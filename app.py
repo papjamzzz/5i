@@ -260,4 +260,6 @@ def render_verdict():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5562, debug=True)
+    port = int(os.getenv("PORT", 5562))
+    host = "0.0.0.0" if os.getenv("PORT") else "127.0.0.1"
+    app.run(host=host, port=port, debug=not os.getenv("PORT"))
