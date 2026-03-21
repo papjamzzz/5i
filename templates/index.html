@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5i Consortium — Five Intelligences</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #07080d;
+      --surface: #0c0e18;
+      --card:    #10121f;
+      --border:  #1a1e30;
+      --text:    #eef0ff;
+      --dim:     #4a5070;
+      --accent:  #7ee8fa;
+      --gold:    #f5c842;
+      --glow:    rgba(126, 232, 250, 0.10);
+      --gold-glow: rgba(245, 200, 66, 0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── DIFFUSE LOGO BG ── */
+    .logo-bg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 700px;
+      background-image: url('/static/logo.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.08;
+      filter: blur(3px) brightness(2.5);
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 1s ease;
+    }
+    .logo-bg.dim { opacity: 0.025; }
+
+    /* ── LAYOUT ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      max-width: 1300px;
+      padding: 36px 32px 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      background-image: url('/static/logo.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: brightness(1.6) drop-shadow(0 0 6px rgba(126,232,250,0.4));
+    }
+
+    .brand { display: flex; flex-direction: column; }
+    .brand-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+    .brand-sub {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--dim);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    /* ── MODE TOGGLE ── */
+    .mode-bar {
+      margin-left: auto;
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px;
+      gap: 2px;
+    }
+    .mode-btn {
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--dim);
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 64px 32px 36px;
+      width: 100%;
+      max-width: 820px;
+      transition: padding 0.5s ease;
+    }
+    .hero.compact { padding: 24px 32px 20px; }
+
+    .hero-title {
+      font-size: 44px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transition: font-size 0.4s ease;
+    }
+    .hero.compact .hero-title { font-size: 24px; }
+
+    .hero-desc {
+      font-size: 15px;
+      color: var(--dim);
+      text-align: center;
+      margin-bottom: 36px;
+      transition: opacity 0.3s, max-height 0.4s;
+      max-height: 40px;
+      overflow: hidden;
+    }
+    .hero.compact .hero-desc { opacity: 0; max-height: 0; margin-bottom: 12px; }
+
+    /* ── INPUT ── */
+    .input-wrap { width: 100%; position: relative; }
+
+    textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 160px 36px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      color: var(--text);
+      resize: none;
+      min-height: 88px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      line-height: 1.6;
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    textarea::placeholder { color: var(--dim); }
+
+    .char-count {
+      position: absolute;
+      bottom: 12px;
+      left: 24px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+    .char-count.warn { color: #f59e0b; }
+    .char-count.over { color: #ef4444; }
+
+    .btn-group {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ask-btn {
+      background: var(--accent);
+      color: #07080d;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .ask-btn:hover { filter: brightness(1.1); }
+    .ask-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .verdict-btn {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 7px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .verdict-btn:hover {
+      background: var(--gold-glow);
+    }
+    .verdict-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── MODEL TOGGLES ── */
+    .model-toggles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .toggle.active {
+      border-color: var(--model-color, var(--accent));
+      background: color-mix(in srgb, var(--model-color, var(--accent)) 10%, var(--surface));
+    }
+    .toggle.disabled-model { opacity: 0.3; cursor: not-allowed; }
+    .toggle-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--model-color, var(--dim));
+    }
+    .toggle-label { font-size: 12px; font-weight: 500; color: var(--text); }
+    .toggle-provider { font-size: 10px; color: var(--dim); }
+
+    /* ── LOADING ── */
+    .loading-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px;
+    }
+    .loading-wrap.visible { display: flex; }
+
+    .dots { display: flex; gap: 8px; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.15s; }
+    .dot:nth-child(3) { animation-delay: 0.3s; }
+    .dot:nth-child(4) { animation-delay: 0.45s; }
+    .dot:nth-child(5) { animation-delay: 0.6s; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); opacity: 0.25; }
+      50% { transform: translateY(-10px); opacity: 1; }
+    }
+
+    .loading-label {
+      font-size: 13px;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+
+    /* ── VERDICT PANEL ── */
+    .verdict-panel {
+      display: none;
+      width: 100%;
+      max-width: 1300px;
+      padding: 0 32px 28px;
+    }
+    .verdict-panel.visible { display: block; }
+
+    .verdict-inner {
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
+      border-top: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 24px 28px;
+    }
+
+    .verdict-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .verdict-icon { font-size: 20px; }
+    .verdict-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .verdict-time {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .verdict-body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .verdict-body strong {
+      color: var(--gold);
+    }
+
+    /* ── RESULTS ── */
+    .results-outer {
+      width: 100%;
+      max-width: 1300px;
+      padding: 0 32px 60px;
+    }
+
+    .results-meta {
+      text-align: center;
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 20px;
+      letter-spacing: 0.03em;
+    }
+    .results-meta strong { color: var(--accent); }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: cardIn 0.4s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-card:nth-child(1) { animation-delay: 0.04s; }
+    .result-card:nth-child(2) { animation-delay: 0.08s; }
+    .result-card:nth-child(3) { animation-delay: 0.12s; }
+    .result-card:nth-child(4) { animation-delay: 0.16s; }
+    .result-card:nth-child(5) { animation-delay: 0.20s; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--model-color) 6%, var(--card));
+    }
+    .card-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--model-color);
+      box-shadow: 0 0 7px var(--model-color);
+      flex-shrink: 0;
+    }
+    .card-model { font-size: 13px; font-weight: 600; }
+    .card-provider { font-size: 10px; color: var(--dim); margin-left: auto; }
+
+    .card-body {
+      padding: 18px;
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .card-body.error { color: #f87171; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<div class="logo-bg" id="logoBg"></div>
+
+<div class="wrapper">
+  <header>
+    <div class="logo-mark"></div>
+    <div class="brand">
+      <span class="brand-name">5i</span>
+      <span class="brand-sub">Consortium · Five Intelligences</span>
+    </div>
+    <div class="mode-bar">
+      <button class="mode-btn active" id="modeQuick" onclick="setMode('quick')">Quick · 3</button>
+      <button class="mode-btn" id="modeFull" onclick="setMode('full')">Full Jury · 5</button>
+    </div>
+  </header>
+
+  <div class="hero" id="hero">
+    <h1 class="hero-title">Ask once.<br>Hear from all five.</h1>
+    <p class="hero-desc">One question. Every major AI. The jury reads the verdict.</p>
+
+    <div class="input-wrap">
+      <textarea
+        id="promptInput"
+        placeholder="Ask anything — up to {{ max_chars }} characters…"
+        maxlength="{{ max_chars }}"
+        rows="3"
+      ></textarea>
+      <span class="char-count" id="charCount">0 / {{ max_chars }}</span>
+      <div class="btn-group">
+        <button class="ask-btn" id="askBtn" onclick="submitAsk(false)">Ask the Jury</button>
+        <button class="verdict-btn" id="verdictBtnTop" onclick="submitAsk(true)" title="Ask all models + render a unified verdict">+ Render Verdict</button>
+      </div>
+    </div>
+
+    <div class="model-toggles" id="modelToggles">
+      {% for key, m in models.items() %}
+      <div class="toggle {% if m.enabled %}active{% else %}disabled-model{% endif %}"
+           id="toggle-{{ key }}"
+           style="--model-color: {{ m.color }}"
+           onclick="{% if m.enabled %}toggleModel('{{ key }}'){% endif %}"
+           title="{% if not m.enabled %}Add {{ key.upper() }}_API_KEY to .env to unlock{% endif %}">
+        <span class="toggle-dot"></span>
+        <span class="toggle-label">{{ m.label }}</span>
+        <span class="toggle-provider">{{ m.provider }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="loading-label" id="loadingLabel">The jury is deliberating…</div>
+  </div>
+
+  <!-- Verdict Panel -->
+  <div class="verdict-panel" id="verdictPanel">
+    <div class="verdict-inner">
+      <div class="verdict-header">
+        <div class="verdict-icon">⚖️</div>
+        <div class="verdict-title">The Verdict</div>
+        <div class="verdict-time" id="verdictTime"></div>
+      </div>
+      <div class="verdict-body" id="verdictBody"></div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-outer" id="resultsOuter">
+    <div class="results-meta" id="resultsMeta"></div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+</div>
+
+<script>
+  const models = {{ models | tojson }};
+  const maxChars = {{ max_chars }};
+
+  // Quick mode = first 3 enabled models; Full = all
+  const allEnabled = Object.keys(models).filter(k => models[k].enabled);
+  let activeModels = new Set(allEnabled.slice(0, 3));
+  let currentMode = 'quick';
+  let lastResults = null;
+  let lastPrompt = '';
+
+  // Reflect initial quick mode in toggles
+  updateToggleUI();
+
+  const input = document.getElementById('promptInput');
+  const charCount = document.getElementById('charCount');
+
+  input.addEventListener('input', () => {
+    const len = input.value.length;
+    charCount.textContent = `${len} / ${maxChars}`;
+    charCount.className = 'char-count' +
+      (len > maxChars * 0.88 ? ' warn' : '') +
+      (len >= maxChars ? ' over' : '');
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAsk(false); }
+  });
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('modeQuick').classList.toggle('active', mode === 'quick');
+    document.getElementById('modeFull').classList.toggle('active', mode === 'full');
+
+    if (mode === 'quick') {
+      activeModels = new Set(allEnabled.slice(0, 3));
+    } else {
+      activeModels = new Set(allEnabled);
+    }
+    updateToggleUI();
+  }
+
+  function updateToggleUI() {
+    Object.keys(models).forEach(k => {
+      const el = document.getElementById(`toggle-${k}`);
+      if (!el || !models[k].enabled) return;
+      el.classList.toggle('active', activeModels.has(k));
+    });
+  }
+
+  function toggleModel(key) {
+    const el = document.getElementById(`toggle-${key}`);
+    if (activeModels.has(key)) {
+      if (activeModels.size <= 1) return;
+      activeModels.delete(key);
+      el.classList.remove('active');
+    } else {
+      activeModels.add(key);
+      el.classList.add('active');
+    }
+  }
+
+  async function submitAsk(withVerdict) {
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    const askBtn = document.getElementById('askBtn');
+    const vBtn = document.getElementById('verdictBtnTop');
+    const loading = document.getElementById('loadingWrap');
+    const label = document.getElementById('loadingLabel');
+    const grid = document.getElementById('resultsGrid');
+    const hero = document.getElementById('hero');
+    const logoBg = document.getElementById('logoBg');
+    const verdictPanel = document.getElementById('verdictPanel');
+    const meta = document.getElementById('resultsMeta');
+
+    askBtn.disabled = true;
+    vBtn.disabled = true;
+    askBtn.textContent = 'Deliberating…';
+    loading.classList.add('visible');
+    label.textContent = withVerdict ? 'Summoning the jury + rendering verdict…' : 'The jury is deliberating…';
+    grid.innerHTML = '';
+    verdictPanel.classList.remove('visible');
+    meta.textContent = '';
+    hero.classList.add('compact');
+    logoBg.classList.add('dim');
+
+    try {
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          models: [...activeModels],
+          verdict: withVerdict
+        })
+      });
+
+      const data = await res.json();
+      loading.classList.remove('visible');
+
+      if (data.error) {
+        grid.innerHTML = `<p style="color:#f87171;text-align:center;padding:40px;grid-column:1/-1">${data.error}</p>`;
+      } else {
+        lastResults = data.results;
+        lastPrompt = prompt;
+        const count = Object.keys(data.results).length;
+        meta.innerHTML = `<strong>${count} model${count !== 1 ? 's' : ''}</strong> responded in <strong>${data.elapsed}s</strong>`;
+
+        for (const [key, text] of Object.entries(data.results)) {
+          const m = models[key];
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.style.setProperty('--model-color', m.color);
+          const isErr = text.startsWith('Error:');
+          card.innerHTML = `
+            <div class="card-header">
+              <div class="card-dot"></div>
+              <div class="card-model">${m.label}</div>
+              <div class="card-provider">${m.provider}</div>
+            </div>
+            <div class="card-body ${isErr ? 'error' : ''}">${escHtml(text)}</div>
+          `;
+          grid.appendChild(card);
+        }
+
+        if (data.verdict) {
+          renderVerdictPanel(data.verdict, data.elapsed);
+        }
+      }
+    } catch (err) {
+      loading.classList.remove('visible');
+      grid.innerHTML = `<p style="color:#f87171;text-align:center;padding:40px;grid-column:1/-1">Network error — is the server running?</p>`;
+    }
+
+    askBtn.disabled = false;
+    vBtn.disabled = false;
+    askBtn.textContent = 'Ask the Jury';
+  }
+
+  async function renderVerdictLate() {
+    if (!lastResults) return;
+    const vBtn = document.getElementById('verdictBtnTop');
+    const loading = document.getElementById('loadingWrap');
+    const label = document.getElementById('loadingLabel');
+
+    vBtn.disabled = true;
+    loading.classList.add('visible');
+    label.textContent = 'Rendering verdict…';
+
+    try {
+      const res = await fetch('/verdict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: lastPrompt, results: lastResults })
+      });
+      const data = await res.json();
+      loading.classList.remove('visible');
+      if (data.verdict) renderVerdictPanel(data.verdict, data.elapsed);
+    } catch {
+      loading.classList.remove('visible');
+    }
+
+    vBtn.disabled = false;
+  }
+
+  function renderVerdictPanel(text, elapsed) {
+    const panel = document.getElementById('verdictPanel');
+    const body = document.getElementById('verdictBody');
+    const time = document.getElementById('verdictTime');
+
+    // Bold the section headers
+    const formatted = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    body.innerHTML = formatted;
+    time.textContent = `${elapsed}s`;
+    panel.classList.add('visible');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
