@@ -1,692 +1,3203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5i Consortium — Five Intelligences</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg:      #07080d;
-      --surface: #0c0e18;
-      --card:    #10121f;
-      --border:  #1a1e30;
-      --text:    #eef0ff;
-      --dim:     #4a5070;
-      --accent:  #7ee8fa;
-      --gold:    #f5c842;
-      --glow:    rgba(126, 232, 250, 0.10);
-      --gold-glow: rgba(245, 200, 66, 0.12);
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>5i — AI Synthesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<!-- keys handled server-side -->
+<style>
+/* ── TOKENS ──────────────────────────────────────────── */
+:root {
+  --bg:          #0B1210;
+  --bg2:         #0F1A16;
+  --bg3:         #132018;
+  --bg4:         #0d1714;
+  --border:      #2E8C52;
+  --border-dim:  #1E4A32;
+  --border-hi:   #3DB862;
+  --green:       #5EE88A;
+  --green-bright:#86F5B4;
+  --green-deep:  #1F5A38;
+  --mint:        #E8FAF2;
+  --mint-dim:    rgba(232,250,242,0.62);
+  --amber:       #F0A030;
+  --ember:       #E05520;
+  --claude:      #7C3AED; --claude-hi: #B8A0FA;
+  --gemini:      #3B82F6; --gemini-hi: #93C5FD;
+  --gpt:         #22C55E; --gpt-hi:    #86EFAC;
+  --mistral:     #F0A030; --mistral-hi:#FFD98A;
+  --grok:        #E05520; --grok-hi:   #FFA585;
+  --panel-bg:    rgba(15,26,22,0.92);
+  --inset:       rgba(0,0,0,0.25);
+  --led-off:     rgba(31,90,56,0.28);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--mint);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 15px;
+  user-select: none;
+}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ── ORBITAL BACKGROUND ──────────────────────────────── */
+#orbital-bg {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+}
+#orbital-canvas {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.28;
+}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+/* ── PERFORMANCE ─────────────────────────────────────── */
+.hero-logo-wrap { will-change: transform; }
+#orbital-canvas  { will-change: transform; }
 
-    /* ── DIFFUSE LOGO BG ── */
-    .logo-bg {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 700px;
-      height: 700px;
-      background-image: url('/static/logo.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      opacity: 0.08;
-      filter: blur(3px) brightness(2.5);
-      pointer-events: none;
-      z-index: 0;
-      transition: opacity 1s ease;
-    }
-    .logo-bg.dim { opacity: 0.025; }
+/* ── ANIMATIONS ──────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1);   opacity: 0.5; }
+  50%       { transform: scale(1.08); opacity: 0.15; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes led-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; box-shadow: 0 0 8px currentColor; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-3px); }
+  40%      { transform: translateX(3px); }
+  60%      { transform: translateX(-2px); }
+  80%      { transform: translateX(2px); }
+}
 
-    /* ── LAYOUT ── */
-    .wrapper {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+/* ── APP SHELL ───────────────────────────────────────── */
+.app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* ── HEADER ── */
-    header {
-      width: 100%;
-      max-width: 1300px;
-      padding: 36px 32px 0;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+/* ── HEADER — floating, no bar ───────────────────────── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px;
+  background: transparent;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  gap: 14px;
+  pointer-events: none;
+}
+header > *, header .logo-mark, header .header-right { pointer-events: auto; }
+.btn-fullscreen { opacity: 0; transition: opacity 0.2s; }
+header:hover .btn-fullscreen { opacity: 1; }
+.logo-mark { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.logo-icon  { width: 38px; height: 38px; border-radius: 7px; }
+.logo-5i {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--mint);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
 
-    .logo-mark {
-      width: 38px;
-      height: 38px;
-      background-image: url('/static/logo.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      filter: brightness(1.6) drop-shadow(0 0 6px rgba(126,232,250,0.4));
-    }
+/* ── COST METER ──────────────────────────────────────── */
+.cost-meter {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(11,18,16,0.9);
+  border: 1px solid var(--border-dim);
+  border-radius: 5px; padding: 5px 11px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: help; position: relative;
+}
+.cost-meter:hover .cost-tooltip { opacity: 1; pointer-events: auto; }
+.cost-label { font-size: 7px; color: var(--amber); opacity: 0.75; letter-spacing: 2px; text-transform: uppercase; }
+.cost-readout { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.cost-value {
+  font-size: 12px; font-weight: 600; color: var(--amber);
+  letter-spacing: -0.5px; min-width: 64px; text-align: right;
+  transition: color 0.4s;
+}
+.cost-value.fresh { color: var(--green-bright); }
+.cost-quip { font-size: 7px; color: rgba(255,255,255,0.38); letter-spacing: 0.5px; text-align: right; white-space: nowrap; }
+.cost-session { font-size: 7px; color: rgba(255,255,255,0.28); letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
+.cost-tooltip {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 230px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px;
+  font-size: 10px; line-height: 1.6; color: var(--mint-dim);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 999;
+}
 
-    .brand { display: flex; flex-direction: column; }
-    .brand-name {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-    }
-    .brand-sub {
-      font-size: 10px;
-      font-weight: 400;
-      color: var(--dim);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
+/* ── INFO VIEW (Ableton-style hover help) ────────────── */
+.info-view {
+  background: rgba(9,16,13,0.97);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.info-view.hidden { display: none; }
+.info-view-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 10px;
+  background: rgba(31,90,56,0.18);
+  border-bottom: 1px solid var(--border-dim);
+}
+.info-view-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); font-weight: 500;
+}
+.info-view-close {
+  background: none; border: none; color: var(--mint-dim);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  transition: color 0.15s;
+}
+.info-view-close:hover { color: var(--green); }
+.info-view-body {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; line-height: 1.6;
+  color: var(--mint);
+  padding: 8px 10px;
+  min-height: 48px;
+  transition: opacity 0.08s ease;
+}
 
-    /* ── MODE TOGGLE ── */
-    .mode-bar {
-      margin-left: auto;
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px;
-      gap: 2px;
-    }
-    .mode-btn {
-      padding: 6px 16px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--dim);
-      transition: all 0.2s;
-    }
-    .mode-btn.active {
-      background: var(--card);
-      color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    }
+/* ── CPU METER ───────────────────────────────────────── */
+/* ── MONITOR PANEL (above Info View) ──────────────── */
+.monitor-panel {
+  background: rgba(11,18,16,0.88);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px; padding: 8px 11px;
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative;
+}
+.monitor-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.monitor-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.75; white-space: nowrap; flex-shrink: 0;
+}
+.monitor-bar-wrap {
+  flex: 1; height: 3px; background: rgba(31,90,56,0.3);
+  border-radius: 2px; overflow: hidden;
+}
+.monitor-bar-fill {
+  height: 100%; border-radius: 2px; width: 0%;
+  background: linear-gradient(90deg, var(--green-deep), var(--green-bright));
+  transition: width 0.5s ease, background 0.5s ease;
+}
+.monitor-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--mint); min-width: 32px; text-align: right;
+}
+.monitor-cost-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--amber); text-align: right;
+}
+.monitor-divider {
+  height: 1px; background: var(--border-dim); opacity: 0.5;
+}
+.monitor-flash {
+  position: absolute; inset: 0; border-radius: 6px;
+  border: 1px solid var(--ember); opacity: 0; transition: opacity 0.1s; pointer-events: none;
+}
+.monitor-flash.active { opacity: 1; }
 
-    /* ── HERO ── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 64px 32px 36px;
-      width: 100%;
-      max-width: 820px;
-      transition: padding 0.5s ease;
-    }
-    .hero.compact { padding: 24px 32px 20px; }
+.cpu-meter {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(11,18,16,0.9);
+  border: 1px solid var(--border-dim);
+  border-radius: 5px; padding: 5px 11px;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative; cursor: help;
+}
+.cpu-meter:hover .cpu-tooltip { opacity: 1; pointer-events: auto; }
+.cpu-label { font-size: 7px; color: var(--green); opacity: 0.75; letter-spacing: 2px; text-transform: uppercase; }
+.cpu-bar-track { width: 64px; height: 3px; background: rgba(31,90,56,0.3); border-radius: 2px; overflow: hidden; }
+.cpu-bar-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--green-deep), var(--green-bright)); transition: width 0.5s ease, background 0.5s ease; }
+.cpu-value     { font-size: 10px; color: var(--mint); min-width: 30px; text-align: right; }
+.cpu-sparkline { display: flex; align-items: flex-end; gap: 1px; height: 12px; }
+.spark-bar     { width: 2px; border-radius: 1px; background: var(--green-bright); opacity: 0.6; transition: height 0.4s ease; }
+.cpu-mode      { font-size: 7px; color: var(--green); opacity: 0.60; letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
+.longtask-flash {
+  position: absolute; inset: 0; border-radius: 5px;
+  border: 1px solid var(--ember); opacity: 0; transition: opacity 0.1s; pointer-events: none;
+}
+.longtask-flash.active { opacity: 1; }
+.cpu-tooltip {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 240px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px;
+  font-size: 10px; line-height: 1.6; color: var(--mint-dim);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  z-index: 999;
+}
 
-    .hero-title {
-      font-size: 44px;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      transition: font-size 0.4s ease;
-    }
-    .hero.compact .hero-title { font-size: 24px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.status-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mint-dim);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: led-pulse 2s ease-in-out infinite; }
 
-    .hero-desc {
-      font-size: 15px;
-      color: var(--dim);
-      text-align: center;
-      margin-bottom: 36px;
-      transition: opacity 0.3s, max-height 0.4s;
-      max-height: 40px;
-      overflow: hidden;
-    }
-    .hero.compact .hero-desc { opacity: 0; max-height: 0; margin-bottom: 12px; }
+/* ── FULLSCREEN BTN ──────────────────────────────────── */
+.btn-fullscreen {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  background: var(--inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 5px; cursor: pointer;
+  color: var(--mint-dim); transition: all 0.15s;
+  flex-shrink: 0;
+}
+.btn-fullscreen:hover {
+  border-color: var(--green); color: var(--green);
+  box-shadow: 0 0 10px rgba(94,232,138,0.2);
+}
+.btn-fullscreen svg { width: 12px; height: 12px; }
+:fullscreen .btn-fullscreen,
+:-webkit-full-screen .btn-fullscreen { border-color: var(--green); color: var(--green); }
 
-    /* ── INPUT ── */
-    .input-wrap { width: 100%; position: relative; }
+/* ── MAIN GRID ───────────────────────────────────────── */
+.main-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 270px 1fr 270px;
+  gap: 0;
+  min-height: 100vh;
+  padding-top: 62px;
+}
 
-    textarea {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px 160px 36px 24px;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      color: var(--text);
-      resize: none;
-      min-height: 88px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      line-height: 1.6;
-    }
-    textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--glow);
-    }
-    textarea::placeholder { color: var(--dim); }
+/* ── PANELS ──────────────────────────────────────────── */
+.panel {
+  border-right: 1px solid var(--border-dim);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.panel:last-child { border-right: none; }
+.panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--green); opacity: 0.70; margin-bottom: 2px;
+}
 
-    .char-count {
-      position: absolute;
-      bottom: 12px;
-      left: 24px;
-      font-size: 11px;
-      color: var(--dim);
-    }
-    .char-count.warn { color: #f59e0b; }
-    .char-count.over { color: #ef4444; }
+/* ── HERO LOGO ───────────────────────────────────────── */
+.hero-logo-section {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0 8px;
+  position: relative;
+}
+.hero-logo-wrap {
+  position: relative;
+  width: 210px; height: 210px;
+  animation: float 6s ease-in-out infinite;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-logo-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(88,222,131,0.22) 0%, transparent 65%);
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+.hero-logo-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(88,222,131,0.18);
+  box-shadow: 0 0 20px rgba(88,222,131,0.12), inset 0 0 20px rgba(88,222,131,0.06);
+  animation: pulse-ring 3.5s ease-in-out infinite 1.5s;
+}
+.hero-logo-canvas {
+  width: 200px; height: 200px;
+  filter: drop-shadow(0 0 40px rgba(88,222,131,0.55))
+          drop-shadow(0 0 90px rgba(88,222,131,0.22))
+          drop-shadow(0 0 4px rgba(195,253,216,0.4));
+  cursor: crosshair;
+}
+.hero-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--mint);
+  letter-spacing: -0.3px; text-align: center; margin-top: 10px;
+}
+.hero-title span { color: var(--green); }
+.hero-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; color: var(--green);
+  opacity: 0.5; text-transform: uppercase; text-align: center; margin-top: 3px;
+}
 
-    .btn-group {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+/* ── KNOB BANK ───────────────────────────────────────── */
+.knob-bank {
+  display: flex; gap: 12px; justify-content: center;
+  align-items: flex-end; flex-wrap: wrap;
+  padding: 6px 0;
+}
+.knob-unit {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer;
+}
+.knob-outer {
+  position: relative;
+  width: 108px; height: 108px;
+}
+.knob-ring-svg {
+  position: absolute; inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px);
+  pointer-events: none;
+}
+.knob-canvas-el {
+  width: 108px; height: 108px;
+  display: block; border-radius: 50%;
+  transition: filter 0.2s;
+}
+.knob-unit:hover .knob-canvas-el {
+  filter: brightness(1.2);
+}
+.knob-unit.active .knob-canvas-el {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.knob-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--mint); opacity: 0.90; text-align: center;
+  line-height: 1.4; font-weight: 500;
+}
 
-    .ask-btn {
-      background: var(--accent);
-      color: #07080d;
-      border: none;
-      border-radius: 10px;
-      padding: 9px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .ask-btn:hover { filter: brightness(1.1); }
-    .ask-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* ── FADER BANK ───────────────────────────────────────── */
+.fader-bank {
+  display: flex; gap: 8px;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 8px 0;
+}
+.fader-unit {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 1;
+}
+.fader-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #ffffff; opacity: 0.92; text-align: center;
+}
+.fader-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: #ffffff; font-weight: 700; text-align: center;
+  min-width: 42px; background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.20); border-radius: 3px; padding: 2px 6px;
+}
+.fader-wrap {
+  position: relative;
+  width: 42px; height: 190px;
+  /* dark neutral charcoal — matches knob skirt treatment */
+  background: linear-gradient(180deg, #1c1c1c 0%, #111111 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255,255,255,0.18);
+  border-bottom: 1px solid rgba(0,0,0,0.7);
+  border-radius: 5px;
+  cursor: ns-resize;
+  overflow: visible;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05);
+}
+/* Tick marks — left side */
+.fader-wrap::before {
+  content: '';
+  position: absolute;
+  left: 3px; top: 10px; bottom: 10px; width: 2px;
+  background: repeating-linear-gradient(to bottom,
+    rgba(255,255,255,0.30) 0px, rgba(255,255,255,0.30) 1px,
+    transparent 1px, transparent 9px
+  );
+  pointer-events: none;
+}
+/* Tick marks — right side */
+.fader-wrap::after {
+  content: '';
+  position: absolute;
+  right: 3px; top: 10px; bottom: 10px; width: 2px;
+  background: repeating-linear-gradient(to bottom,
+    rgba(255,255,255,0.30) 0px, rgba(255,255,255,0.30) 1px,
+    transparent 1px, transparent 9px
+  );
+  pointer-events: none;
+}
+.fader-track {
+  position: absolute;
+  left: 50%; top: 10px; bottom: 10px; width: 5px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.9);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), inset 0 0 2px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+.fader-fill {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  border-radius: 3px;
+  transition: height 0.05s linear;
+  pointer-events: none;
+  opacity: 0.70;
+}
+/* ── Fader thumb — Waves NS1 / mixing board style ── */
+.fader-thumb {
+  position: absolute;
+  left: 50%; width: 38px; height: 28px;
+  transform: translate(-50%, 50%);
+  /* dark charcoal body — neutral, matches knob skirt */
+  background: linear-gradient(180deg,
+    #383838 0%,
+    #2a2a2a 35%,
+    #1e1e1e 50%,
+    #2a2a2a 65%,
+    #383838 100%
+  );
+  border: 1px solid rgba(255,255,255,0.20);
+  border-top: 1px solid rgba(255,255,255,0.32);
+  border-bottom: 1px solid rgba(0,0,0,0.7);
+  border-radius: 4px;
+  cursor: ns-resize;
+  transition: box-shadow 0.15s;
+  z-index: 10;
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.7),
+    0 1px 0 rgba(255,255,255,0.10) inset,
+    0 -1px 0 rgba(0,0,0,0.5) inset;
+}
+/* Horizontal ribs across the whole thumb — mixing board grip */
+.fader-thumb::before {
+  content: '';
+  position: absolute;
+  left: 3px; right: 3px;
+  top: 4px; bottom: 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px,
+    transparent 1px, transparent 4px
+  );
+  border-radius: 2px;
+  pointer-events: none;
+}
+/* Bold center accent stripe — the NS1 amber line, per-fader color */
+.fader-thumb::after {
+  content: '';
+  position: absolute;
+  left: 5px; right: 5px;
+  top: 50%; height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  pointer-events: none;
+}
+.fader-thumb.dragging,
+.fader-thumb:hover {
+  box-shadow:
+    0 0 14px currentColor,
+    0 3px 8px rgba(0,0,0,0.7),
+    0 1px 0 rgba(255,255,255,0.15) inset;
+}
 
-    .verdict-btn {
-      background: transparent;
-      color: var(--gold);
-      border: 1px solid var(--gold);
-      border-radius: 10px;
-      padding: 7px 18px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .verdict-btn:hover {
-      background: var(--gold-glow);
-    }
-    .verdict-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+/* fader color accent per type */
+.fader-unit[data-type="cost"]    .fader-fill { background: linear-gradient(0deg, #B06810, #FFD060); }
+.fader-unit[data-type="cost"]    .fader-thumb::after { background: #FFB830; box-shadow: 0 0 6px #FFB830; }
+.fader-unit[data-type="cost"]    .fader-thumb { color: rgba(255,180,48,0.4); }
+.fader-unit[data-type="latency"] .fader-fill { background: linear-gradient(0deg, #1E4A9A, #60A5FF); }
+.fader-unit[data-type="latency"] .fader-thumb::after { background: #4D90FF; box-shadow: 0 0 6px #4D90FF; }
+.fader-unit[data-type="latency"] .fader-thumb { color: rgba(77,144,255,0.4); }
+.fader-unit[data-type="agree"]   .fader-fill { background: linear-gradient(0deg, #4A1A9A, #C084FC); }
+.fader-unit[data-type="agree"]   .fader-thumb::after { background: #A855F7; box-shadow: 0 0 6px #A855F7; }
+.fader-unit[data-type="agree"]   .fader-thumb { color: rgba(168,85,247,0.4); }
+.fader-unit[data-type="rely"]    .fader-fill { background: linear-gradient(0deg, #166534, #4ADE80); }
+.fader-unit[data-type="rely"]    .fader-thumb::after { background: #22C55E; box-shadow: 0 0 6px #22C55E; }
+.fader-unit[data-type="rely"]    .fader-thumb { color: rgba(34,197,94,0.4); }
 
-    /* ── MODEL TOGGLES ── */
-    .model-toggles {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 18px;
-    }
+/* ── ANALYSIS TOOL STRIP ─────────────────────────────── */
+.tool-strip {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;
+}
+.tool-unit {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 11px 8px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px; text-align: center; position: relative;
+}
+.tool-toggle { cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.tool-toggle:hover { border-color: rgba(255,255,255,0.20); background: rgba(255,255,255,0.03); }
+.tool-toggle.active { border-color: var(--green); background: rgba(61,255,122,0.07); }
+.tool-led {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(31,90,56,0.38);
+  transition: background 0.2s, box-shadow 0.2s; flex-shrink: 0;
+}
+.tool-toggle.active .tool-led { background: #3DFF7A; box-shadow: 0 0 10px #3DFF7A; animation: led-pulse 2s ease-in-out infinite; }
+.tool-unit-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); line-height: 1.45;
+}
+.tool-toggle.active .tool-unit-label { color: #86F5B4; }
+.tool-state-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.22); margin-top: 2px;
+}
+.tool-toggle.active .tool-state-badge { color: #3DFF7A; }
+.tool-big-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 800; line-height: 1;
+  color: rgba(255,255,255,0.60); font-variant-numeric: tabular-nums;
+  transition: color 0.4s, text-shadow 0.4s;
+}
+.tool-big-val.green { color: #3DFF7A; text-shadow: 0 0 16px rgba(61,255,122,0.35); }
+.tool-big-val.amber { color: #FFD400; text-shadow: 0 0 16px rgba(255,212,0,0.35); }
+.tool-big-val.red   { color: #FF4422; text-shadow: 0 0 16px rgba(255,68,34,0.35); }
 
-    .toggle {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      user-select: none;
-    }
-    .toggle.active {
-      border-color: var(--model-color, var(--accent));
-      background: color-mix(in srgb, var(--model-color, var(--accent)) 10%, var(--surface));
-    }
-    .toggle.disabled-model { opacity: 0.3; cursor: not-allowed; }
-    .toggle-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--model-color, var(--dim));
-    }
-    .toggle-label { font-size: 12px; font-weight: 500; color: var(--text); }
-    .toggle-provider { font-size: 10px; color: var(--dim); }
+/* ── RANDOMIZE BTN ───────────────────────────────────── */
+.btn-randomize {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--inset);
+  border: 1px solid var(--border);
+  border-radius: 5px; padding: 7px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--green); cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.btn-randomize:hover {
+  background: rgba(88,222,131,0.08);
+  box-shadow: 0 0 12px rgba(88,222,131,0.2);
+  border-color: var(--green);
+}
+.btn-randomize.shaking { animation: shake 0.4s ease; }
+.btn-randomize svg { width: 12px; height: 12px; }
 
-    /* ── LOADING ── */
-    .loading-wrap {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding: 32px;
-    }
-    .loading-wrap.visible { display: flex; }
+/* ── CENTER PANEL ────────────────────────────────────── */
+.center-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 
-    .dots { display: flex; gap: 8px; }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: bounce 1.2s ease-in-out infinite;
-    }
-    .dot:nth-child(2) { animation-delay: 0.15s; }
-    .dot:nth-child(3) { animation-delay: 0.3s; }
-    .dot:nth-child(4) { animation-delay: 0.45s; }
-    .dot:nth-child(5) { animation-delay: 0.6s; }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); opacity: 0.25; }
-      50% { transform: translateY(-10px); opacity: 1; }
-    }
+/* ── MODEL CONSOLE STRIP ─────────────────────────────── */
+.model-console {
+  background: var(--inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex; gap: 8px; align-items: center;
+}
+.console-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.65;
+  writing-mode: vertical-lr; transform: rotate(180deg);
+  flex-shrink: 0;
+}
+.model-nodes { display: flex; gap: 6px; flex: 1; align-items: center; justify-content: space-around; }
+.model-node {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s; cursor: pointer;
+  position: relative; flex: 1;
+}
+.model-node.active { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
+.model-node:hover { background: rgba(255,255,255,0.06); }
+.model-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  transition: box-shadow 0.3s;
+}
+.model-node.active .model-led { animation: led-pulse 2s ease-in-out infinite; }
+.model-orbit-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; color: rgba(232,250,242,0.50); letter-spacing: 0.5px;
+}
+.model-name-sm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 0.5px; font-weight: 700;
+  color: #ffffff;
+}
+.model-weight {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: #ffffff;
+  background: rgba(255,255,255,0.08); border-radius: 3px;
+  padding: 1px 6px; border: 1px solid rgba(255,255,255,0.18);
+  font-weight: 600;
+}
+.flow-arrow {
+  font-size: 10px; color: var(--green); opacity: 0.60;
+  flex-shrink: 0;
+}
 
-    .loading-label {
-      font-size: 13px;
-      color: var(--dim);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.35; }
-      50% { opacity: 1; }
-    }
+/* ── DEV TOOL BAR ────────────────────────────────────── */
+.dev-tool-bar {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.tool-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 4px; padding: 6px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.5px;
+  color: var(--mint-dim); cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.tool-btn .tool-led {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green-deep); flex-shrink: 0;
+  transition: all 0.2s;
+}
+.tool-btn:hover { border-color: var(--border-hi); color: var(--mint); }
+.tool-btn:hover .tool-led, .tool-btn.active .tool-led {
+  background: var(--green); box-shadow: 0 0 6px rgba(88,222,131,0.5);
+}
+.tool-btn.active { border-color: var(--green); color: var(--green); }
 
-    /* ── VERDICT PANEL ── */
-    .verdict-panel {
-      display: none;
-      width: 100%;
-      max-width: 1300px;
-      padding: 0 32px 28px;
-    }
-    .verdict-panel.visible { display: block; }
+/* ── INPUT SECTION ───────────────────────────────────── */
+.input-section { display: flex; flex-direction: column; gap: 8px; }
+.input-header { display: flex; align-items: center; justify-content: space-between; }
+.input-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.72;
+}
+.token-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px; padding: 2px 8px;
+}
+.token-counter span { color: var(--green); }
 
-    .verdict-inner {
-      background: var(--surface);
-      border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--border));
-      border-top: 2px solid var(--gold);
-      border-radius: 16px;
-      padding: 24px 28px;
-    }
+.prompt-area {
+  background: var(--inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.prompt-area:focus-within { border-color: var(--border-hi); }
 
-    .verdict-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .verdict-icon { font-size: 20px; }
-    .verdict-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--gold);
-      font-weight: 600;
-    }
-    .verdict-time {
-      margin-left: auto;
-      font-size: 11px;
-      color: var(--dim);
-    }
+.prompt-textarea {
+  width: 100%; min-height: 140px;
+  background: transparent; border: none; outline: none;
+  color: #ffffff; font-family: 'Inter', sans-serif;
+  font-size: 16px; line-height: 1.65;
+  padding: 14px 16px; resize: vertical;
+  user-select: text;
+}
+.prompt-textarea::placeholder { color: rgba(232,250,242,0.38); font-size: 15px; }
 
-    .verdict-body {
-      font-size: 14px;
-      line-height: 1.8;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+/* ── DEVELOPER TOOLBAR ───────────────────────────────── */
+.dev-toolbar {
+  background: var(--bg4);
+  border-top: 1px solid var(--border-dim);
+  padding: 7px 10px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.dbt-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(31,90,56,0.15);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px; padding: 4px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--mint-dim);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.dbt-btn:hover { border-color: var(--green); color: var(--green); }
+.dbt-btn .kbd {
+  font-size: 8px; color: var(--green); opacity: 0.6;
+  background: var(--inset); border-radius: 2px; padding: 0 3px;
+}
+.dbt-btn svg { width: 10px; height: 10px; opacity: 0.7; }
 
-    .verdict-body strong {
-      color: var(--gold);
-    }
+/* file upload drop zone */
+.file-drop {
+  flex: 1; min-width: 80px;
+  border: 1px dashed var(--border-dim);
+  border-radius: 3px; padding: 4px 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  color: rgba(195,253,216,0.25); text-align: center; cursor: pointer;
+  transition: all 0.15s;
+}
+.file-drop:hover, .file-drop.drag-over {
+  border-color: var(--green); color: var(--green);
+  background: rgba(88,222,131,0.04);
+}
+.file-drop input { display: none; }
 
-    /* ── RESULTS ── */
-    .results-outer {
-      width: 100%;
-      max-width: 1300px;
-      padding: 0 32px 60px;
-    }
+/* format selector */
+.format-selector {
+  display: flex; border: 1px solid var(--border-dim); border-radius: 3px; overflow: hidden;
+}
+.fmt-opt {
+  padding: 4px 7px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.5px;
+  color: var(--mint-dim); cursor: pointer; transition: all 0.12s;
+  background: transparent; border: none; border-right: 1px solid var(--border-dim);
+}
+.fmt-opt:last-child { border-right: none; }
+.fmt-opt.active, .fmt-opt:hover { background: rgba(88,222,131,0.1); color: var(--green); }
 
-    .results-meta {
-      text-align: center;
-      font-size: 12px;
-      color: var(--dim);
-      margin-bottom: 20px;
-      letter-spacing: 0.03em;
-    }
-    .results-meta strong { color: var(--accent); }
+/* sys prompt toggle */
+.sys-toggle {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mint-dim);
+  cursor: pointer; padding: 4px 8px;
+  border: 1px solid var(--border-dim); border-radius: 3px;
+  transition: all 0.15s;
+}
+.sys-toggle.on { border-color: var(--amber); color: var(--amber); }
+.sys-toggle .toggle-led {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--led-off); transition: all 0.2s;
+}
+.sys-toggle.on .toggle-led { background: var(--amber); box-shadow: 0 0 5px rgba(218,142,32,0.5); }
 
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 18px;
-    }
+.sys-prompt-row {
+  display: none; padding: 0 10px 7px;
+  background: var(--bg4);
+  border-top: 1px solid var(--border-dim);
+}
+.sys-prompt-row.visible { display: block; }
+.sys-prompt-input {
+  width: 100%; background: var(--inset); border: 1px solid var(--border-dim);
+  border-radius: 3px; padding: 6px 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--mint); outline: none; resize: none; height: 50px;
+  user-select: text;
+}
+.sys-prompt-input::placeholder { color: rgba(195,253,216,0.2); }
 
-    .result-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      animation: cardIn 0.4s ease forwards;
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    @keyframes cardIn {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .result-card:nth-child(1) { animation-delay: 0.04s; }
-    .result-card:nth-child(2) { animation-delay: 0.08s; }
-    .result-card:nth-child(3) { animation-delay: 0.12s; }
-    .result-card:nth-child(4) { animation-delay: 0.16s; }
-    .result-card:nth-child(5) { animation-delay: 0.20s; }
+/* ── SYNTHESIZE ROW ──────────────────────────────────── */
+.synth-row { display: flex; gap: 8px; align-items: center; }
+.btn-synth {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(94,232,138,0.16), rgba(94,232,138,0.06));
+  border: 1px solid var(--green);
+  border-radius: 6px; padding: 15px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--green); cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 24px rgba(94,232,138,0.14), inset 0 1px 0 rgba(94,232,138,0.15);
+}
+.btn-synth:hover {
+  background: linear-gradient(135deg, rgba(94,232,138,0.26), rgba(94,232,138,0.10));
+  box-shadow: 0 0 40px rgba(94,232,138,0.28), inset 0 1px 0 rgba(94,232,138,0.2);
+  transform: translateY(-1px);
+  color: var(--green-bright);
+}
+.btn-synth svg { width: 16px; height: 16px; }
+.synth-kbd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--green); opacity: 0.45;
+}
+.model-seq-display {
+  display: flex; gap: 3px; align-items: center; flex-shrink: 0;
+}
+.seq-planet {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.seq-arrow { font-size: 8px; color: var(--green); opacity: 0.55; }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      background: color-mix(in srgb, var(--model-color) 6%, var(--card));
-    }
-    .card-dot {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      background: var(--model-color);
-      box-shadow: 0 0 7px var(--model-color);
-      flex-shrink: 0;
-    }
-    .card-model { font-size: 13px; font-weight: 600; }
-    .card-provider { font-size: 10px; color: var(--dim); margin-left: auto; }
+/* ── RESULTS PANEL ───────────────────────────────────── */
+.results-section { flex: 1; display: flex; flex-direction: column; gap: 0; min-height: 200px; }
+.tabs-bar {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+.tab-btn {
+  padding: 8px 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.65); cursor: pointer; background: none; border: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.tab-btn.active { color: var(--green-bright); border-bottom-color: var(--green-bright); }
+.tab-btn:hover:not(.active) { color: var(--mint); }
+.tab-content { display: none; padding: 12px; flex: 1; animation: fadeIn 0.2s ease; }
+.tab-content.active { display: block; }
 
-    .card-body {
-      padding: 18px;
-      font-size: 13.5px;
-      line-height: 1.75;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .card-body.error { color: #f87171; font-style: italic; }
-  </style>
+.output-body {
+  min-height: 120px; background: rgba(14,24,20,0.55);
+  border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7;
+  color: var(--mint);
+}
+.output-empty { color: rgba(232,250,242,0.28); font-style: italic; }
+
+/* agreement highlight */
+.agree-marker { background: rgba(88,222,131,0.12); border-left: 2px solid var(--green); padding-left: 6px; border-radius: 0 3px 3px 0; }
+.flag-card {
+  background: var(--inset); border: 1px solid var(--border-dim);
+  border-radius: 5px; padding: 8px 10px; margin-bottom: 6px; font-size: 10px; line-height: 1.6;
+}
+.flag-card .flag-label {
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.6; margin-bottom: 3px;
+}
+
+/* ── RIGHT PANEL ─────────────────────────────────────── */
+.right-panel { padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+
+/* ── RANKING PANEL ───────────────────────────────────── */
+.ranking-panel { display: flex; flex-direction: column; gap: 10px; }
+.rank-category { }
+.rank-cat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.72; margin-bottom: 5px;
+}
+.rank-list { display: flex; flex-direction: column; gap: 3px; }
+.rank-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 7px; border-radius: 4px;
+  background: rgba(15,26,22,0.5); border: 1px solid var(--border-dim);
+  transition: border-color 0.2s;
+  animation: fadeIn 0.25s ease;
+}
+.rank-medal {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 700; flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.medal-1 { background: radial-gradient(circle at 35% 30%, #FDE68A, #DA8E20); color: #5a3800; box-shadow: 0 0 8px rgba(218,142,32,0.5); }
+.medal-2 { background: radial-gradient(circle at 35% 30%, #E2F5EA, #C3FDD8 60%, #69F09B); color: #0a3020; }
+.medal-3 { background: radial-gradient(circle at 35% 30%, #A7C4B0, #58DE83 70%, #1F5A38); color: #0a2016; }
+.medal-4, .medal-5 { background: rgba(31,90,56,0.12); color: rgba(195,253,216,0.2); }
+.rank-model-name {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; flex: 1;
+  color: #ffffff;
+}
+.rank-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #ffffff;
+  background: rgba(255,255,255,0.07); border-radius: 2px; padding: 1px 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* ── MODEL STATUS MONITOR ────────────────────────────── */
+.model-monitor {
+  background: var(--inset);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px; overflow: hidden;
+}
+.monitor-header {
+  background: rgba(31,90,56,0.12);
+  border-bottom: 1px solid var(--border-dim);
+  padding: 6px 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.monitor-dots { display: flex; gap: 4px; }
+.monitor-dot { width: 7px; height: 7px; border-radius: 50%; }
+.monitor-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.72;
+}
+.monitor-rows { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.monitor-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 8px; border-radius: 4px;
+  border: 1px solid var(--border-dim);
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.monitor-row.active { border-color: rgba(255,255,255,0.1); }
+.monitor-row:hover { border-color: var(--border-hi); }
+.m-led {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0; transition: all 0.3s;
+}
+.monitor-row.active .m-led { animation: led-pulse 2s ease-in-out infinite; }
+.m-name {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; flex: 1;
+}
+.m-stats {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+}
+.m-stat {
+  font-family: 'JetBrains Mono', monospace; font-size: 7px; color: rgba(255,255,255,0.75);
+}
+.m-bar-track { width: 40px; height: 2px; background: var(--border-dim); border-radius: 1px; overflow: hidden; }
+.m-bar-fill  { height: 100%; border-radius: 1px; transition: width 0.5s ease; }
+
+/* ── SHORTCUT STRIP ──────────────────────────────────── */
+/* ── DISAGREEMENT WARNING BAR ────────────────────────── */
+.disagree-bar {
+  display: flex; align-items: stretch;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 7px; overflow: hidden;
+  background: rgba(0,0,0,0.35);
+  transition: border-color 0.4s, box-shadow 0.4s;
+  min-height: 38px;
+}
+.disagree-bar.warning {
+  border-color: rgba(240,160,48,0.55);
+  box-shadow: 0 0 18px rgba(240,160,48,0.15);
+  animation: disagree-pulse 2.5s ease-in-out infinite;
+}
+.disagree-bar.critical {
+  border-color: rgba(224,85,32,0.65);
+  box-shadow: 0 0 22px rgba(224,85,32,0.20);
+  animation: disagree-pulse 1.4s ease-in-out infinite;
+}
+@keyframes disagree-pulse {
+  0%,100% { box-shadow: 0 0 14px rgba(240,160,48,0.12); }
+  50%      { box-shadow: 0 0 28px rgba(240,160,48,0.30); }
+}
+.disagree-cell {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6px 10px; gap: 2px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.3s;
+}
+.disagree-cell:last-child { border-right: none; }
+.disagree-cell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); white-space: nowrap;
+}
+.disagree-cell-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75);
+  white-space: nowrap;
+}
+.disagree-cell-val.green  { color: #3DFF7A; }
+.disagree-cell-val.amber  { color: #FFD400; }
+.disagree-cell-val.red    { color: #FF4422; }
+/* Warning cell — spans full width conceptually via flex */
+.disagree-warn-cell {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 14px; flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.disagree-warn-icon {
+  font-size: 14px; line-height: 1; flex-shrink: 0;
+}
+.disagree-warn-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.35); white-space: nowrap;
+  transition: color 0.3s;
+}
+.disagree-bar.warning .disagree-warn-text { color: #FFD400; }
+.disagree-bar.critical .disagree-warn-text { color: #FF4422; }
+
+.shortcut-strip {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.shortcut-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 6px; border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--mint-dim);
+  border: 1px solid var(--border-dim); background: rgba(0,0,0,0.2);
+}
+.shortcut-keys { display: flex; gap: 3px; }
+.kbd-key {
+  background: var(--inset); border: 1px solid var(--border-hi);
+  border-radius: 2px; padding: 1px 4px; font-size: 7px; color: var(--green);
+}
+
+/* ── API KEY PANEL ───────────────────────────────────── */
+.api-panel {
+  background: var(--inset); border: 1px solid var(--border-dim);
+  border-radius: 6px; overflow: hidden;
+}
+.api-header {
+  padding: 6px 10px; border-bottom: 1px solid var(--border-dim);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.api-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.70;
+}
+.api-rows { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.api-row {
+  display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+  border-radius: 3px; border: 1px solid var(--border-dim);
+}
+.api-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.api-logo { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: filter 0.3s; }
+.api-logo svg { display: block; }
+.api-model { font-family: 'JetBrains Mono', monospace; font-size: 8px; flex: 1; }
+.api-status {
+  font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 1px;
+  padding: 1px 5px; border-radius: 2px;
+}
+.api-status.set { background: rgba(88,222,131,0.1); color: var(--green); border: 1px solid var(--green-deep); }
+.api-status.unset { background: rgba(205,78,20,0.1); color: var(--ember); border: 1px solid rgba(205,78,20,0.3); }
+.api-set-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 7px; color: var(--mint-dim);
+  background: var(--inset); border: 1px solid var(--border-dim); border-radius: 2px;
+  padding: 1px 6px; cursor: pointer; transition: all 0.15s;
+}
+.api-set-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ── BYOK MODAL ──────────────────────────────────────── */
+.byok-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 6px;
+  background: rgba(218,142,32,0.06);
+  border: 1px dashed rgba(218,142,32,0.35);
+  border-radius: 4px; padding: 7px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(218,142,32,0.65); cursor: pointer;
+  transition: all 0.2s;
+}
+.byok-btn:hover {
+  background: rgba(218,142,32,0.12);
+  border-color: var(--amber); color: var(--amber);
+  box-shadow: 0 0 12px rgba(218,142,32,0.15);
+}
+.byok-btn svg { width: 10px; height: 10px; flex-shrink: 0; }
+
+.byok-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.72);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.15s ease;
+}
+.byok-overlay.hidden { display: none; }
+.byok-modal {
+  background: var(--bg3);
+  border: 1px solid var(--amber);
+  border-radius: 10px; width: 400px; max-width: 92vw;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 40px rgba(218,142,32,0.08);
+}
+.byok-modal-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-dim);
+  background: rgba(218,142,32,0.06);
+}
+.byok-modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px; font-weight: 700; color: var(--amber);
+  letter-spacing: -0.5px;
+}
+.byok-modal-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(240,160,48,0.55); margin-top: 3px;
+}
+.byok-modal-body {
+  padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.byok-modal-body p {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.72);
+  margin: 0;
+}
+.byok-modal-body strong { color: #ffffff; }
+.byok-modal-body .byok-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.25); border-radius: 4px;
+  padding: 8px 10px; border-left: 2px solid var(--border-dim);
+  line-height: 1.6;
+}
+.byok-modal-body .byok-note span { color: var(--green); }
+.byok-actions {
+  display: flex; gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border-dim);
+}
+.byok-cancel {
+  flex: 1; padding: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-dim); border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); cursor: pointer;
+  transition: all 0.15s;
+}
+.byok-cancel:hover { border-color: var(--border-hi); color: rgba(255,255,255,0.7); }
+.byok-confirm {
+  flex: 2; padding: 10px;
+  background: rgba(218,142,32,0.12);
+  border: 1px solid var(--amber); border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--amber); cursor: pointer;
+  transition: all 0.15s;
+}
+.byok-confirm:hover {
+  background: rgba(218,142,32,0.22);
+  box-shadow: 0 0 20px rgba(218,142,32,0.2);
+}
+
+/* pulse highlight for api panel after byok */
+@keyframes api-pulse {
+  0%,100% { border-color: var(--border-dim); }
+  50%      { border-color: var(--amber); box-shadow: 0 0 16px rgba(218,142,32,0.25); }
+}
+.api-panel.byok-highlight { animation: api-pulse 0.6s ease 3; }
+
+/* ── GHOST HUD — always present, hidden in plain sight ── */
+.ghost-hud {
+  position: fixed;
+  bottom: 14px; right: 18px;
+  z-index: 500;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  opacity: 0.14;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.ghost-hud:hover { opacity: 0.60; pointer-events: auto; }
+.ghost-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: rgba(255,255,255,0.7); white-space: nowrap;
+  display: flex; gap: 7px; align-items: center;
+}
+.ghost-line .g-label { color: rgba(255,255,255,0.35); }
+.ghost-line .g-val-green { color: var(--green); }
+.ghost-line .g-val-amber { color: var(--amber); }
+.ghost-divider {
+  width: 100%; height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 1px 0;
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-dim); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .panel, .right-panel { border-right: none; border-bottom: 1px solid var(--border-dim); }
+}
+</style>
 </head>
 <body>
 
-<div class="logo-bg" id="logoBg"></div>
+<!-- ORBITAL BACKGROUND -->
+<div id="orbital-bg"><canvas id="orbital-canvas"></canvas></div>
 
-<div class="wrapper">
+<div class="app">
+
+  <!-- ── HEADER ─────────────────────────────────────── -->
   <header>
-    <div class="logo-mark"></div>
-    <div class="brand">
-      <span class="brand-name">5i</span>
-      <span class="brand-sub">Consortium · Five Intelligences</span>
+    <div class="logo-mark">
+      <canvas class="logo-icon" id="logo-icon-canvas" width="76" height="76"></canvas>
+      <div class="logo-5i">5i</div>
     </div>
-    <div class="mode-bar">
-      <button class="mode-btn active" id="modeQuick" onclick="setMode('quick')">Quick · 3</button>
-      <button class="mode-btn" id="modeFull" onclick="setMode('full')">Full Jury · 5</button>
+
+    <div class="header-right">
+      <div class="status-dot">
+        <div class="dot"></div>
+        <span>LIVE</span>
+      </div>
+      <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()" title="Fullscreen (F)">
+        <svg id="fsIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M1 1h4M1 1v4M15 1h-4M15 1v4M1 15h4M1 15v-4M15 15h-4M15 15v-4"/>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <div class="hero" id="hero">
-    <h1 class="hero-title">Ask once.<br>Hear from all five.</h1>
-    <p class="hero-desc">One question. Every major AI. The jury reads the verdict.</p>
+  <!-- ── MAIN GRID ───────────────────────────────────── -->
+  <div class="main-grid">
 
-    <div class="input-wrap">
-      <textarea
-        id="promptInput"
-        placeholder="Ask anything — up to {{ max_chars }} characters…"
-        maxlength="{{ max_chars }}"
-        rows="3"
-      ></textarea>
-      <span class="char-count" id="charCount">0 / {{ max_chars }}</span>
-      <div class="btn-group">
-        <button class="ask-btn" id="askBtn" onclick="submitAsk(false)">Ask the Jury</button>
-        <button class="verdict-btn" id="verdictBtnTop" onclick="submitAsk(true)" title="Ask all models + render a unified verdict">+ Render Verdict</button>
+    <!-- ══ LEFT PANEL — LOGO + FADERS ════════════════ -->
+    <div class="panel" id="leftPanel">
+
+      <!-- Hero Logo -->
+      <div class="hero-logo-section">
+        <div class="hero-logo-wrap">
+          <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:42px;color:var(--mint);letter-spacing:-2px;text-align:center;margin-top:10px;line-height:1;">5i</div>
+        <div class="hero-subtitle">The AI Synthesis Consortium</div>
       </div>
-    </div>
 
-    <div class="model-toggles" id="modelToggles">
-      {% for key, m in models.items() %}
-      <div class="toggle {% if m.enabled %}active{% else %}disabled-model{% endif %}"
-           id="toggle-{{ key }}"
-           style="--model-color: {{ m.color }}"
-           onclick="{% if m.enabled %}toggleModel('{{ key }}'){% endif %}"
-           title="{% if not m.enabled %}Add {{ key.upper() }}_API_KEY to .env to unlock{% endif %}">
-        <span class="toggle-dot"></span>
-        <span class="toggle-label">{{ m.label }}</span>
-        <span class="toggle-provider">{{ m.provider }}</span>
+      <!-- Fader Bank -->
+      <div>
+        <div class="panel-label">Mix Controls</div>
+        <div class="fader-bank" id="faderBank">
+
+          <div class="fader-unit" data-type="cost" data-fader="cost">
+            <div class="fader-val" id="val-cost">50%</div>
+            <div class="fader-wrap" id="wrap-cost" data-info="Cost Fader|Up = premium models weighted heavier (GPT-4, Claude). Down = budget-friendly models (Mistral, Gemini). Uses real pricing data from official API pages.">
+              <div class="fader-track">
+                <div class="fader-fill" id="fill-cost" style="height:50%"></div>
+              </div>
+              <div class="fader-thumb" id="thumb-cost" style="bottom:calc(50% - 6px)"></div>
+            </div>
+            <div class="fader-name">Cost</div>
+          </div>
+
+          <div class="fader-unit" data-type="latency" data-fader="latency">
+            <div class="fader-val" id="val-latency">50%</div>
+            <div class="fader-wrap" id="wrap-latency" data-info="Latency Fader|Up = prioritize fast low-latency models. Down = allow slower, more thorough processing. Based on TTFT benchmarks from artificialanalysis.ai.">
+              <div class="fader-track">
+                <div class="fader-fill" id="fill-latency" style="height:50%"></div>
+              </div>
+              <div class="fader-thumb" id="thumb-latency" style="bottom:calc(50% - 6px)"></div>
+            </div>
+            <div class="fader-name">Latency</div>
+          </div>
+
+          <div class="fader-unit" data-type="agree" data-fader="agree">
+            <div class="fader-val" id="val-agree">50%</div>
+            <div class="fader-wrap" id="wrap-agree" data-info="Agreeability Fader|Up = prefer consensus-building models. Down = prefer divergent, contrarian models. Source: LMSYS Chatbot Arena agreeability proxy.">
+              <div class="fader-track">
+                <div class="fader-fill" id="fill-agree" style="height:50%"></div>
+              </div>
+              <div class="fader-thumb" id="thumb-agree" style="bottom:calc(50% - 6px)"></div>
+            </div>
+            <div class="fader-name">Agree</div>
+          </div>
+
+          <div class="fader-unit" data-type="rely" data-fader="rely">
+            <div class="fader-val" id="val-rely">50%</div>
+            <div class="fader-wrap" id="wrap-rely" data-info="Reliability Fader|Up = weight models with highest uptime scores. Down = allow experimental or lower-uptime models. Source: 90-day rolling status pages.">
+              <div class="fader-track">
+                <div class="fader-fill" id="fill-rely" style="height:50%"></div>
+              </div>
+              <div class="fader-thumb" id="thumb-rely" style="bottom:calc(50% - 6px)"></div>
+            </div>
+            <div class="fader-name">Rely</div>
+          </div>
+
+        </div>
       </div>
-      {% endfor %}
-    </div>
-  </div>
 
-  <!-- Loading -->
-  <div class="loading-wrap" id="loadingWrap">
-    <div class="dots">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <div class="dot"></div><div class="dot"></div>
-    </div>
-    <div class="loading-label" id="loadingLabel">The jury is deliberating…</div>
-  </div>
+      <!-- Randomize -->
+      <button class="btn-randomize" id="btnRandomize" data-info="Randomize Faders|Sets all 4 faders to random positions. Explore unexpected model weightings and see how the synthesis chain responds. Press ⌘R.">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 5h2.5l2.5 6h2l1-3 1 3h1.5L15 5"/>
+          <path d="M13 3l2 2-2 2M13 11l2 2-2 2"/>
+        </svg>
+        Randomize
+      </button>
 
-  <!-- Verdict Panel -->
-  <div class="verdict-panel" id="verdictPanel">
-    <div class="verdict-inner">
-      <div class="verdict-header">
-        <div class="verdict-icon">⚖️</div>
-        <div class="verdict-title">The Verdict</div>
-        <div class="verdict-time" id="verdictTime"></div>
+      <!-- API Key Quick Access -->
+      <div>
+        <div class="panel-label">API Keys</div>
+        <div class="api-panel">
+          <div class="api-header">
+            <div class="api-title">Connected Models</div>
+          </div>
+          <div class="api-rows" id="apiRows"></div>
+        </div>
+        <button class="byok-btn" onclick="openBYOK()" data-info="BYOK — Bring Your Own Keys|Clears all loaded API keys so you can enter your own. Models will go offline until new keys are added via the Set button on each model row above.">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M11 7H3a1 1 0 00-1 1v5a1 1 0 001 1h10a1 1 0 001-1V8a1 1 0 00-1-1h-1"/>
+            <path d="M9 7V4a2 2 0 10-4 0v3"/>
+            <circle cx="7" cy="11" r="1" fill="currentColor"/>
+          </svg>
+          BYOK — Bring Your Own Keys
+        </button>
       </div>
-      <div class="verdict-body" id="verdictBody"></div>
-    </div>
-  </div>
 
-  <!-- Results -->
-  <div class="results-outer" id="resultsOuter">
-    <div class="results-meta" id="resultsMeta"></div>
-    <div class="results-grid" id="resultsGrid"></div>
+      <!-- Monitoring — CPU + Cost -->
+      <div>
+        <div class="panel-label">Monitoring</div>
+        <div class="monitor-panel">
+          <div class="monitor-row">
+            <span class="monitor-label">THREAD</span>
+            <div class="monitor-bar-wrap"><div class="monitor-bar-fill" id="cpuFill"></div></div>
+            <span class="monitor-value" id="cpuValue">0.0%</span>
+          </div>
+          <div class="monitor-divider"></div>
+          <div class="monitor-row">
+            <span class="monitor-label">LAST RUN</span>
+            <span class="monitor-cost-val" id="panelCost">—</span>
+          </div>
+          <div class="monitor-row">
+            <span class="monitor-label">SESSION</span>
+            <span class="monitor-cost-val" id="panelSession">$0.00000</span>
+          </div>
+          <div class="monitor-flash" id="ltFlash"></div>
+        </div>
+      </div>
+
+      <!-- Info View — Ableton-style hover help -->
+      <div>
+        <div class="panel-label">Info View</div>
+        <div class="info-view" id="infoView">
+          <div class="info-view-header">
+            <span class="info-view-name" id="infoTitle">5i</span>
+            <button class="info-view-close" onclick="toggleInfoView()" title="Hide info view">×</button>
+          </div>
+          <div class="info-view-body" id="infoDesc">Hover over any control to see its description and data source.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ CENTER PANEL ════════════════════════════════ -->
+    <div class="center-panel">
+
+      <!-- Model Console Strip -->
+      <div>
+        <div class="panel-label">Synthesis Chain</div>
+        <div class="model-console" id="modelConsole" data-info="Synthesis Chain|The active model sequence. Each model feeds into the next. Weight percentages update in real time based on fader positions. Click a model to toggle it on or off.">
+          <div class="console-label">FLOW</div>
+          <div class="model-nodes" id="modelNodes"></div>
+        </div>
+      </div>
+
+      <!-- Analysis Tools — functional controls -->
+      <div>
+        <div class="panel-label">Analysis Tools</div>
+        <div class="tool-strip">
+
+          <!-- AGREE DETECT: toggle button, arms post-synthesis agreement scan -->
+          <div class="tool-unit tool-toggle" id="tool-agreement" onclick="toggleTool('agreement')"
+               data-info="Agreement Detection|Arms agreement analysis. After synthesis, scans all model outputs for shared concepts and phrases. Results appear in the Agreement tab — shows exactly what all 5 models converged on.">
+            <div class="tool-led"></div>
+            <div class="tool-unit-label">AGREE<br>DETECT</div>
+            <div class="tool-state-badge" id="tbadge-agreement">OFF</div>
+          </div>
+
+          <!-- CONSENSUS MAP: auto gauge, updates after every run -->
+          <div class="tool-unit"
+               data-info="Consensus Map|Live consensus score across all active models. Updates automatically after every synthesis run. Green = strong consensus, amber = moderate divergence, red = high disagreement.">
+            <div class="tool-big-val" id="tval-consensus">—</div>
+            <div class="tool-unit-label">CONSENSUS<br>MAP</div>
+          </div>
+
+          <!-- DELTA ANALYSIS: toggle button, arms per-step diff -->
+          <div class="tool-unit tool-toggle" id="tool-delta" onclick="toggleTool('delta')"
+               data-info="Delta Analysis|Arms delta tracking. After synthesis, shows exactly what each model added, removed, and reframed at every step in the chain. Results appear in the Delta tab.">
+            <div class="tool-led" style="background:rgba(255,212,0,0.25)"></div>
+            <div class="tool-unit-label">DELTA<br>ANALYSIS</div>
+            <div class="tool-state-badge" id="tbadge-delta">OFF</div>
+          </div>
+
+          <!-- CONFIDENCE SCORE: auto numeric readout -->
+          <div class="tool-unit"
+               data-info="Confidence Score|Composite certainty metric computed after each synthesis run. Factors in agreement level, output consistency, and cross-model convergence. High = reliable output, low = treat with skepticism.">
+            <div class="tool-big-val" id="tval-confidence">—</div>
+            <div class="tool-unit-label">CONFIDENCE<br>SCORE</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Input Section -->
+      <div class="input-section">
+        <div class="input-header">
+          <div class="input-title">Prompt Input</div>
+          <div class="token-counter">Tokens: <span id="tokenCount">0</span></div>
+        </div>
+
+        <div class="prompt-area">
+          <textarea
+            class="prompt-textarea"
+            id="promptInput"
+            data-info="Prompt Input|Type your prompt here. Press ⌘↵ to synthesize. The prompt seeds the first model, then each subsequent model receives the previous output as context."
+            placeholder="Enter your prompt. Press ⌘↵ to run through 5i…"
+            rows="6"
+          ></textarea>
+
+          <!-- Sys prompt row (hidden by default) -->
+          <div class="sys-prompt-row" id="sysPromptRow">
+            <textarea
+              class="sys-prompt-input"
+              id="sysPromptInput"
+              placeholder="System prompt (applied to all models)..."
+            ></textarea>
+          </div>
+
+          <!-- Developer toolbar -->
+          <div class="dev-toolbar">
+
+            <!-- File upload -->
+            <label class="file-drop" id="fileDrop">
+              <input type="file" id="fileInput" multiple accept=".txt,.md,.json,.csv,.py,.js,.ts,.jsx,.tsx"/>
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:inline;margin-right:4px"><path d="M8 12V4M4 8l4-4 4 4"/><path d="M2 14h12"/></svg>
+              Drop file / ⌘O
+            </label>
+
+            <!-- Format selector -->
+            <div class="format-selector">
+              <button class="fmt-opt active" data-fmt="text" onclick="setFormat(this)">TEXT</button>
+              <button class="fmt-opt" data-fmt="json" onclick="setFormat(this)">JSON</button>
+              <button class="fmt-opt" data-fmt="md" onclick="setFormat(this)">MD</button>
+              <button class="fmt-opt" data-fmt="stream" onclick="setFormat(this)">STREAM</button>
+            </div>
+
+            <!-- System prompt toggle -->
+            <div class="sys-toggle" id="sysToggle" onclick="toggleSysPrompt()">
+              <div class="toggle-led"></div>
+              SYS <span class="kbd">⌘/</span>
+            </div>
+
+            <!-- Dev shortcuts -->
+            <button class="dbt-btn" title="Copy output" onclick="copyOutput()">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V2h9"/></svg>
+              Copy <span class="kbd">⌘C</span>
+            </button>
+            <button class="dbt-btn" title="Clear all" onclick="clearAll()">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+              Clear <span class="kbd">⌘K</span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Synthesize Button -->
+      <div class="synth-row">
+        <button class="btn-synth" id="btnSynth" onclick="synthesize()" data-info="Synthesize|Runs your prompt sequentially through all active models. Each model receives the previous model's output as context. Press ⌘↵ to trigger.">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="6"/>
+            <path d="M5 8h6M8 5l3 3-3 3"/>
+          </svg>
+          SYNTHESIZE
+          <span class="synth-kbd">⌘↵</span>
+        </button>
+        <div class="model-seq-display" id="modelSeqDisplay"></div>
+      </div>
+
+      <!-- Disagreement Warning Bar -->
+      <div class="disagree-bar" id="disagreeBar">
+        <div class="disagree-warn-cell">
+          <span class="disagree-warn-icon">◈</span>
+          <span class="disagree-warn-text" id="disagreeLabel">MODEL CONSENSUS</span>
+        </div>
+        <div class="disagree-cell">
+          <span class="disagree-cell-label">Agreement</span>
+          <span class="disagree-cell-val green" id="dAgree">—</span>
+        </div>
+        <div class="disagree-cell">
+          <span class="disagree-cell-label">Divergence</span>
+          <span class="disagree-cell-val green" id="dDiverg">—</span>
+        </div>
+        <div class="disagree-cell">
+          <span class="disagree-cell-label">Consensus</span>
+          <span class="disagree-cell-val green" id="dConsensus">—</span>
+        </div>
+        <div class="disagree-cell">
+          <span class="disagree-cell-label">Confidence</span>
+          <span class="disagree-cell-val green" id="dConfidence">—</span>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results-section">
+        <div class="tabs-bar">
+          <button class="tab-btn active" onclick="switchTab(this,'synthesis')">Synthesis</button>
+          <button class="tab-btn" onclick="switchTab(this,'delta')">Delta</button>
+          <button class="tab-btn" onclick="switchTab(this,'agreement')" style="margin-left:auto">Agreement</button>
+        </div>
+        <div class="tab-content active" id="tab-synthesis">
+          <div class="output-body" id="outputSynthesis">
+            <span class="output-empty">Synthesis output will appear here after running models…</span>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-agreement">
+          <div id="outputAgreement">
+            <div class="flag-card">
+              <div class="flag-label">Agreement Detection</div>
+              <span class="output-empty">Run synthesis to detect model agreement zones…</span>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-delta">
+          <div id="outputDelta">
+            <div class="flag-card">
+              <div class="flag-label">Delta Analysis</div>
+              <span class="output-empty">Run synthesis to see how each model transformed the output…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ RIGHT PANEL — RANKING + MONITOR ═══════════ -->
+    <div class="right-panel">
+
+      <!-- Ranking -->
+      <div>
+        <div class="panel-label">Rankings</div>
+        <div class="ranking-panel" id="rankingPanel" data-info="Rankings|Real benchmark data for all 5 models ranked across Cost, Speed, Agreeability, and Reliability. Sources: official pricing pages, artificialanalysis.ai, 90-day status pages."></div>
+      </div>
+
+      <!-- Model Status Monitor -->
+      <div>
+        <div class="panel-label">Model Monitor</div>
+        <div class="model-monitor" data-info="Model Monitor|Live status for each model — current weight percentage, uptime score, and active state. Click any row to toggle a model on or off in the synthesis chain.">
+          <div class="monitor-header">
+            <div class="monitor-dots">
+              <div class="monitor-dot" style="background:#CD4E14"></div>
+              <div class="monitor-dot" style="background:#DA8E20"></div>
+              <div class="monitor-dot" style="background:#22C55E"></div>
+            </div>
+            <div class="monitor-title">Status / Weights</div>
+          </div>
+          <div class="monitor-rows" id="monitorRows"></div>
+        </div>
+      </div>
+
+      <!-- Keyboard Shortcuts -->
+      <div>
+        <div class="panel-label">Shortcuts</div>
+        <div class="shortcut-strip">
+          <div class="shortcut-item">
+            Synthesize
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">↵</span></div>
+          </div>
+          <div class="shortcut-item">
+            System Prompt
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">/</span></div>
+          </div>
+          <div class="shortcut-item">
+            Open File
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">O</span></div>
+          </div>
+          <div class="shortcut-item">
+            Randomize Faders
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">R</span></div>
+          </div>
+          <div class="shortcut-item">
+            Copy Output
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">C</span></div>
+          </div>
+          <div class="shortcut-item">
+            Clear All
+            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">K</span></div>
+          </div>
+          <div class="shortcut-item">
+            Fullscreen
+            <div class="shortcut-keys"><span class="kbd-key">F</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /.main-grid -->
+</div><!-- /.app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   MODEL DATA — sourced from official APIs + benchmarks
+   Sources: anthropic.com/api, openai.com/pricing,
+   ai.google.dev/pricing, artificialanalysis.ai (TTFT),
+   uptime status pages (90-day rolling),
+   LMSYS Chatbot Arena (agreeability proxy)
+═══════════════════════════════════════════════════════ */
+const MODELS = {
+  claude: {
+    name:'Claude', short:'CLD', color:'#7C3AED', colorHi:'#A78BFA',
+    costPerMOutput:{ budget:1.25, standard:15, premium:75 },
+    premiumScore:0.94, budgetScore:0.48,
+    ttft:520, speedScore:0.62,
+    reliabilityPct:99.7, reliabilityScore:0.90,
+    agreeabilityScore:0.72,
+    orbit:2, active:true,
+    apiKey: 'server',
+  },
+  gemini: {
+    name:'Gemini', short:'GEM', color:'#3B82F6', colorHi:'#93C5FD',
+    costPerMOutput:{ budget:0.075, standard:1.25, premium:10 },
+    premiumScore:0.71, budgetScore:0.80,
+    ttft:410, speedScore:0.78,
+    reliabilityPct:99.5, reliabilityScore:0.86,
+    agreeabilityScore:0.68,
+    orbit:3, active:true,
+    apiKey: 'server',
+  },
+  gpt: {
+    name:'GPT-4', short:'GPT', color:'#22C55E', colorHi:'#86EFAC',
+    costPerMOutput:{ budget:0.15, standard:10, premium:60 },
+    premiumScore:0.88, budgetScore:0.70,
+    ttft:680, speedScore:0.50,
+    reliabilityPct:99.9, reliabilityScore:0.95,
+    agreeabilityScore:0.75,
+    orbit:1, active:true,
+    apiKey: 'server',
+  },
+  mistral: {
+    name:'Mistral', short:'MST', color:'#DA8E20', colorHi:'#FDE68A',
+    costPerMOutput:{ budget:0.25, standard:2, premium:8 },
+    premiumScore:0.65, budgetScore:0.92,
+    ttft:320, speedScore:0.88,
+    reliabilityPct:99.2, reliabilityScore:0.80,
+    agreeabilityScore:0.62,
+    orbit:4, active:true,
+    apiKey: 'server',
+  },
+  grok: {
+    name:'Grok', short:'GRK', color:'#CD4E14', colorHi:'#FCA5A5',
+    costPerMOutput:{ budget:0.50, standard:5, premium:15 },
+    premiumScore:0.78, budgetScore:0.78,
+    ttft:580, speedScore:0.58,
+    reliabilityPct:98.8, reliabilityScore:0.72,
+    agreeabilityScore:0.60,
+    orbit:5, active:true,
+    apiKey: 'server',
+  },
+};
+
+/* Model order: sequential synthesis chain */
+const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok'];
+
+/* ── FADER STATE ─────────────────────────────────────── */
+const faders = { cost:0.5, latency:0.5, agree:0.5, rely:0.5 };
+
+/* ── LERP UTILITY ────────────────────────────────────── */
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+/* ── COMPUTE WEIGHTS ─────────────────────────────────── */
+function computeWeights() {
+  const w = {};
+  const cv = faders.cost, lv = faders.latency, av = faders.agree, rv = faders.rely;
+  for (const [k, m] of Object.entries(MODELS)) {
+    if (!m.active) { w[k] = 0; continue; }
+    const costW    = lerp(m.budgetScore,       m.premiumScore,       cv);
+    const latW     = lerp(1 - m.speedScore,    m.speedScore,         lv);
+    const agreeW   = lerp(1 - m.agreeabilityScore, m.agreeabilityScore, av);
+    const relyW    = lerp(1 - m.reliabilityScore,  m.reliabilityScore,  rv);
+    w[k] = (costW + latW + agreeW + relyW) / 4;
+  }
+  /* normalize */
+  const total = Object.values(w).reduce((s, v) => s + v, 0);
+  if (total > 0) for (const k of Object.keys(w)) w[k] = w[k] / total;
+  return w;
+}
+
+/* ═══ FADER DRAG SYSTEM (thumb-only, NO click-to-jump) ═══ */
+function initFaders() {
+  const FADER_KEYS = ['cost','latency','agree','rely'];
+  FADER_KEYS.forEach(key => {
+    const thumb = document.getElementById('thumb-' + key);
+    const wrap  = document.getElementById('wrap-' + key);
+    if (!thumb || !wrap) return;
+
+    let dragging = false;
+    let dragStartY = 0;
+    let dragStartVal = 0;
+
+    let _fadeDebounce = null;
+    function setVal(v) {
+      v = Math.max(0, Math.min(1, v));
+      faders[key] = v;
+      const pct = Math.round(v * 100);
+      /* position thumb: 0% = bottom of track, 100% = top */
+      const trackH = wrap.offsetHeight - 12; /* 12 = thumb height */
+      const thumbBottom = v * trackH;
+      thumb.style.bottom = thumbBottom + 'px';
+      /* fill bar */
+      const fill = document.getElementById('fill-' + key);
+      if (fill) fill.style.height = (v * 100) + '%';
+      /* value display */
+      const valEl = document.getElementById('val-' + key);
+      if (valEl) valEl.textContent = pct + '%';
+      /* debounce the expensive DOM rebuild to one frame */
+      clearTimeout(_fadeDebounce);
+      _fadeDebounce = setTimeout(updateUI, 16);
+    }
+
+    /* ── THUMB MOUSEDOWN only — no click-on-track ── */
+    thumb.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragging = true;
+      dragStartY   = e.clientY;
+      dragStartVal = faders[key];
+      thumb.classList.add('dragging');
+      document.body.style.cursor = 'ns-resize';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      const trackH = wrap.offsetHeight - 12;
+      if (trackH <= 0) return;
+      const dy = dragStartY - e.clientY; /* positive = up = higher value */
+      const delta = dy / trackH;
+      setVal(dragStartVal + delta);
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      thumb.classList.remove('dragging');
+      document.body.style.cursor = '';
+    });
+
+    /* Touch support */
+    thumb.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      const t = e.touches[0];
+      dragging = true;
+      dragStartY   = t.clientY;
+      dragStartVal = faders[key];
+      thumb.classList.add('dragging');
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      const trackH = wrap.offsetHeight - 12;
+      if (trackH <= 0) return;
+      const dy = dragStartY - t.clientY;
+      const delta = dy / trackH;
+      setVal(dragStartVal + delta);
+    }, { passive: false });
+
+    document.addEventListener('touchend', function() {
+      if (!dragging) return;
+      dragging = false;
+      thumb.classList.remove('dragging');
+    });
+
+    /* init position */
+    setVal(0.5);
+  });
+}
+
+/* ── RANDOMIZE ───────────────────────────────────────── */
+function randomizeFaders() {
+  const btn = document.getElementById('btnRandomize');
+  btn.classList.add('shaking');
+  setTimeout(() => btn.classList.remove('shaking'), 400);
+  ['cost','latency','agree','rely'].forEach(key => {
+    const thumb = document.getElementById('thumb-' + key);
+    const wrap  = document.getElementById('wrap-' + key);
+    const target = Math.random();
+    faders[key] = target;
+    const trackH = (wrap ? wrap.offsetHeight : 140) - 12;
+    if (thumb) thumb.style.bottom = (target * trackH) + 'px';
+    const fill = document.getElementById('fill-' + key);
+    if (fill) fill.style.height = (target * 100) + '%';
+    const valEl = document.getElementById('val-' + key);
+    if (valEl) valEl.textContent = Math.round(target * 100) + '%';
+  });
+  updateUI();
+}
+document.getElementById('btnRandomize').addEventListener('click', randomizeFaders);
+
+/* ── RANKINGS ────────────────────────────────────────── */
+const RANKING_DEFS = [
+  { key:'cost',    label:'💰 Cost',       rank: m => m.costPerMOutput.standard,  asc:true,  fmt: v => '$'+v+'/M' },
+  { key:'latency', label:'⚡ Speed (TTFT)', rank: m => m.ttft,                    asc:true,  fmt: v => v+'ms' },
+  { key:'agree',   label:'🤝 Agreeability', rank: m => m.agreeabilityScore,       asc:false, fmt: v => Math.round(v*100)+'%' },
+  { key:'rely',    label:'🛡 Reliability',  rank: m => m.reliabilityPct,           asc:false, fmt: v => v+'%' },
+];
+
+function buildRankings() {
+  const container = document.getElementById('rankingPanel');
+  if (!container) return;
+  container.innerHTML = '';
+  RANKING_DEFS.forEach(def => {
+    const sorted = Object.values(MODELS).sort((a,b) =>
+      def.asc ? def.rank(a) - def.rank(b) : def.rank(b) - def.rank(a)
+    );
+    const catDiv = document.createElement('div');
+    catDiv.className = 'rank-category';
+    const lbl = document.createElement('div');
+    lbl.className = 'rank-cat-label';
+    lbl.textContent = def.label;
+    catDiv.appendChild(lbl);
+    const list = document.createElement('div');
+    list.className = 'rank-list';
+    sorted.forEach((m, i) => {
+      const item = document.createElement('div');
+      item.className = 'rank-item';
+      const medal = document.createElement('div');
+      medal.className = 'rank-medal medal-' + (i + 1);
+      medal.textContent = ['1','2','3','4','5'][i];
+      const name = document.createElement('div');
+      name.className = 'rank-model-name';
+      name.style.color = m.color;
+      name.textContent = m.name;
+      const val = document.createElement('div');
+      val.className = 'rank-value';
+      val.textContent = def.fmt(def.rank(m));
+      item.appendChild(medal); item.appendChild(name); item.appendChild(val);
+      list.appendChild(item);
+    });
+    catDiv.appendChild(list);
+    container.appendChild(catDiv);
+  });
+}
+
+/* ── MODEL CONSOLE STRIP ─────────────────────────────── */
+function buildModelConsole(weights) {
+  const container = document.getElementById('modelNodes');
+  if (!container) return;
+  container.innerHTML = '';
+  MODEL_ORDER.forEach((k, i) => {
+    const m = MODELS[k];
+    const w = weights ? weights[k] : 0.2;
+
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'flow-arrow';
+      arrow.textContent = '›';
+      container.appendChild(arrow);
+    }
+
+    const node = document.createElement('div');
+    node.className = 'model-node' + (m.active ? ' active' : '');
+
+    const led = document.createElement('div');
+    led.className = 'model-led';
+    led.style.background = m.color;
+    led.style.boxShadow = m.active ? `0 0 6px ${m.color}` : 'none';
+
+    const orb = document.createElement('div');
+    orb.className = 'model-orbit-num';
+    orb.textContent = 'ORB-' + m.orbit;
+
+    const name = document.createElement('div');
+    name.className = 'model-name-sm';
+    name.style.color = m.colorHi;
+    name.textContent = m.short;
+
+    const wgt = document.createElement('div');
+    wgt.className = 'model-weight';
+    wgt.textContent = Math.round(w * 100) + '%';
+
+    node.appendChild(led); node.appendChild(orb);
+    node.appendChild(name); node.appendChild(wgt);
+    node.addEventListener('click', () => { m.active = !m.active; updateUI(); });
+    node.title = (m.active ? 'Click to disable ' : 'Click to enable ') + m.name;
+    container.appendChild(node);
+  });
+}
+
+/* ── MODEL SEQUENCE DISPLAY ──────────────────────────── */
+function buildSeqDisplay(weights) {
+  const container = document.getElementById('modelSeqDisplay');
+  if (!container) return;
+  container.innerHTML = '';
+  MODEL_ORDER.forEach((k, i) => {
+    const m = MODELS[k];
+    if (i > 0) {
+      const a = document.createElement('span');
+      a.className = 'seq-arrow'; a.textContent = '→';
+      container.appendChild(a);
+    }
+    const p = document.createElement('div');
+    p.className = 'seq-planet';
+    p.style.background = m.color;
+    p.style.opacity = (weights ? weights[k] : 0.2) * 2.5 + 0.3 + '';
+    p.title = m.name + ' ' + Math.round((weights?weights[k]:0.2)*100) + '%';
+    container.appendChild(p);
+  });
+}
+
+/* ── MONITOR ROWS ────────────────────────────────────── */
+function buildMonitorRows(weights) {
+  const container = document.getElementById('monitorRows');
+  if (!container) return;
+  container.innerHTML = '';
+  MODEL_ORDER.forEach(k => {
+    const m = MODELS[k];
+    const w = weights ? weights[k] : 0.2;
+    const row = document.createElement('div');
+    row.className = 'monitor-row' + (m.active ? ' active' : '');
+
+    const led = document.createElement('div');
+    led.className = 'm-led';
+    led.style.background = m.color;
+    led.style.boxShadow = m.active ? `0 0 5px ${m.color}80` : 'none';
+
+    const name = document.createElement('div');
+    name.className = 'm-name';
+    name.style.color = m.colorHi;
+    name.textContent = m.name;
+
+    const stats = document.createElement('div');
+    stats.className = 'm-stats';
+
+    const wgtStat = document.createElement('div');
+    wgtStat.className = 'm-stat';
+    wgtStat.textContent = Math.round(w * 100) + '% wt';
+
+    const track = document.createElement('div');
+    track.className = 'm-bar-track';
+    const fill = document.createElement('div');
+    fill.className = 'm-bar-fill';
+    fill.style.width = (w * 100) + '%';
+    fill.style.background = m.color;
+    track.appendChild(fill);
+
+    const relyStat = document.createElement('div');
+    relyStat.className = 'm-stat';
+    relyStat.textContent = m.reliabilityPct + '% up';
+
+    stats.appendChild(wgtStat); stats.appendChild(track); stats.appendChild(relyStat);
+    row.appendChild(led); row.appendChild(name); row.appendChild(stats);
+
+    row.addEventListener('click', () => { m.active = !m.active; updateUI(); });
+    container.appendChild(row);
+  });
+}
+
+/* ── API ROWS ────────────────────────────────────────── */
+/* ── KEY PERSISTENCE — localStorage ─────────────────── */
+const LS_KEY = '5i_api_keys';
+function saveKeysToStorage() {
+  const saved = {};
+  Object.entries(MODELS).forEach(([k, m]) => { if (m.apiKey) saved[k] = m.apiKey; });
+  localStorage.setItem(LS_KEY, JSON.stringify(saved));
+}
+function loadKeysFromStorage() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    Object.entries(saved).forEach(([k, v]) => { if (MODELS[k]) MODELS[k].apiKey = v; });
+  } catch(e) {}
+}
+
+/* ── AI LOGO CARICATURES — inline SVG per model ─────── */
+const AI_LOGOS = {
+  gpt: (c) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- OpenAI: bold hexagonal swirl, exaggerated -->
+    <path d="M12 2.5 C15.5 2.5 18.5 4.8 19.5 8 C21.2 8.6 22.5 10.2 22.5 12 C22.5 13.8 21.2 15.4 19.5 16 C18.5 19.2 15.5 21.5 12 21.5 C8.5 21.5 5.5 19.2 4.5 16 C2.8 15.4 1.5 13.8 1.5 12 C1.5 10.2 2.8 8.6 4.5 8 C5.5 4.8 8.5 2.5 12 2.5Z" stroke="${c}" stroke-width="1.5" fill="${c}22"/>
+    <path d="M9 8.5 L15 8.5 L15 10 L13 10 L13 15.5 L11 15.5 L11 10 L9 10Z" fill="${c}" opacity="0.9"/>
+    <circle cx="12" cy="12" r="1.5" fill="${c}"/>
+  </svg>`,
+
+  claude: (c) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Claude/Anthropic: stylized rising sun / face -->
+    <circle cx="12" cy="12" r="9" stroke="${c}" stroke-width="1.5" fill="${c}18"/>
+    <path d="M8.5 10 Q10 7.5 12 7.5 Q14 7.5 15.5 10" stroke="${c}" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M7 13.5 Q9.5 17 12 17 Q14.5 17 17 13.5" stroke="${c}" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <circle cx="9.5" cy="12" r="1.2" fill="${c}"/>
+    <circle cx="14.5" cy="12" r="1.2" fill="${c}"/>
+  </svg>`,
+
+  gemini: (c) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Gemini: the iconic 4-pointed star sparkle, exaggerated proportions -->
+    <path d="M12 2 C12 2 13 8.5 17 12 C13 15.5 12 22 12 22 C12 22 11 15.5 7 12 C11 8.5 12 2 12 2Z" fill="${c}" opacity="0.95"/>
+    <path d="M2 12 C2 12 8.5 11 12 7 C15.5 11 22 12 22 12 C22 12 15.5 13 12 17 C8.5 13 2 12 2 12Z" fill="${c}" opacity="0.70"/>
+  </svg>`,
+
+  mistral: (c) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Mistral: bold stylized M with wind-wave energy -->
+    <rect x="2" y="2" width="7" height="7" rx="1" fill="${c}" opacity="0.95"/>
+    <rect x="15" y="2" width="7" height="7" rx="1" fill="${c}" opacity="0.95"/>
+    <rect x="2" y="15" width="7" height="7" rx="1" fill="${c}" opacity="0.55"/>
+    <rect x="15" y="15" width="7" height="7" rx="1" fill="${c}" opacity="0.55"/>
+    <path d="M9 5.5 L12 9 L15 5.5" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>`,
+
+  grok: (c) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Grok/xAI: bold X mark, slightly tilted, Elon swagger -->
+    <line x1="4" y1="4" x2="20" y2="20" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="20" y1="4" x2="4" y2="20" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="12" cy="12" r="3" fill="${c}33" stroke="${c}" stroke-width="1"/>
+  </svg>`,
+};
+
+function buildApiRows() {
+  const container = document.getElementById('apiRows');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.entries(MODELS).forEach(([k, m]) => {
+    const row = document.createElement('div');
+    row.className = 'api-row';
+
+    /* AI logo caricature */
+    const logo = document.createElement('div');
+    logo.className = 'api-logo';
+    logo.innerHTML = (AI_LOGOS[k] || (() => `<div class="api-dot" style="background:${m.color}"></div>`))(m.color);
+    logo.style.filter = m.apiKey ? `drop-shadow(0 0 4px ${m.color}90)` : 'none';
+
+    const name = document.createElement('div');
+    name.className = 'api-model';
+    name.style.color = m.colorHi;
+    name.textContent = m.name;
+    const status = document.createElement('div');
+    status.className = 'api-status ' + (m.apiKey ? 'set' : 'unset');
+    status.textContent = m.apiKey ? 'SET' : 'UNSET';
+    const btn = document.createElement('button');
+    btn.className = 'api-set-btn';
+    btn.textContent = m.apiKey ? 'Edit' : 'Set';
+    btn.addEventListener('click', () => {
+      const key = prompt('Enter API key for ' + m.name + ':');
+      if (key !== null) {
+        m.apiKey = key.trim() || null;
+        saveKeysToStorage();
+        buildApiRows();
+      }
+    });
+    row.appendChild(logo); row.appendChild(name); row.appendChild(status); row.appendChild(btn);
+    container.appendChild(row);
+  });
+}
+
+/* ── MASTER UPDATE ───────────────────────────────────── */
+function updateUI() {
+  const weights = computeWeights();
+  buildModelConsole(weights);
+  buildMonitorRows(weights);
+  buildSeqDisplay(weights);
+}
+
+/* ── TABS ────────────────────────────────────────────── */
+function switchTab(btn, tabKey) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const tc = document.getElementById('tab-' + tabKey);
+  if (tc) tc.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════
+   VST KNOBS — canvas-drawn rotary controls
+   Off  → indicator at 7 o'clock (lower-left, ~210° canvas)
+   On   → indicator at 5 o'clock (lower-right,  ~330° canvas)
+   Range arc spans 270° through the top (12 o'clock)
+═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   ANALYSIS TOOLS — toggle state + real functions
+═══════════════════════════════════════════════════════ */
+const toolStates = { agreement: false, delta: false };
+
+function toggleTool(id) {
+  toolStates[id] = !toolStates[id];
+  const unit = document.getElementById('tool-' + id);
+  const badge = document.getElementById('tbadge-' + id);
+  if (unit) unit.classList.toggle('active', toolStates[id]);
+  if (badge) badge.textContent = toolStates[id] ? 'ON' : 'OFF';
+  /* delta tool LED uses amber when active */
+  if (id === 'delta' && unit) {
+    const led = unit.querySelector('.tool-led');
+    if (led) led.style.background = toolStates[id] ? '#FFD400' : 'rgba(255,212,0,0.25)';
+    if (led) led.style.boxShadow = toolStates[id] ? '0 0 10px #FFD400' : 'none';
+  }
+}
+
+/* ── AGREEMENT ANALYSIS (real) ───────────────────────── */
+function runAgreementAnalysis(stepOutputs) {
+  const container = document.getElementById('outputAgreement');
+  if (!container || !stepOutputs || stepOutputs.length < 2) return;
+
+  /* Count word occurrences across model outputs */
+  const wordCounts = {};
+  stepOutputs.forEach(o => {
+    const words = new Set(o.text.toLowerCase().match(/\b[a-z]{5,}\b/g) || []);
+    words.forEach(w => { wordCounts[w] = (wordCounts[w] || 0) + 1; });
+  });
+
+  const threshold = Math.max(2, Math.ceil(stepOutputs.length * 0.55));
+  const agreed = Object.entries(wordCounts)
+    .filter(([, c]) => c >= threshold)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 28);
+
+  if (!agreed.length) {
+    container.innerHTML = `<div class="flag-card"><div class="flag-label">Agreement Detection</div>
+      <span class="output-empty">No significant shared concepts found across models.</span></div>`;
+    return;
+  }
+
+  const chips = agreed.map(([word, count]) => {
+    const strength = count / stepOutputs.length;
+    return `<span style="display:inline-block;margin:3px 2px;padding:3px 9px;
+      background:rgba(61,255,122,${strength * 0.18});
+      border:1px solid rgba(61,255,122,${strength * 0.55});
+      border-radius:4px;font-family:'JetBrains Mono',monospace;
+      font-size:10px;color:#3DFF7A;cursor:default;"
+      title="${count}/${stepOutputs.length} models">${word}
+      <span style="opacity:0.5;font-size:8px">${count}/${stepOutputs.length}</span></span>`;
+  }).join('');
+
+  container.innerHTML = `<div class="flag-card">
+    <div class="flag-label">Shared Concepts — ${agreed.length} terms in ${threshold}+ models</div>
+    <p style="font-size:10px;color:rgba(255,255,255,0.4);margin:6px 0 10px;">
+      Concepts agreed upon by the majority of models in the chain. Chip size reflects agreement strength.
+    </p>
+    <div>${chips}</div>
+  </div>`;
+}
+
+/* ── DELTA ANALYSIS (real) ───────────────────────────── */
+function runDeltaAnalysis(stepOutputs) {
+  const container = document.getElementById('outputDelta');
+  if (!container || !stepOutputs || stepOutputs.length < 2) return;
+
+  let html = '';
+  for (let i = 1; i < stepOutputs.length; i++) {
+    const prev = stepOutputs[i - 1];
+    const curr = stepOutputs[i];
+    const pm   = MODELS[prev.key];
+    const cm   = MODELS[curr.key];
+
+    const prevSet  = new Set(prev.text.toLowerCase().match(/\b[a-z]{5,}\b/g) || []);
+    const currArr  = curr.text.toLowerCase().match(/\b[a-z]{5,}\b/g) || [];
+    const currSet  = new Set(currArr);
+
+    const added    = [...currSet].filter(w => !prevSet.has(w)).slice(0, 10);
+    const dropped  = [...prevSet].filter(w => !currSet.has(w)).slice(0, 10);
+    const lenDelta = currArr.length - [...(prev.text.toLowerCase().match(/\b[a-z]{5,}\b/g) || [])].length;
+    const sign     = lenDelta >= 0 ? '+' : '';
+
+    html += `<div style="margin-bottom:12px;padding:10px 12px;
+      border-left:3px solid ${cm.color};
+      background:rgba(255,255,255,0.025);border-radius:0 6px 6px 0;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+        color:${cm.colorHi};letter-spacing:1.5px;margin-bottom:8px;display:flex;gap:12px;align-items:center;">
+        <span>${pm.name} → ${cm.name}</span>
+        <span style="opacity:0.5">${sign}${lenDelta} concept words</span>
+      </div>
+      ${added.length ? `<div style="margin-bottom:5px;">
+        <span style="font-size:7.5px;letter-spacing:1px;color:rgba(61,255,122,0.55);font-family:'JetBrains Mono',monospace;">INTRODUCED &nbsp;</span>
+        ${added.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;
+          color:#3DFF7A;background:rgba(61,255,122,0.10);
+          padding:1px 7px;border-radius:3px;margin:2px;display:inline-block;">${w}</span>`).join('')}
+      </div>` : ''}
+      ${dropped.length ? `<div>
+        <span style="font-size:7.5px;letter-spacing:1px;color:rgba(255,68,34,0.55);font-family:'JetBrains Mono',monospace;">DROPPED &nbsp;</span>
+        ${dropped.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;
+          color:#FF4422;background:rgba(255,68,34,0.10);
+          padding:1px 7px;border-radius:3px;margin:2px;display:inline-block;">${w}</span>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }
+
+  container.innerHTML = html || `<span class="output-empty">Not enough model outputs to compute delta.</span>`;
+}
+
+/* ── UPDATE CONSENSUS + CONFIDENCE GAUGES ────────────── */
+function updateToolGauges(agreePct, confidencePct) {
+  const colorCls = v => v >= 65 ? 'green' : v >= 40 ? 'amber' : 'red';
+  const cv = document.getElementById('tval-consensus');
+  const cf = document.getElementById('tval-confidence');
+  if (cv) { cv.textContent = agreePct + '%'; cv.className = 'tool-big-val ' + colorCls(agreePct); }
+  if (cf) { cf.textContent = confidencePct + '%'; cf.className = 'tool-big-val ' + colorCls(confidencePct); }
+}
+
+/* ── SYS PROMPT TOGGLE ───────────────────────────────── */
+function toggleSysPrompt() {
+  const toggle = document.getElementById('sysToggle');
+  const row    = document.getElementById('sysPromptRow');
+  toggle.classList.toggle('on');
+  row.classList.toggle('visible');
+}
+
+/* ── FORMAT SELECTOR ─────────────────────────────────── */
+let currentFormat = 'text';
+function setFormat(btn) {
+  document.querySelectorAll('.fmt-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFormat = btn.dataset.fmt;
+}
+
+/* ── COPY / CLEAR ────────────────────────────────────── */
+function copyOutput() {
+  const out = document.getElementById('outputSynthesis');
+  if (out) navigator.clipboard.writeText(out.textContent).catch(() => {});
+}
+function clearAll() {
+  const ta = document.getElementById('promptInput');
+  if (ta) ta.value = '';
+  const out = document.getElementById('outputSynthesis');
+  if (out) out.innerHTML = '<span class="output-empty">Synthesis output will appear here after running models…</span>';
+  updateTokenCount();
+}
+
+/* ── TOKEN COUNTER ───────────────────────────────────── */
+function updateTokenCount() {
+  const ta = document.getElementById('promptInput');
+  const cnt = document.getElementById('tokenCount');
+  if (!ta || !cnt) return;
+  const approx = Math.ceil(ta.value.length / 4);
+  cnt.textContent = approx;
+}
+document.getElementById('promptInput').addEventListener('input', updateTokenCount);
+
+/* ── FILE DROP ───────────────────────────────────────── */
+function initFileDrop() {
+  const drop = document.getElementById('fileDrop');
+  const input = document.getElementById('fileInput');
+  const ta = document.getElementById('promptInput');
+
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+  });
+  input.addEventListener('change', () => handleFiles(input.files));
+
+  function handleFiles(files) {
+    if (!files.length) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      ta.value = (ta.value ? ta.value + '\n\n---\n\n' : '') + ev.target.result;
+      updateTokenCount();
+    };
+    reader.readAsText(files[0]);
+  }
+}
+
+/* ── COST METER UPDATE ───────────────────────────────── */
+let sessionCost = 0;
+const COST_QUIPS = [
+  [0.0001, 'basically free 🔥'],
+  [0.001,  'cheaper than a text message'],
+  [0.005,  'less than a stick of gum'],
+  [0.01,   'fraction of a penny'],
+  [0.05,   'cheaper than a McDonald\'s napkin'],
+  [0.10,   'less than a packet of ketchup'],
+  [0.25,   'still cheaper than a McDouble'],
+  [0.50,   'half the cost of tap water'],
+  [1.00,   'less than a dollar, wildly'],
+  [Infinity,'ok now we\'re cooking 🍟'],
+];
+function updateCostMeter(runCost) {
+  sessionCost += runCost;
+  const fmt = runCost < 0.00001 ? '<$0.00001'
+            : runCost < 0.001   ? '$' + runCost.toFixed(5)
+            : runCost < 0.01    ? '$' + runCost.toFixed(4)
+            : '$' + runCost.toFixed(3);
+  const hudCost = document.getElementById('hudCost');
+  const hudSess = document.getElementById('hudSession');
+  if (hudCost) hudCost.textContent = fmt;
+  if (hudSess) hudSess.textContent = '$' + sessionCost.toFixed(5);
+  /* panel cost (above Info View) */
+  const panelCost = document.getElementById('panelCost');
+  const panelSess = document.getElementById('panelSession');
+  if (panelCost) panelCost.textContent = fmt;
+  if (panelSess) panelSess.textContent = '$' + sessionCost.toFixed(5);
+  /* Brief ghost flare on update */
+  const hud = document.getElementById('ghostHud');
+  if (hud) {
+    hud.style.opacity = '0.65';
+    setTimeout(() => { hud.style.opacity = ''; }, 2200);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   COST + TOKEN UTILITIES
+   ─ All cost estimates use standard tier pricing.
+   ─ estimateTokens: chars/4 (industry standard approx).
+   ─ Keep MAX_TOKENS_PER_STEP low = cheaper + faster.
+═══════════════════════════════════════════════════════ */
+function estimateTokens(text) { return Math.ceil((text || '').length / 4); }
+
+function estimateStepCost(modelKey, inputText, outputTokens) {
+  const m = MODELS[modelKey];
+  const inTok  = estimateTokens(inputText);
+  const outTok = outputTokens || 600;
+  /* cost = (tokens / 1M) * price. Input ~20% of output price typically. */
+  return ((inTok * 0.2 + outTok) / 1e6) * m.costPerMOutput.standard;
+}
+
+/* Chain system prompts — tight token budgets baked in */
+function chainSysPrompt(m, step, total, maxTok) {
+  const budget = `Be direct. Max ${maxTok} tokens.`;
+  if (step === 1) return `You are ${m.name}. First in a ${total}-model synthesis chain. Answer the prompt directly and substantively. ${budget}`;
+  if (step === total) return `You are ${m.name}. Final synthesizer in a ${total}-model chain. Distill all prior reasoning into the best possible answer. Remove redundancy. ${budget}`;
+  return `You are ${m.name}. Step ${step} of ${total} in a synthesis chain. Refine the prior output — correct errors, sharpen clarity, add your distinct perspective. ${budget}`;
+}
+
+/* Context compression — pass only last N chars to next model to cap input cost */
+function compressContext(text, maxChars) {
+  if (!text || text.length <= maxChars) return text;
+  return '…[compressed]\n\n' + text.slice(text.length - maxChars);
+}
+
+/* ── SYNTHESIZE — production streaming architecture ──── */
+let synthController = null;
+
+async function synthesize() {
+  const ta  = document.getElementById('promptInput');
+  const prompt = ta ? ta.value.trim() : '';
+  if (!prompt) {
+    if (ta) {
+      ta.placeholder = '⚠ Enter a prompt first…';
+      setTimeout(() => { ta.placeholder = 'Enter your prompt. Press ⌘↵ to run through 5i…'; }, 2000);
+    }
+    return;
+  }
+
+  /* Cancel any running synthesis */
+  if (synthController) { synthController.abort(); synthController = null; }
+  synthController = new AbortController();
+
+  const btn = document.getElementById('btnSynth');
+  const out = document.getElementById('outputSynthesis');
+  const sysPromptEl = document.getElementById('sysPromptInput');
+  const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
+
+  /* Token budget — default 600 per step (cheap + fast) */
+  const MAX_TOKENS = 600;
+  /* Context passed to next model capped at ~3000 chars (~750 tokens) to control input cost */
+  const MAX_CTX_CHARS = 3000;
+
+  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
+  btn.style.opacity = '0.75';
+  out.innerHTML = '';
+
+  const activeModels = MODEL_ORDER.filter(k => MODELS[k].active);
+  if (!activeModels.length) { resetBtn(btn); return; }
+
+  const t0 = performance.now();
+  let totalEstCost = 0;
+  let totalOutTokens = 0;
+  let context = prompt;
+  const stepOutputs = []; /* collect per-model text for disagreement analysis */
+
+  for (let i = 0; i < activeModels.length; i++) {
+    if (synthController.signal.aborted) break;
+
+    const k   = activeModels[i];
+    const m   = MODELS[k];
+    const step = i + 1;
+    const isLast = step === activeModels.length;
+
+    /* Cost estimate for this step */
+    const ctxToSend = compressContext(context, MAX_CTX_CHARS);
+    const stepCost  = estimateStepCost(k, ctxToSend, MAX_TOKENS);
+    totalEstCost   += stepCost;
+
+    /* Create output block immediately — user sees progress */
+    const block = document.createElement('div');
+    block.style.cssText = `margin-bottom:12px;padding-left:10px;border-left:2px solid ${m.color};animation:fadeIn 0.15s ease;`;
+    block.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit} · ${step}/${activeModels.length}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,0.35);">est $${stepCost.toFixed(5)}</span>
+      </div>
+      <div id="si-out-${k}" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:rgba(255,255,255,0.80);">
+        <span style="opacity:0.3;font-style:italic;">Waiting for ${m.name}…</span>
+      </div>`;
+    out.appendChild(block);
+    out.scrollTop = out.scrollHeight;
+
+    const outEl = document.getElementById('si-out-' + k);
+
+    if (!m.apiKey) {
+      /* No key — clear placeholder, leave instructional note */
+      outEl.innerHTML = `<span style="color:rgba(255,255,255,0.30);font-style:italic;">[${m.name}: add API key in Connected Models → output would stream here]</span>`;
+      /* Pass prompt through unmodified so chain can continue */
+    } else {
+      /* ── REAL STREAMING FETCH ────────────────────────── */
+      /* Architecture ready for each model's streaming API. */
+      /* Replace the throw below with model-specific fetch. */
+      try {
+        const result = await callModelStreaming(k, {
+          sysPrompt:  userSysPrompt || chainSysPrompt(m, step, activeModels.length, MAX_TOKENS),
+          userPrompt: ctxToSend,
+          maxTokens:  MAX_TOKENS,
+          signal:     synthController.signal,
+          onToken: (chunk) => {
+            /* Stream tokens in as they arrive */
+            if (outEl.querySelector('span[style*="opacity:0.3"]')) outEl.innerHTML = '';
+            outEl.textContent += chunk;
+            out.scrollTop = out.scrollHeight;
+          }
+        });
+        context = result.text;
+        totalOutTokens += result.outputTokens || estimateTokens(result.text);
+        stepOutputs.push({ key: k, text: result.text });
+      } catch (err) {
+        if (err.name === 'AbortError') break;
+        outEl.innerHTML += `<span style="color:#F07C5A;font-size:10px;display:block;margin-top:4px;">⚠ ${err.message}</span>`;
+      }
+    }
+  }
+
+  /* ══ CONSENSUS SYNTHESIS — the actual payoff ══════════ */
+  /* Take all model outputs + original prompt → one clean answer */
+  let consensusText = '';
+  if (stepOutputs.length >= 1 && !synthController?.signal.aborted) {
+
+    /* Pick best available synthesizer: Claude first, then GPT, then whoever */
+    const synthKey = ['claude','gpt','gemini','mistral','grok'].find(k => MODELS[k].apiKey);
+
+    if (synthKey) {
+      const sm = MODELS[synthKey];
+
+      /* Build the synthesis payload */
+      const chainText = stepOutputs.map((o, i) => {
+        const mm = MODELS[o.key];
+        return `[${mm.name}]\n${o.text}`;
+      }).join('\n\n---\n\n');
+
+      const synthUserPrompt =
+        `Original question: "${prompt}"\n\n` +
+        `Below are responses from ${stepOutputs.length} AI models. ` +
+        `Synthesize them into ONE clear, authoritative consensus answer that directly addresses the original question. ` +
+        `Do not reference the models or say "the AIs agree". Just give the best unified answer:\n\n${chainText}`;
+
+      /* Inject consensus block at the TOP of the output area */
+      const consensusBlock = document.createElement('div');
+      consensusBlock.style.cssText = `
+        margin-bottom:20px;
+        padding:18px 20px;
+        background: linear-gradient(135deg, rgba(61,255,122,0.07) 0%, rgba(0,0,0,0.25) 100%);
+        border:1px solid rgba(61,255,122,0.35);
+        border-radius:10px;
+        animation:fadeIn 0.2s ease;
+        position:relative;
+      `;
+      consensusBlock.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 10px #3DFF7A;flex-shrink:0;"></div>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Consensus</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:1px;">synthesized by ${sm.name}</span>
+        </div>
+        <div id="consensus-out" style="font-family:'Inter',sans-serif;font-size:15px;line-height:1.75;color:#E8FAF2;"></div>
+      `;
+      /* Prepend consensus above individual outputs */
+      out.insertBefore(consensusBlock, out.firstChild);
+
+      const consensusOutEl = document.getElementById('consensus-out');
+
+      /* Divider between consensus and chain outputs */
+      const divider = document.createElement('div');
+      divider.style.cssText = `
+        margin:18px 0 14px;
+        display:flex;align-items:center;gap:12px;
+        font-family:'JetBrains Mono',monospace;font-size:8px;
+        letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);
+      `;
+      divider.innerHTML = `<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>MODEL CHAIN — HOW WE GOT HERE<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>`;
+      out.insertBefore(divider, consensusBlock.nextSibling);
+
+      /* Stream the synthesis */
+      try {
+        const synthResult = await callModelStreaming(synthKey, {
+          sysPrompt: 'You are a synthesis engine. Distill multiple AI perspectives into one clean, definitive, well-written answer. No meta-commentary. Just the best answer.',
+          userPrompt: synthUserPrompt,
+          maxTokens: MAX_TOKENS * 2,
+          signal: synthController?.signal,
+          onToken: (chunk) => {
+            consensusText += chunk;
+            consensusOutEl.textContent = consensusText;
+            out.scrollTop = 0; /* keep consensus in view */
+          }
+        });
+        const synthCost = estimateStepCost(synthKey, synthUserPrompt, MAX_TOKENS * 2);
+        totalEstCost += synthCost;
+        totalOutTokens += estimateTokens(consensusText);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          consensusOutEl.innerHTML = `<span style="color:#F07C5A;">⚠ Synthesis failed: ${err.message}</span>`;
+        }
+      }
+    }
+  }
+
+  /* ── Run summary bar ─────────────────────────────────── */
+  const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+  const summary = document.createElement('div');
+  summary.style.cssText = 'margin-top:14px;padding:7px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:4px;display:flex;gap:14px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:9px;color:rgba(255,255,255,0.45);';
+  summary.innerHTML = `<span>⏱ ${elapsed}s</span><span>🔗 ${activeModels.length} models + synthesis</span><span>~${totalOutTokens} tokens</span><span>est $${totalEstCost.toFixed(5)}</span>`;
+  out.appendChild(summary);
+
+  updateCostMeter(totalEstCost);
+  updateDisagreeBar(stepOutputs);
+  if (toolStates.agreement) runAgreementAnalysis(stepOutputs);
+  if (toolStates.delta)     runDeltaAnalysis(stepOutputs);
+  resetBtn(btn);
+  synthController = null;
+}
+
+function resetBtn(btn) {
+  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZE <span class="synth-kbd">⌘↵</span>`;
+  btn.style.opacity = '1';
+}
+
+/* ── DISAGREEMENT BAR ─────────────────────────────────── */
+function updateDisagreeBar(stepOutputs) {
+  const bar   = document.getElementById('disagreeBar');
+  const label = document.getElementById('disagreeLabel');
+  const dA    = document.getElementById('dAgree');
+  const dD    = document.getElementById('dDiverg');
+  const dC    = document.getElementById('dConsensus');
+  const dConf = document.getElementById('dConfidence');
+  if (!bar || !stepOutputs || stepOutputs.length < 2) return;
+
+  /* Length variance as divergence proxy */
+  const lengths = stepOutputs.map(o => o.text.split(/\s+/).length);
+  const avgLen  = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  const variance = lengths.reduce((a,b) => a + Math.abs(b - avgLen), 0) / lengths.length;
+  const divergePct = Math.min(100, Math.round((variance / Math.max(avgLen, 1)) * 100));
+
+  /* Word overlap between first and last output as agreement proxy */
+  const words1 = new Set(stepOutputs[0].text.toLowerCase().match(/\b\w{4,}\b/g) || []);
+  const wordsN = (stepOutputs[stepOutputs.length-1].text.toLowerCase().match(/\b\w{4,}\b/g) || []);
+  const overlap = wordsN.filter(w => words1.has(w)).length;
+  const agreePct = Math.min(100, Math.round((overlap / Math.max(words1.size, 1)) * 80));
+
+  /* Consensus — how similar lengths are (low variance = high consensus) */
+  const consensusPct = Math.max(0, 100 - divergePct);
+
+  /* Confidence — composite */
+  const confidencePct = Math.round((agreePct * 0.6 + consensusPct * 0.4));
+
+  /* Color helpers */
+  const cls = v => v >= 65 ? 'green' : v >= 40 ? 'amber' : 'red';
+
+  dA.textContent    = agreePct + '%';    dA.className    = 'disagree-cell-val ' + cls(agreePct);
+  dD.textContent    = divergePct + '%';  dD.className    = 'disagree-cell-val ' + cls(100 - divergePct);
+  dC.textContent    = consensusPct + '%';dC.className    = 'disagree-cell-val ' + cls(consensusPct);
+  dConf.textContent = confidencePct + '%';dConf.className = 'disagree-cell-val ' + cls(confidencePct);
+  updateToolGauges(agreePct, confidencePct);
+
+  bar.className = 'disagree-bar';
+  if (agreePct < 30 || divergePct > 70) {
+    bar.classList.add('critical');
+    label.textContent = 'HIGH MODEL DISAGREEMENT DETECTED';
+  } else if (agreePct < 55 || divergePct > 45) {
+    bar.classList.add('warning');
+    label.textContent = 'ELEVATED DIVERGENCE DETECTED';
+  } else {
+    label.textContent = 'MODEL CONSENSUS';
+  }
+}
+
+/* ── MODEL STREAMING CONNECTORS ──────────────────────── */
+/* All calls routed through Flask proxy — keys stay on server */
+async function callModelStreaming(modelKey, { sysPrompt, userPrompt, maxTokens, signal, onToken }) {
+  const proxyMap = {
+    claude:  { url: '/proxy/claude',  extract: d => d.delta?.text || '' },
+    gpt:     { url: '/proxy/gpt',     extract: d => d.choices?.[0]?.delta?.content || '' },
+    gemini:  { url: '/proxy/gemini',  extract: d => d.candidates?.[0]?.content?.parts?.[0]?.text || '' },
+    mistral: { url: '/proxy/mistral', extract: d => d.choices?.[0]?.delta?.content || '' },
+    grok:    { url: '/proxy/grok',    extract: d => d.choices?.[0]?.delta?.content || '' },
+  };
+  const p = proxyMap[modelKey];
+  if (!p) throw new Error('Unknown model: ' + modelKey);
+  const res = await fetch(p.url, {
+    method: 'POST', signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sysPrompt, userPrompt, maxTokens })
+  });
+  return streamSSE(res, signal, onToken, p.extract);
+}
+
+/* ── GENERIC SSE STREAM READER ───────────────────────── */
+/* Reads a streaming SSE response, calls onToken per chunk. */
+/* extractText: fn(parsedData) → string chunk              */
+async function streamSSE(response, signal, onToken, extractText) {
+  if (!response.ok) {
+    const err = await response.text().catch(() => response.statusText);
+    throw new Error(`HTTP ${response.status}: ${err.slice(0, 120)}`);
+  }
+  const reader  = response.body.getReader();
+  const decoder = new TextDecoder();
+  let   full    = '';
+  let   buf     = '';
+
+  while (true) {
+    if (signal?.aborted) { reader.cancel(); break; }
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop(); /* keep incomplete line */
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const payload = line.slice(6).trim();
+      if (payload === '[DONE]') continue;
+      try {
+        const chunk = extractText(JSON.parse(payload));
+        if (chunk) { onToken(chunk); full += chunk; }
+      } catch {}
+    }
+  }
+  return { text: full, outputTokens: estimateTokens(full) };
+}
+
+/* ── INFO VIEW (Ableton-style hover help) ────────────── */
+let infoViewOn = true;
+function toggleInfoView() {
+  infoViewOn = !infoViewOn;
+  const iv = document.getElementById('infoView');
+  if (iv) iv.classList.toggle('hidden', !infoViewOn);
+}
+document.addEventListener('mouseover', function(e) {
+  if (!infoViewOn) return;
+  const el = e.target.closest('[data-info]');
+  if (!el) return;
+  const parts = el.dataset.info.split('|');
+  const titleEl = document.getElementById('infoTitle');
+  const descEl  = document.getElementById('infoDesc');
+  if (titleEl) titleEl.textContent = parts[0] || '';
+  if (descEl)  descEl.textContent  = parts[1] || '';
+});
+
+/* ── FULLSCREEN ──────────────────────────────────────── */
+function toggleFullscreen() {
+  const icon = document.getElementById('fsIcon');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const icon = document.getElementById('fsIcon');
+  if (document.fullscreenElement) {
+    icon.innerHTML = '<path d="M5 1H1v4M11 1h4v4M5 15H1v-4M11 15h4v-4"/>';
+  } else {
+    icon.innerHTML = '<path d="M1 1h4M1 1v4M15 1h-4M15 1v4M1 15h4M1 15v-4M15 15h-4M15 15v-4"/>';
+  }
+});
+
+/* ── KEYBOARD SHORTCUTS ──────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); synthesize(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === '/') { e.preventDefault(); toggleSysPrompt(); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') { e.preventDefault(); randomizeFaders(); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); clearAll(); }
+  if (!e.metaKey && !e.ctrlKey && e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+  if (e.key === 'Escape' && synthController) { synthController.abort(); synthController = null; const btn = document.getElementById('btnSynth'); if (btn) resetBtn(btn); }
+});
+
+/* ═══════════════════════════════════════════════════════
+   ORBITAL CANVAS — background animation
+═══════════════════════════════════════════════════════ */
+function initOrbitalBackground() {
+  const canvas = document.getElementById('orbital-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const SIZE = 900;
+  canvas.width = SIZE; canvas.height = SIZE;
+  const cx = SIZE / 2, cy = SIZE / 2;
+
+  const PLANETS = [
+    { key:'gpt',     radius:180, speed:0.00038, angle:0.5,  size:10, glitchFrames:0, glitchR:180 },
+    { key:'claude',  radius:240, speed:0.00028, angle:1.9,  size:9,  glitchFrames:0, glitchR:240 },
+    { key:'gemini',  radius:300, speed:0.00020, angle:3.3,  size:8,  glitchFrames:0, glitchR:300 },
+    { key:'mistral', radius:360, speed:0.00015, angle:4.7,  size:9,  glitchFrames:0, glitchR:360 },
+    { key:'grok',    radius:420, speed:0.00010, angle:0.2,  size:10, glitchFrames:0, glitchR:420 },
+  ];
+  const RING_COLORS = ['#7C3AED','#3B82F6','#58DE83','#DA8E20','#CD4E14'];
+
+  let t = 0;
+  let _orbLastFrame = 0;
+  function draw(ts) {
+    requestAnimationFrame(draw);
+    if (ts - _orbLastFrame < 41.7) return; /* 24 fps cap — saves ~60% GPU */
+    _orbLastFrame = ts;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    /* maybe trigger a glitch collision */
+    if (Math.random() < 0.003) {
+      const i = Math.floor(Math.random() * PLANETS.length);
+      const j = Math.floor(Math.random() * PLANETS.length);
+      if (i !== j) {
+        const dur = Math.floor(Math.random() * 14) + 5;
+        PLANETS[i].glitchR = PLANETS[j].radius;
+        PLANETS[i].glitchFrames = dur;
+        PLANETS[j].glitchR = PLANETS[j].radius; /* j stays on its orbit = collision */
+        PLANETS[j].glitchFrames = dur;
+      }
+    }
+
+    /* glowing orbital rings */
+    PLANETS.forEach((p, i) => {
+      ctx.save();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = RING_COLORS[i] + '60';
+      ctx.beginPath();
+      ctx.arc(cx, cy, p.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = RING_COLORS[i] + '55';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      /* outer halo ring */
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, p.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(88,222,131,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    /* sine wave signal */
+    ctx.save();
+    ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(88,222,131,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(cx - 220, cy);
+    for (let x = -220; x <= 220; x += 2) {
+      const y = Math.sin((x / 42) + t * 0.001) * 22;
+      ctx.lineTo(cx + x, cy + y);
+    }
+    ctx.strokeStyle = 'rgba(88,222,131,0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    /* planets */
+    PLANETS.forEach(p => {
+      p.angle += p.speed;
+      const effectiveR = p.glitchFrames > 0 ? p.glitchR : p.radius;
+      if (p.glitchFrames > 0) p.glitchFrames--;
+
+      const isGlitching = p.glitchFrames > 0;
+      const px = cx + Math.cos(p.angle) * effectiveR;
+      const py = cy + Math.sin(p.angle) * effectiveR;
+      const m = MODELS[p.key];
+
+      ctx.save();
+      /* planet glow */
+      ctx.shadowBlur = isGlitching ? 30 : 16;
+      ctx.shadowColor = m.color;
+      const grd = ctx.createRadialGradient(px, py, 0, px, py, p.size * 3);
+      grd.addColorStop(0, m.color + 'dd');
+      grd.addColorStop(0.5, m.color + '55');
+      grd.addColorStop(1, m.color + '00');
+      ctx.beginPath(); ctx.arc(px, py, p.size * 3, 0, Math.PI * 2);
+      ctx.fillStyle = grd; ctx.fill();
+
+      /* planet body */
+      if (isGlitching && Math.random() < 0.4) {
+        /* glitch flicker — draw offset ghost */
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(px + (Math.random()-0.5)*6, py, p.size * 0.8, 0, Math.PI*2);
+        ctx.fillStyle = m.color + 'aa'; ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      ctx.beginPath(); ctx.arc(px, py, p.size * 0.75, 0, Math.PI * 2);
+      ctx.fillStyle = m.color; ctx.fill();
+      /* bright center highlight */
+      ctx.beginPath(); ctx.arc(px - p.size*0.25, py - p.size*0.25, p.size * 0.2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+      ctx.restore();
+    });
+
+    /* core */
+    ctx.save();
+    ctx.shadowBlur = 30; ctx.shadowColor = 'rgba(88,222,131,0.8)';
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 34);
+    core.addColorStop(0, 'rgba(195,253,216,0.95)');
+    core.addColorStop(0.4, 'rgba(88,222,131,0.6)');
+    core.addColorStop(1, 'rgba(88,222,131,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, 34, 0, Math.PI * 2);
+    ctx.fillStyle = core; ctx.fill();
+    ctx.restore();
+
+    t++;
+  }
+  requestAnimationFrame(draw);
+}
+
+/* ═══════════════════════════════════════════════════════
+   HERO LOGO CANVAS — the big glowing orbital logo
+═══════════════════════════════════════════════════════ */
+function drawHeroLogo(canvas) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+
+  ctx.clearRect(0, 0, W, H);
+
+  /* background circle */
+  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.5);
+  bgGrad.addColorStop(0, '#132018');
+  bgGrad.addColorStop(1, '#0B1210');
+  ctx.beginPath(); ctx.arc(cx, cy, W * 0.48, 0, Math.PI * 2);
+  ctx.fillStyle = bgGrad; ctx.fill();
+
+  /* outer ring */
+  ctx.beginPath(); ctx.arc(cx, cy, W * 0.47, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(31,90,56,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+
+  /* orbits */
+  const orbits = [0.12, 0.19, 0.26, 0.33, 0.40];
+  orbits.forEach(r => {
+    ctx.beginPath(); ctx.arc(cx, cy, W * r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(31,90,56,0.35)'; ctx.lineWidth = 0.5; ctx.stroke();
+  });
+
+  /* planets */
+  const planets = [
+    { key:'gpt',     r:0.12, angle: 0.5  },
+    { key:'claude',  r:0.19, angle: 1.9  },
+    { key:'gemini',  r:0.26, angle: 3.3  },
+    { key:'mistral', r:0.33, angle: 4.7  },
+    { key:'grok',    r:0.40, angle: 0.2  },
+  ];
+
+  planets.forEach(p => {
+    const m = MODELS[p.key];
+    const px = cx + Math.cos(p.angle) * W * p.r;
+    const py = cy + Math.sin(p.angle) * W * p.r;
+    const ps = W * 0.036;
+    /* glow */
+    const grd = ctx.createRadialGradient(px, py, 0, px, py, ps * 3);
+    grd.addColorStop(0, m.color + 'bb');
+    grd.addColorStop(1, m.color + '00');
+    ctx.beginPath(); ctx.arc(px, py, ps * 3, 0, Math.PI * 2);
+    ctx.fillStyle = grd; ctx.fill();
+    /* planet */
+    ctx.beginPath(); ctx.arc(px, py, ps, 0, Math.PI * 2);
+    ctx.fillStyle = m.color; ctx.fill();
+    /* connector */
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py);
+    ctx.strokeStyle = m.color + '22'; ctx.lineWidth = 0.5; ctx.stroke();
+  });
+
+  /* sine wave */
+  ctx.beginPath();
+  ctx.moveTo(cx - W * 0.28, cy);
+  for (let x = -W * 0.28; x <= W * 0.28; x += 2) {
+    const y = Math.sin((x / (W * 0.07))) * (W * 0.035);
+    ctx.lineTo(cx + x, cy + y);
+  }
+  ctx.strokeStyle = 'rgba(88,222,131,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+
+  /* core glow */
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.06);
+  core.addColorStop(0, 'rgba(195,253,216,0.95)');
+  core.addColorStop(0.4, 'rgba(88,222,131,0.6)');
+  core.addColorStop(1, 'rgba(88,222,131,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, W * 0.06, 0, Math.PI * 2);
+  ctx.fillStyle = core; ctx.fill();
+}
+
+function initHeroLogo() {
+  const canvas = document.getElementById('heroCanvas');
+  if (!canvas) return;
+  let angle = 0;
+  let heroPaused = false;
+
+  /* Hover to freeze */
+  canvas.addEventListener('mouseenter', () => { heroPaused = true; });
+  canvas.addEventListener('mouseleave', () => { heroPaused = false; });
+
+  /* Glitch state */
+  const heroGlitches = {};
+
+  const speedMult  = [0.009, 0.006, 0.004, 0.003, 0.002];
+  const baseAngles = [0.5, 1.9, 3.3, 4.7, 0.2];
+  const planetKeys = ['gpt','claude','gemini','mistral','grok'];
+  const rads       = [0.12, 0.19, 0.26, 0.33, 0.40];
+  const ringColors = ['#7C3AED','#3B82F6','#58DE83','#DA8E20','#CD4E14'];
+
+  let _heroLastFrame = 0;
+  function animate(ts) {
+    requestAnimationFrame(animate);
+    if (ts - _heroLastFrame < 33.3) return; /* 30 fps cap */
+    _heroLastFrame = ts;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W/2, cy = H/2;
+    ctx.clearRect(0, 0, W, H);
+
+    if (!heroPaused) angle++;
+
+    /* maybe glitch */
+    if (!heroPaused && Math.random() < 0.004) {
+      const i = Math.floor(Math.random() * planetKeys.length);
+      const j = Math.floor(Math.random() * planetKeys.length);
+      if (i !== j) {
+        const dur = Math.floor(Math.random() * 12) + 4;
+        heroGlitches[planetKeys[i]] = { r: rads[j], frames: dur };
+        heroGlitches[planetKeys[j]] = { r: rads[j], frames: dur };
+      }
+    }
+
+    /* TRANSPARENT background — let the panel show through, just a very subtle disc */
+    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W*0.48);
+    bgGrad.addColorStop(0, 'rgba(19,32,24,0.35)');
+    bgGrad.addColorStop(0.65, 'rgba(11,18,16,0.15)');
+    bgGrad.addColorStop(1, 'rgba(11,18,16,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.48, 0, Math.PI*2);
+    ctx.fillStyle = bgGrad; ctx.fill();
+
+    /* outer boundary ring — subtle glow */
+    ctx.save();
+    ctx.shadowBlur = 12; ctx.shadowColor = 'rgba(88,222,131,0.4)';
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.455, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(88,222,131,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+
+    /* glowing orbital rings */
+    rads.forEach((r, i) => {
+      ctx.save();
+      ctx.shadowBlur = 10; ctx.shadowColor = ringColors[i] + '70';
+      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
+      ctx.strokeStyle = ringColors[i] + '60';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      /* soft outer glow ring */
+      ctx.shadowBlur = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(195,253,216,0.08)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    /* sine wave */
+    ctx.save();
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(88,222,131,0.6)';
+    ctx.beginPath(); ctx.moveTo(cx - W*0.3, cy);
+    for (let x=-W*0.3; x<=W*0.3; x+=2) {
+      ctx.lineTo(cx+x, cy + Math.sin(x/(W*0.065) + angle*0.018) * (W*0.038));
+    }
+    ctx.strokeStyle='rgba(88,222,131,0.55)'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.restore();
+
+    /* planets */
+    planetKeys.forEach((k, i) => {
+      const m = MODELS[k];
+      const glitch = heroGlitches[k];
+      const effectiveR = (glitch && glitch.frames > 0) ? glitch.r : rads[i];
+      if (glitch) { glitch.frames--; if (glitch.frames <= 0) delete heroGlitches[k]; }
+
+      const a = baseAngles[i] + angle * speedMult[i];
+      const px = cx + Math.cos(a) * W * effectiveR;
+      const py = cy + Math.sin(a) * W * effectiveR;
+      const ps = W * 0.038;
+      const isGlitching = !!glitch;
+
+      ctx.save();
+      ctx.shadowBlur = isGlitching ? 28 : 16;
+      ctx.shadowColor = m.color;
+
+      /* planet halo */
+      const grd = ctx.createRadialGradient(px,py,0,px,py,ps*3.5);
+      grd.addColorStop(0, m.color+'cc'); grd.addColorStop(0.5, m.color+'44'); grd.addColorStop(1, m.color+'00');
+      ctx.beginPath(); ctx.arc(px,py,ps*3.5,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+
+      /* glitch ghost */
+      if (isGlitching && Math.random() < 0.5) {
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath(); ctx.arc(px + (Math.random()-0.5)*8, py, ps*0.9, 0, Math.PI*2);
+        ctx.fillStyle = m.color; ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      /* planet body */
+      ctx.beginPath(); ctx.arc(px,py,ps,0,Math.PI*2); ctx.fillStyle=m.color; ctx.fill();
+      /* specular */
+      ctx.beginPath(); ctx.arc(px-ps*0.28, py-ps*0.28, ps*0.22, 0, Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.fill();
+
+      /* connector line */
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py);
+      ctx.strokeStyle=m.color; ctx.lineWidth=0.7; ctx.stroke();
+      ctx.restore();
+    });
+
+    /* core pulse */
+    ctx.save();
+    const pulse = 0.055 + Math.sin(angle * 0.04) * 0.008;
+    ctx.shadowBlur = 24; ctx.shadowColor = 'rgba(88,222,131,0.9)';
+    const core = ctx.createRadialGradient(cx,cy,0,cx,cy,W*pulse);
+    core.addColorStop(0,'rgba(220,255,236,1)');
+    core.addColorStop(0.3,'rgba(105,240,155,0.9)');
+    core.addColorStop(0.7,'rgba(88,222,131,0.4)');
+    core.addColorStop(1,'rgba(88,222,131,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,W*pulse*1.5,0,Math.PI*2); ctx.fillStyle=core; ctx.fill();
+    ctx.restore();
+
+  }
+  requestAnimationFrame(animate);
+
+  /* Small logo icon for header */
+  const icon = document.getElementById('logo-icon-canvas');
+  if (icon) { drawHeroLogo(icon); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LONG TASKS API — CPU meter
+═══════════════════════════════════════════════════════ */
+function initCpuMeter() {
+  const fill  = document.getElementById('cpuFill');
+  const val   = document.getElementById('cpuValue');
+  const spark = document.getElementById('cpuSparkline');
+  const flash = document.getElementById('ltFlash');
+  if (!fill || !val) return;
+
+  const history = new Array(6).fill(0);
+  let totalLongTaskMs = 0;
+  let windowMs = 0;
+  const WINDOW = 5000;
+
+  function update(pct) {
+    history.shift(); history.push(pct);
+    const displayPct = Math.min(100, pct);
+    /* ghost HUD — primary output now */
+    const hudCpuEl = document.getElementById('hudCpu');
+    if (hudCpuEl) hudCpuEl.textContent = pct.toFixed(1) + '%';
+    /* legacy bar/val still exist if ever re-added */
+    if (fill) {
+      fill.style.width = displayPct + '%';
+      fill.style.background = displayPct > 30
+        ? `linear-gradient(90deg,#DA8E20,#CD4E14)`
+        : `linear-gradient(90deg,#1F5A38,#69F09B)`;
+    }
+    if (val) val.textContent = pct.toFixed(1) + '%';
+    if (spark) {
+      spark.querySelectorAll('.spark-bar').forEach((bar, i) => {
+        bar.style.height = Math.max(6, history[i] * 1.2) + '%';
+      });
+    }
+  }
+
+  if ('PerformanceObserver' in window) {
+    const po = new PerformanceObserver(list => {
+      list.getEntries().forEach(entry => {
+        totalLongTaskMs += entry.duration;
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), 200);
+      });
+    });
+    try { po.observe({ entryTypes: ['longtask'] }); } catch(e) {}
+
+    setInterval(() => {
+      const pct = Math.min(100, (totalLongTaskMs / WINDOW) * 100);
+      update(pct);
+      totalLongTaskMs = Math.max(0, totalLongTaskMs - 50);
+    }, 500);
+  } else {
+    /* rAF fallback */
+    let last = performance.now();
+    function rafCheck(now) {
+      const delta = now - last;
+      const lag = Math.max(0, delta - 16.67);
+      const pct = Math.min(100, (lag / 100) * 15);
+      update(pct);
+      last = now;
+      requestAnimationFrame(rafCheck);
+    }
+    requestAnimationFrame(rafCheck);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  initFaders();
+  initOrbitalBackground();
+  initHeroLogo();
+  initCpuMeter();
+  buildRankings();
+  /* Auto-load from 5i-keys.js if present (local only, gitignored) */
+  if (window._5I_KEYS) {
+    Object.entries(window._5I_KEYS).forEach(([k, v]) => {
+      if (MODELS[k] && v) MODELS[k].apiKey = v;
+    });
+    saveKeysToStorage();
+  } else {
+    loadKeysFromStorage();
+  }
+  buildApiRows();
+  updateUI();
+  initFileDrop();
+});
+
+
+/* ── BYOK ────────────────────────────────────────────── */
+function openBYOK() {
+  document.getElementById('byokOverlay').classList.remove('hidden');
+}
+function closeBYOK() {
+  document.getElementById('byokOverlay').classList.add('hidden');
+}
+function confirmBYOK() {
+  /* Clear every key */
+  Object.values(MODELS).forEach(m => { m.apiKey = null; });
+  localStorage.removeItem(LS_KEY);
+  buildApiRows();
+  closeBYOK();
+
+  /* Pulse the API panel to show where to re-enter keys */
+  const panel = document.querySelector('.api-panel');
+  if (panel) {
+    panel.classList.add('byok-highlight');
+    panel.addEventListener('animationend', () => panel.classList.remove('byok-highlight'), { once: true });
+  }
+
+  /* Scroll left panel to show the Connected Models section */
+  const leftPanel = document.getElementById('leftPanel');
+  const apiSection = document.querySelector('.api-panel');
+  if (leftPanel && apiSection) {
+    apiSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+/* Close modal on overlay click */
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('byokOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeBYOK(); });
+  }
+});
+</script>
+
+<!-- ── GHOST HUD ───────────────────────────────────── -->
+<div class="ghost-hud" id="ghostHud">
+  <div class="ghost-line">
+    <span class="g-label">THREAD</span>
+    <span class="g-val-green" id="hudCpu">0.0%</span>
+  </div>
+  <div class="ghost-divider"></div>
+  <div class="ghost-line">
+    <span class="g-label">LAST RUN</span>
+    <span class="g-val-amber" id="hudCost">—</span>
+  </div>
+  <div class="ghost-line">
+    <span class="g-label">SESSION</span>
+    <span class="g-val-amber" id="hudSession">$0.00000</span>
   </div>
 </div>
 
-<script>
-  const models = {{ models | tojson }};
-  const maxChars = {{ max_chars }};
+<!-- ── BYOK MODAL ──────────────────────────────────── -->
+<div class="byok-overlay hidden" id="byokOverlay">
+  <div class="byok-modal">
+    <div class="byok-modal-header">
+      <div class="byok-modal-title">BYOK</div>
+      <div class="byok-modal-sub">Bring Your Own Keys</div>
+    </div>
+    <div class="byok-modal-body">
+      <p>This will <strong>clear all API keys</strong> from the current session.</p>
+      <p>All 5 models will go offline. You can re-enter your own keys using the <strong>Set</strong> button next to each model in the Connected Models panel.</p>
+      <div class="byok-note">
+        After clearing, look for the glowing panel on the left →<br/>
+        Each model has a <span>Set</span> button. Enter your key there.<br/>
+        Keys are memory-only — never stored, never sent anywhere except the model's own API.
+      </div>
+    </div>
+    <div class="byok-actions">
+      <button class="byok-cancel" onclick="closeBYOK()">Cancel</button>
+      <button class="byok-confirm" onclick="confirmBYOK()">Yes, clear all keys</button>
+    </div>
+  </div>
+</div>
 
-  // Quick mode = first 3 enabled models; Full = all
-  const allEnabled = Object.keys(models).filter(k => models[k].enabled);
-  let activeModels = new Set(allEnabled.slice(0, 3));
-  let currentMode = 'quick';
-  let lastResults = null;
-  let lastPrompt = '';
-
-  // Reflect initial quick mode in toggles
-  updateToggleUI();
-
-  const input = document.getElementById('promptInput');
-  const charCount = document.getElementById('charCount');
-
-  input.addEventListener('input', () => {
-    const len = input.value.length;
-    charCount.textContent = `${len} / ${maxChars}`;
-    charCount.className = 'char-count' +
-      (len > maxChars * 0.88 ? ' warn' : '') +
-      (len >= maxChars ? ' over' : '');
-  });
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAsk(false); }
-  });
-
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('modeQuick').classList.toggle('active', mode === 'quick');
-    document.getElementById('modeFull').classList.toggle('active', mode === 'full');
-
-    if (mode === 'quick') {
-      activeModels = new Set(allEnabled.slice(0, 3));
-    } else {
-      activeModels = new Set(allEnabled);
-    }
-    updateToggleUI();
-  }
-
-  function updateToggleUI() {
-    Object.keys(models).forEach(k => {
-      const el = document.getElementById(`toggle-${k}`);
-      if (!el || !models[k].enabled) return;
-      el.classList.toggle('active', activeModels.has(k));
-    });
-  }
-
-  function toggleModel(key) {
-    const el = document.getElementById(`toggle-${key}`);
-    if (activeModels.has(key)) {
-      if (activeModels.size <= 1) return;
-      activeModels.delete(key);
-      el.classList.remove('active');
-    } else {
-      activeModels.add(key);
-      el.classList.add('active');
-    }
-  }
-
-  async function submitAsk(withVerdict) {
-    const prompt = input.value.trim();
-    if (!prompt) return;
-
-    const askBtn = document.getElementById('askBtn');
-    const vBtn = document.getElementById('verdictBtnTop');
-    const loading = document.getElementById('loadingWrap');
-    const label = document.getElementById('loadingLabel');
-    const grid = document.getElementById('resultsGrid');
-    const hero = document.getElementById('hero');
-    const logoBg = document.getElementById('logoBg');
-    const verdictPanel = document.getElementById('verdictPanel');
-    const meta = document.getElementById('resultsMeta');
-
-    askBtn.disabled = true;
-    vBtn.disabled = true;
-    askBtn.textContent = 'Deliberating…';
-    loading.classList.add('visible');
-    label.textContent = withVerdict ? 'Summoning the jury + rendering verdict…' : 'The jury is deliberating…';
-    grid.innerHTML = '';
-    verdictPanel.classList.remove('visible');
-    meta.textContent = '';
-    hero.classList.add('compact');
-    logoBg.classList.add('dim');
-
-    try {
-      const res = await fetch('/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          models: [...activeModels],
-          verdict: withVerdict
-        })
-      });
-
-      const data = await res.json();
-      loading.classList.remove('visible');
-
-      if (data.error) {
-        grid.innerHTML = `<p style="color:#f87171;text-align:center;padding:40px;grid-column:1/-1">${data.error}</p>`;
-      } else {
-        lastResults = data.results;
-        lastPrompt = prompt;
-        const count = Object.keys(data.results).length;
-        meta.innerHTML = `<strong>${count} model${count !== 1 ? 's' : ''}</strong> responded in <strong>${data.elapsed}s</strong>`;
-
-        for (const [key, text] of Object.entries(data.results)) {
-          const m = models[key];
-          const card = document.createElement('div');
-          card.className = 'result-card';
-          card.style.setProperty('--model-color', m.color);
-          const isErr = text.startsWith('Error:');
-          card.innerHTML = `
-            <div class="card-header">
-              <div class="card-dot"></div>
-              <div class="card-model">${m.label}</div>
-              <div class="card-provider">${m.provider}</div>
-            </div>
-            <div class="card-body ${isErr ? 'error' : ''}">${escHtml(text)}</div>
-          `;
-          grid.appendChild(card);
-        }
-
-        if (data.verdict) {
-          renderVerdictPanel(data.verdict, data.elapsed);
-        }
-      }
-    } catch (err) {
-      loading.classList.remove('visible');
-      grid.innerHTML = `<p style="color:#f87171;text-align:center;padding:40px;grid-column:1/-1">Network error — is the server running?</p>`;
-    }
-
-    askBtn.disabled = false;
-    vBtn.disabled = false;
-    askBtn.textContent = 'Ask the Jury';
-  }
-
-  async function renderVerdictLate() {
-    if (!lastResults) return;
-    const vBtn = document.getElementById('verdictBtnTop');
-    const loading = document.getElementById('loadingWrap');
-    const label = document.getElementById('loadingLabel');
-
-    vBtn.disabled = true;
-    loading.classList.add('visible');
-    label.textContent = 'Rendering verdict…';
-
-    try {
-      const res = await fetch('/verdict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: lastPrompt, results: lastResults })
-      });
-      const data = await res.json();
-      loading.classList.remove('visible');
-      if (data.verdict) renderVerdictPanel(data.verdict, data.elapsed);
-    } catch {
-      loading.classList.remove('visible');
-    }
-
-    vBtn.disabled = false;
-  }
-
-  function renderVerdictPanel(text, elapsed) {
-    const panel = document.getElementById('verdictPanel');
-    const body = document.getElementById('verdictBody');
-    const time = document.getElementById('verdictTime');
-
-    // Bold the section headers
-    const formatted = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    body.innerHTML = formatted;
-    time.textContent = `${elapsed}s`;
-    panel.classList.add('visible');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-</script>
 </body>
 </html>

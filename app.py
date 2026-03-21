@@ -1,7 +1,8 @@
 import os
 import asyncio
 import aiohttp
-from flask import Flask, render_template, request, jsonify
+import requests as req_lib
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
 import time
 
@@ -257,6 +258,83 @@ def render_verdict():
     verdict = asyncio.run(_synth())
     elapsed = round(time.time() - start, 1)
     return jsonify({"verdict": verdict, "elapsed": elapsed})
+
+
+# ── Streaming proxy routes — keep API keys off the browser ──────────────────
+
+def _stream_proxy(upstream_url, upstream_headers, upstream_body):
+    def generate():
+        try:
+            with req_lib.post(upstream_url, headers=upstream_headers,
+                              json=upstream_body, stream=True, timeout=60) as r:
+                for chunk in r.iter_content(chunk_size=None):
+                    if chunk:
+                        yield chunk
+        except Exception as e:
+            yield f"data: {{\"error\": \"{str(e)}\"}}\n\n".encode()
+    return Response(stream_with_context(generate()), content_type='text/event-stream')
+
+
+@app.route('/proxy/claude', methods=['POST'])
+def proxy_claude():
+    d = request.json
+    return _stream_proxy(
+        'https://api.anthropic.com/v1/messages',
+        {'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
+         'content-type': 'application/json'},
+        {'model': 'claude-3-5-haiku-20241022', 'max_tokens': d.get('maxTokens', 600),
+         'stream': True, 'system': d.get('sysPrompt', ''),
+         'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
+    )
+
+
+@app.route('/proxy/gpt', methods=['POST'])
+def proxy_gpt():
+    d = request.json
+    return _stream_proxy(
+        'https://api.openai.com/v1/chat/completions',
+        {'Authorization': f'Bearer {OPENAI_KEY}', 'Content-Type': 'application/json'},
+        {'model': 'gpt-4o', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+         'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
+                      {'role': 'user', 'content': d.get('userPrompt', '')}]}
+    )
+
+
+@app.route('/proxy/gemini', methods=['POST'])
+def proxy_gemini():
+    d = request.json
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key={GOOGLE_KEY}'
+    return _stream_proxy(
+        url,
+        {'Content-Type': 'application/json'},
+        {'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
+         'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
+         'generationConfig': {'maxOutputTokens': d.get('maxTokens', 600), 'temperature': 0.7}}
+    )
+
+
+@app.route('/proxy/mistral', methods=['POST'])
+def proxy_mistral():
+    d = request.json
+    return _stream_proxy(
+        'https://api.mistral.ai/v1/chat/completions',
+        {'Authorization': f'Bearer {MISTRAL_KEY}', 'Content-Type': 'application/json'},
+        {'model': 'mistral-small-latest', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+         'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
+                      {'role': 'user', 'content': d.get('userPrompt', '')}]}
+    )
+
+
+@app.route('/proxy/grok', methods=['POST'])
+def proxy_grok():
+    d = request.json
+    return _stream_proxy(
+        'https://api.x.ai/v1/chat/completions',
+        {'Authorization': f'Bearer {GROK_KEY}', 'Content-Type': 'application/json'},
+        {'model': 'grok-3-mini-beta', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+         'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
+                      {'role': 'user', 'content': d.get('userPrompt', '')}]}
+    )
 
 
 if __name__ == "__main__":
