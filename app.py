@@ -13,7 +13,7 @@ OPENAI_KEY    = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GOOGLE_KEY    = os.getenv("GOOGLE_API_KEY", "")
 GROK_KEY      = os.getenv("GROK_API_KEY", "")
-DEEPSEEK_KEY  = os.getenv("DEEPSEEK_API_KEY", "")
+MISTRAL_KEY   = os.getenv("MISTRAL_API_KEY", "")
 
 MAX_INPUT_CHARS = 500
 
@@ -42,11 +42,11 @@ MODELS = {
         "color": "#1da1f2",
         "enabled": lambda: bool(GROK_KEY),
     },
-    "deepseek": {
-        "label": "DeepSeek R1",
-        "provider": "DeepSeek",
-        "color": "#7c3aed",
-        "enabled": lambda: bool(DEEPSEEK_KEY),
+    "mistral": {
+        "label": "Mistral Large",
+        "provider": "Mistral",
+        "color": "#f0a030",
+        "enabled": lambda: bool(MISTRAL_KEY),
     },
 }
 
@@ -115,12 +115,12 @@ async def call_grok(session, prompt):
         return f"Error: {str(e)}"
 
 
-async def call_deepseek(session, prompt):
+async def call_mistral(session, prompt):
     try:
         async with session.post(
-            "https://api.deepseek.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
-            json={"model": "deepseek-reasoner", "messages": [{"role": "user", "content": prompt}], "max_tokens": 800},
+            "https://api.mistral.ai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {MISTRAL_KEY}", "Content-Type": "application/json"},
+            json={"model": "mistral-large-latest", "messages": [{"role": "user", "content": prompt}], "max_tokens": 800},
             timeout=aiohttp.ClientTimeout(total=30)
         ) as r:
             data = await r.json()
@@ -134,7 +134,7 @@ CALLERS = {
     "claude":   call_anthropic,
     "gemini":   call_gemini,
     "grok":     call_grok,
-    "deepseek": call_deepseek,
+    "mistral":  call_mistral,
 }
 
 
