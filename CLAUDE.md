@@ -13,7 +13,7 @@ Scaffold complete. UI built. Awaiting API keys to go live.
 ## File Structure
 ```
 5i/
-├── app.py              ← Flask, port 5561
+├── app.py              ← Flask, port 5562
 ├── templates/index.html
 ├── static/logo.png     ← Diffuse dark logo from Desktop
 ├── requirements.txt
@@ -28,7 +28,7 @@ Scaffold complete. UI built. Awaiting API keys to go live.
 ```bash
 cd ~/5i
 make setup   # first time only
-make run     # starts on http://127.0.0.1:5561
+make run     # starts on http://127.0.0.1:5562
 ```
 
 ## Models Wired
@@ -64,10 +64,10 @@ make run     # starts on http://127.0.0.1:5561
 - Logo is 32x32 RGBA PNG scaled to 600px in background with blur+brightness for diffuse effect
 
 ## Port
-5561
+5562
 
 ## GitHub
-Not created yet — pending name decision.
+https://github.com/papjamzzz/5i — live, public
 
 ---
 *Last updated: 2026-03-18*
