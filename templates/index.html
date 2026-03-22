@@ -2625,9 +2625,11 @@ async function streamSSE(response, signal, onToken, extractText) {
       const payload = line.slice(6).trim();
       if (payload === '[DONE]') continue;
       try {
-        const chunk = extractText(JSON.parse(payload));
+        const parsed = JSON.parse(payload);
+        if (parsed._err) throw new Error(parsed._err);
+        const chunk = extractText(parsed);
         if (chunk) { onToken(chunk); full += chunk; }
-      } catch {}
+      } catch (e) { if (e.message) throw e; }
     }
   }
   return { text: full, outputTokens: estimateTokens(full) };

@@ -268,16 +268,29 @@ def render_verdict():
 # ── Streaming proxy routes — keep API keys off the browser ──────────────────
 
 def _stream_proxy(upstream_url, upstream_headers, upstream_body):
-    def generate():
+    # Eagerly open the connection so we can check status before streaming
+    try:
+        r = req_lib.post(upstream_url, headers=upstream_headers,
+                         json=upstream_body, stream=True, timeout=60)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+
+    if not r.ok:
+        err = r.text[:400]
+        r.close()
+        return jsonify({"error": f"Upstream {r.status_code}: {err}"}), r.status_code
+
+    def generate(resp):
         try:
-            with req_lib.post(upstream_url, headers=upstream_headers,
-                              json=upstream_body, stream=True, timeout=60) as r:
-                for chunk in r.iter_content(chunk_size=None):
-                    if chunk:
-                        yield chunk
+            for chunk in resp.iter_content(chunk_size=None):
+                if chunk:
+                    yield chunk
         except Exception as e:
-            yield f"data: {{\"error\": \"{str(e)}\"}}\n\n".encode()
-    return Response(stream_with_context(generate()), content_type='text/event-stream',
+            yield f"data: {{\"_err\": \"{str(e)}\"}}\n\n".encode()
+        finally:
+            resp.close()
+
+    return Response(stream_with_context(generate(r)), content_type='text/event-stream',
                     headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
 
 
@@ -341,6 +354,20 @@ def proxy_grok():
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
+
+
+@app.route('/health')
+def health():
+    return jsonify({
+        "status": "ok",
+        "keys": {
+            "openai":    bool(OPENAI_KEY),
+            "anthropic": bool(ANTHROPIC_KEY),
+            "google":    bool(GOOGLE_KEY),
+            "grok":      bool(GROK_KEY),
+            "mistral":   bool(MISTRAL_KEY),
+        }
+    })
 
 
 if __name__ == "__main__":
