@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>5i — User Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:    #050d07;
+    --bg2:   #0a160c;
+    --bg3:   #0f1f12;
+    --green: #3DFF7A;
+    --green-dim: rgba(61,255,122,0.15);
+    --amber: #DA8E20;
+    --ember: #CD4E14;
+    --blue:  #3B82F6;
+    --purple:#7C3AED;
+    --text:  rgba(255,255,255,0.85);
+    --dim:   rgba(255,255,255,0.4);
+    --dimmer:rgba(255,255,255,0.2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,13,7,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(61,255,122,0.12);
+    padding: 12px 32px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--green); letter-spacing: 2px;
+  }
+  .nav-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+  .nav-back {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--dim); text-decoration: none; letter-spacing: 1px;
+    padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .nav-back:hover { color: var(--green); border-color: rgba(61,255,122,0.3); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 820px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center; padding: 64px 0 56px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 64px;
+  }
+  .hero-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 3px;
+    color: var(--green); background: var(--green-dim);
+    border: 1px solid rgba(61,255,122,0.25); border-radius: 20px;
+    padding: 4px 14px; margin-bottom: 20px; text-transform: uppercase;
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(36px, 6vw, 60px); font-weight: 700;
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--green); }
+  .hero-sub {
+    font-size: 16px; color: var(--dim); max-width: 540px; margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+  .hero-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--dimmer); letter-spacing: 1px;
+  }
+  .hero-orbits {
+    display: flex; justify-content: center; gap: 12px; margin: 32px 0;
+    flex-wrap: wrap;
+  }
+  .orbit-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 72px; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--green);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:rgba(61,255,122,0.15); }
+  .section h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700; margin-bottom: 24px;
+  }
+
+  /* ── MODEL CARDS ── */
+  .model-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px; margin-top: 8px;
+  }
+  .model-card {
+    background: var(--bg2);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .model-card:hover { transform: translateY(-2px); }
+  .model-card-glow {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 10px 10px 0 0;
+  }
+  .model-card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .model-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .model-name {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
+  }
+  .model-provider {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--dimmer); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .model-tagline {
+    font-size: 13px; color: var(--dim); line-height: 1.6; margin-bottom: 10px;
+    font-style: italic;
+  }
+  .model-facts {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--dimmer); line-height: 1.8;
+  }
+  .model-facts span { color: var(--text); }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 24px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--green-dim); border: 1px solid rgba(61,255,122,0.3);
+    color: var(--green); font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body h3 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .step-body p { font-size: 14px; color: var(--dim); line-height: 1.7; }
+  .step-comic {
+    font-size: 13px; color: rgba(61,255,122,0.6);
+    font-style: italic; margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: rgba(255,255,255,0.7); line-height: 1.8;
+    margin: 12px 0; overflow-x: auto;
+  }
+  .code-block .g { color: var(--green); }
+  .code-block .a { color: var(--amber); }
+  .code-block .d { color: var(--dim); }
+
+  /* ── SYNTHESIS EXPLAINER ── */
+  .synth-flow {
+    display: flex; flex-direction: column; gap: 8px; margin: 20px 0;
+  }
+  .synth-row-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg2); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px; padding: 12px 16px;
+  }
+  .synth-row-item .icon { font-size: 20px; flex-shrink: 0; }
+  .synth-row-item h4 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .synth-row-item p { font-size: 12px; color: var(--dim); }
+  .synth-arrow {
+    text-align: center; color: var(--dimmer); font-size: 18px;
+    line-height: 1;
+  }
+  .no-go {
+    background: rgba(205,78,20,0.08); border: 1px solid rgba(205,78,20,0.2);
+    border-radius: 6px; padding: 14px 16px; margin: 12px 0;
+    font-size: 13px; color: rgba(255,140,100,0.9); line-height: 1.7;
+  }
+  .no-go strong { color: #F07C5A; }
+
+  /* ── BYOK SECTION ── */
+  .byok-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .byok-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--dimmer);
+    text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .byok-table td {
+    font-size: 13px; padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+  .byok-table td a {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--green); text-decoration: none;
+  }
+  .byok-table td a:hover { text-decoration: underline; }
+  .byok-table .model-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    margin-right: 8px; vertical-align: middle;
+  }
+
+  /* ── SHORTCUTS ── */
+  .shortcuts-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;
+  }
+  .shortcut-item-guide {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg2); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px; padding: 10px 14px;
+  }
+  .shortcut-item-guide span { font-size: 13px; color: var(--dim); }
+  .keys { display: flex; gap: 4px; }
+  .key {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 3px; padding: 2px 6px; color: var(--text);
+  }
+
+  /* ── FOOTER ── */
+  .guide-footer {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 40px; margin-top: 40px;
+    text-align: center;
+  }
+  .guide-footer p {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--dimmer); letter-spacing: 1px; line-height: 2;
+  }
+  .guide-footer a { color: var(--green); text-decoration: none; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: rgba(61,255,122,0.05); border: 1px solid rgba(61,255,122,0.2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0;
+    font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.7;
+  }
+  .callout strong { color: var(--green); }
+
+  /* ── COMIC BUBBLE ── */
+  .bubble {
+    background: var(--bg3); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 12px 16px;
+    font-size: 13px; color: var(--dim); font-style: italic;
+    position: relative; margin: 8px 0 8px 32px;
+  }
+  .bubble::before {
+    content: '';
+    position: absolute; left: -9px; top: 14px;
+    border: 8px solid transparent;
+    border-right-color: rgba(255,255,255,0.1);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">5i</div>
+  <div class="nav-sub">USER GUIDE</div>
+  <a href="/" class="nav-back">← Back to App</a>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">v1.0 · For Developers &amp; Researchers</div>
+    <h1>Five Intelligences.<br/><span>One Answer.</span></h1>
+    <p class="hero-sub">
+      5i runs your prompt through five of the world's most powerful AI models simultaneously,
+      then synthesizes their outputs into one neutral, structured consensus — without picking a winner.
+    </p>
+    <div class="hero-orbits">
+      <div class="orbit-dot" style="background:#22C55E;animation-delay:0s;"></div>
+      <div class="orbit-dot" style="background:#7C3AED;animation-delay:0.3s;"></div>
+      <div class="orbit-dot" style="background:#3B82F6;animation-delay:0.6s;"></div>
+      <div class="orbit-dot" style="background:#DA8E20;animation-delay:0.9s;"></div>
+      <div class="orbit-dot" style="background:#CD4E14;animation-delay:1.2s;"></div>
+    </div>
+    <div class="hero-tag">GPT-4 · Claude · Gemini · Mistral · Grok</div>
+  </div>
+
+  <!-- MEET THE CREW -->
+  <div class="section">
+    <div class="section-label">01 · The Lineup</div>
+    <h2>Meet the Five</h2>
+    <div class="model-grid">
+
+      <!-- GPT -->
+      <div class="model-card" style="border-color:rgba(34,197,94,0.2);">
+        <div class="model-card-glow" style="background:#22C55E;"></div>
+        <div class="model-card-header">
+          <div class="model-icon" style="background:rgba(34,197,94,0.1);">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+              <path d="M12 2.5C15.5 2.5 18.5 4.8 19.5 8C21.2 8.6 22.5 10.2 22.5 12C22.5 13.8 21.2 15.4 19.5 16C18.5 19.2 15.5 21.5 12 21.5C8.5 21.5 5.5 19.2 4.5 16C2.8 15.4 1.5 13.8 1.5 12C1.5 10.2 2.8 8.6 4.5 8C5.5 4.8 8.5 2.5 12 2.5Z" stroke="#22C55E" stroke-width="1.5" fill="rgba(34,197,94,0.1)"/>
+              <path d="M9 8.5L15 8.5L15 10L13 10L13 15.5L11 15.5L11 10L9 10Z" fill="#22C55E" opacity="0.9"/>
+              <circle cx="12" cy="12" r="1.5" fill="#22C55E"/>
+            </svg>
+          </div>
+          <div>
+            <div class="model-name" style="color:#86EFAC;">GPT-4o</div>
+            <div class="model-provider">OpenAI · Orbit 1</div>
+          </div>
+        </div>
+        <div class="model-tagline">"The overachiever. Gives you three pages when you asked for one sentence. Remarkably good at it though."</div>
+        <div class="model-facts">
+          Strength: <span>Reasoning, long-form, coding</span><br/>
+          Style: <span>Thorough, structured, sometimes long-winded</span><br/>
+          Vibe: <span>Your smartest coworker who emails at 2am</span>
+        </div>
+      </div>
+
+      <!-- Claude -->
+      <div class="model-card" style="border-color:rgba(124,58,237,0.2);">
+        <div class="model-card-glow" style="background:#7C3AED;"></div>
+        <div class="model-card-header">
+          <div class="model-icon" style="background:rgba(124,58,237,0.1);">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="#7C3AED" stroke-width="1.5" fill="rgba(124,58,237,0.1)"/>
+              <path d="M8.5 10Q10 7.5 12 7.5Q14 7.5 15.5 10" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M7 13.5Q9.5 17 12 17Q14.5 17 17 13.5" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <circle cx="9.5" cy="12" r="1.2" fill="#7C3AED"/>
+              <circle cx="14.5" cy="12" r="1.2" fill="#7C3AED"/>
+            </svg>
+          </div>
+          <div>
+            <div class="model-name" style="color:#A78BFA;">Claude</div>
+            <div class="model-provider">Anthropic · Orbit 2</div>
+          </div>
+        </div>
+        <div class="model-tagline">"The thoughtful one. Reads the whole paper, considers the ethics, then gives you the nuanced answer you didn't know you needed."</div>
+        <div class="model-facts">
+          Strength: <span>Nuance, safety, long documents</span><br/>
+          Style: <span>Careful, balanced, willing to say "it depends"</span><br/>
+          Vibe: <span>Philosophy PhD who also writes clean code</span>
+        </div>
+      </div>
+
+      <!-- Gemini -->
+      <div class="model-card" style="border-color:rgba(59,130,246,0.2);">
+        <div class="model-card-glow" style="background:#3B82F6;"></div>
+        <div class="model-card-header">
+          <div class="model-icon" style="background:rgba(59,130,246,0.1);">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+              <path d="M12 2C12 2 13 8.5 17 12C13 15.5 12 22 12 22C12 22 11 15.5 7 12C11 8.5 12 2 12 2Z" fill="#3B82F6" opacity="0.95"/>
+              <path d="M2 12C2 12 8.5 11 12 7C15.5 11 22 12 22 12C22 12 15.5 13 12 17C8.5 13 2 12 2 12Z" fill="#3B82F6" opacity="0.60"/>
+            </svg>
+          </div>
+          <div>
+            <div class="model-name" style="color:#93C5FD;">Gemini</div>
+            <div class="model-provider">Google · Orbit 3</div>
+          </div>
+        </div>
+        <div class="model-tagline">"Has indexed more of the internet than you've read in your lifetime. Sometimes it shows. Multimodal and unafraid."</div>
+        <div class="model-facts">
+          Strength: <span>Speed, multimodal, up-to-date knowledge</span><br/>
+          Style: <span>Confident, snappy, data-forward</span><br/>
+          Vibe: <span>Google Search grew up and went to grad school</span>
+        </div>
+      </div>
+
+      <!-- Mistral -->
+      <div class="model-card" style="border-color:rgba(218,142,32,0.2);">
+        <div class="model-card-glow" style="background:#DA8E20;"></div>
+        <div class="model-card-header">
+          <div class="model-icon" style="background:rgba(218,142,32,0.1);">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+              <rect x="2" y="2" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.95"/>
+              <rect x="15" y="2" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.95"/>
+              <rect x="2" y="15" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.55"/>
+              <rect x="15" y="15" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.55"/>
+              <path d="M9 5.5L12 9L15 5.5" stroke="#DA8E20" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <div>
+            <div class="model-name" style="color:#FDE68A;">Mistral</div>
+            <div class="model-provider">Mistral AI · Orbit 4</div>
+          </div>
+        </div>
+        <div class="model-tagline">"The European. Efficient, no-nonsense, surprisingly powerful for its size. Doesn't waste your time or your tokens."</div>
+        <div class="model-facts">
+          Strength: <span>Efficiency, instruction following, code</span><br/>
+          Style: <span>Direct, precise, refreshingly concise</span><br/>
+          Vibe: <span>Berlin engineer who ships twice and ships fast</span>
+        </div>
+      </div>
+
+      <!-- Grok -->
+      <div class="model-card" style="border-color:rgba(205,78,20,0.2);">
+        <div class="model-card-glow" style="background:#CD4E14;"></div>
+        <div class="model-card-header">
+          <div class="model-icon" style="background:rgba(205,78,20,0.1);">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none">
+              <line x1="4" y1="4" x2="20" y2="20" stroke="#CD4E14" stroke-width="3.5" stroke-linecap="round"/>
+              <line x1="20" y1="4" x2="4" y2="20" stroke="#CD4E14" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="3" fill="rgba(205,78,20,0.2)" stroke="#CD4E14" stroke-width="1"/>
+            </svg>
+          </div>
+          <div>
+            <div class="model-name" style="color:#FCA5A5;">Grok</div>
+            <div class="model-provider">xAI · Orbit 5</div>
+          </div>
+        </div>
+        <div class="model-tagline">"The wildcard. Chain-of-thought reasoning out in the open. Might give you the answer, might give you a better question."</div>
+        <div class="model-facts">
+          Strength: <span>Reasoning, real-time knowledge, contrarian takes</span><br/>
+          Style: <span>Unfiltered, exploratory, thinks out loud</span><br/>
+          Vibe: <span>The dev who asks "but why though?" and turns out to be right</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div class="section">
+    <div class="section-label">02 · The Workflow</div>
+    <h2>How to Run 5i</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Type your prompt</h3>
+          <p>Enter any question, problem, or research topic in the main input. Works best with open-ended questions where different models might disagree — that's when 5i earns its keep.</p>
+          <div class="step-comic">// e.g. "What's the best database for a real-time multiplayer game?"</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Hit Synthesize (⌘↵)</h3>
+          <p>Each model answers sequentially, building on the previous response. You'll see them stream in one by one. The chain runs GPT → Claude → Gemini → Mistral → Grok.</p>
+          <div class="step-comic">// Watch the orbits glow as each model joins in</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Read the Consensus</h3>
+          <p>The green block at the top is the Synthesis Engine's output — a neutral aggregation of all five perspectives. The main answer is shown immediately. Hit <strong>"Tell me more"</strong> to expand the full breakdown: what everyone agreed on, where they diverged, and unique insights from individual models.</p>
+          <div class="step-comic">// The synthesis never picks a winner. That's the point.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Explore the chain outputs</h3>
+          <p>Below the consensus you'll see each model's individual contribution with cost estimates and timing. Useful when you want to see the raw reasoning before it was synthesized.</p>
+          <div class="step-comic">// "MODEL CHAIN — HOW WE GOT HERE"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE SYNTHESIS ENGINE -->
+  <div class="section">
+    <div class="section-label">03 · Under the Hood</div>
+    <h2>The Synthesis Engine</h2>
+    <p style="color:var(--dim);margin-bottom:20px;font-size:14px;">
+      The consensus block isn't a summary. It's produced by a constrained AI instance playing the role of a
+      <strong style="color:var(--text);">neutral meta-analyst</strong> — not a judge, not a summarizer.
+      It's been explicitly told to behave differently than it normally would.
+    </p>
+
+    <div class="synth-flow">
+      <div class="synth-row-item">
+        <div class="icon">🔍</div>
+        <div>
+          <h4>Unified Synthesis</h4>
+          <p>A clean, direct answer to the original question — synthesized from all models, not copied from any one of them.</p>
+        </div>
+      </div>
+      <div class="synth-arrow">↓</div>
+      <div class="synth-row-item">
+        <div class="icon">✅</div>
+        <div>
+          <h4>Consensus Points</h4>
+          <p>What all or most models explicitly agreed on. If fewer than 3 models agree, it doesn't count as consensus.</p>
+        </div>
+      </div>
+      <div class="synth-arrow">↓</div>
+      <div class="synth-row-item">
+        <div class="icon">⚡</div>
+        <div>
+          <h4>Divergences</h4>
+          <p>Where models meaningfully disagreed. Not smoothed over. Not averaged. Preserved as-is for you to evaluate.</p>
+        </div>
+      </div>
+      <div class="synth-arrow">↓</div>
+      <div class="synth-row-item">
+        <div class="icon">💎</div>
+        <div>
+          <h4>Unique Contributions</h4>
+          <p>Insights that only one model mentioned. Often the most valuable signal — the outlier that turns out to be right.</p>
+        </div>
+      </div>
+      <div class="synth-arrow">↓</div>
+      <div class="synth-row-item">
+        <div class="icon">❓</div>
+        <div>
+          <h4>Open Questions</h4>
+          <p>What none of the models could resolve. Uncertainty is surfaced, not hidden. This is a feature, not a bug.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-go" style="margin-top:20px;">
+      <strong>What the engine is forbidden from doing:</strong><br/>
+      — Picking a "best" answer or ranking models<br/>
+      — Inferring agreement that isn't explicitly stated<br/>
+      — Merging statements that differ in meaning, even if they sound similar<br/>
+      — Discarding minority viewpoints unless they're demonstrably wrong<br/>
+      — Hallucinating consensus where there is none
+    </div>
+
+    <div class="callout">
+      <strong>Why this matters:</strong> Standard AI summarizers average outputs or pick a winner.
+      5i's synthesis engine was designed to be a <em>map of the disagreement space</em>, not a flattener of it.
+      When models agree, that's signal. When they disagree, that's also signal — and you get to see both.
+    </div>
+  </div>
+
+  <!-- BYOK -->
+  <div class="section">
+    <div class="section-label">04 · Developer Setup</div>
+    <h2>Bring Your Own Keys (BYOK)</h2>
+    <p style="color:var(--dim);margin-bottom:20px;font-size:14px;">
+      5i can run on server-side keys (set by the host) or your own API keys stored locally in your browser.
+      BYOK means your keys never touch the server — they're sent directly with each request and stay in your localStorage.
+    </p>
+
+    <div class="steps">
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:13px;width:32px;height:32px;">1</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Open Connected Models in the left panel</h3>
+          <p>Click the <strong>Set</strong> button next to any model. Paste your API key. Done.</p>
+        </div>
+      </div>
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:13px;width:32px;height:32px;">2</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Badge turns amber → BYOK</h3>
+          <p>Green badge = server key. Amber badge = your key. Your key always takes priority.</p>
+        </div>
+      </div>
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:13px;width:32px;height:32px;">3</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Keys persist across sessions</h3>
+          <p>Stored in localStorage. They survive page reloads. Use the BYOK button to clear all and start fresh.</p>
+        </div>
+      </div>
+    </div>
+
+    <table class="byok-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Provider</th>
+          <th>Get Your Key</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="model-dot" style="background:#22C55E;"></span>GPT-4o</td>
+          <td style="color:var(--dim);">OpenAI</td>
+          <td><a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys ↗</a></td>
+        </tr>
+        <tr>
+          <td><span class="model-dot" style="background:#7C3AED;"></span>Claude</td>
+          <td style="color:var(--dim);">Anthropic</td>
+          <td><a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com ↗</a></td>
+        </tr>
+        <tr>
+          <td><span class="model-dot" style="background:#3B82F6;"></span>Gemini</td>
+          <td style="color:var(--dim);">Google</td>
+          <td><a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com ↗</a></td>
+        </tr>
+        <tr>
+          <td><span class="model-dot" style="background:#DA8E20;"></span>Mistral</td>
+          <td style="color:var(--dim);">Mistral AI</td>
+          <td><a href="https://console.mistral.ai/api-keys/" target="_blank">console.mistral.ai ↗</a></td>
+        </tr>
+        <tr>
+          <td><span class="model-dot" style="background:#CD4E14;"></span>Grok</td>
+          <td style="color:var(--dim);">xAI</td>
+          <td><a href="https://console.x.ai/" target="_blank">console.x.ai ↗</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block" style="margin-top:20px;">
+      <span class="d"># Health check — see which keys are active on the server</span><br/>
+      curl <span class="g">https://your-5i-url.railway.app/health</span><br/><br/>
+      <span class="d"># Expected response when all keys are set:</span><br/>
+      {<span class="a">"keys"</span>: {<span class="a">"anthropic"</span>: <span class="g">true</span>, <span class="a">"openai"</span>: <span class="g">true</span>, ...}, <span class="a">"status"</span>: <span class="g">"ok"</span>}
+    </div>
+  </div>
+
+  <!-- SHORTCUTS -->
+  <div class="section">
+    <div class="section-label">05 · Shortcuts</div>
+    <h2>Keyboard Shortcuts</h2>
+    <div class="shortcuts-grid">
+      <div class="shortcut-item-guide">
+        <span>Synthesize</span>
+        <div class="keys"><span class="key">⌘</span><span class="key">↵</span></div>
+      </div>
+      <div class="shortcut-item-guide">
+        <span>Toggle System Prompt</span>
+        <div class="keys"><span class="key">⌘</span><span class="key">/</span></div>
+      </div>
+      <div class="shortcut-item-guide">
+        <span>Randomize Faders</span>
+        <div class="keys"><span class="key">⌘</span><span class="key">R</span></div>
+      </div>
+      <div class="shortcut-item-guide">
+        <span>Open File</span>
+        <div class="keys"><span class="key">⌘</span><span class="key">O</span></div>
+      </div>
+      <div class="shortcut-item-guide">
+        <span>Cancel Synthesis</span>
+        <div class="keys"><span class="key">ESC</span></div>
+      </div>
+      <div class="shortcut-item-guide">
+        <span>Copy Output</span>
+        <div class="keys"><span class="key">⌘</span><span class="key">C</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="section">
+    <div class="section-label">06 · Pro Tips</div>
+    <h2>Getting the Most Out of 5i</h2>
+    <div class="steps">
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:18px;width:36px;height:36px;">💡</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Ask contentious questions</h3>
+          <p>5i shines when models disagree. "What's the best way to handle auth in a React app?" will get 5 different answers — the divergences section is where the real value lives.</p>
+        </div>
+      </div>
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:18px;width:36px;height:36px;">🎚️</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Use the faders to weight models</h3>
+          <p>The vertical faders on the left panel adjust each model's weight in the synthesis. Turn down Grok if you want less chaos. Turn up Claude if you want more nuance.</p>
+        </div>
+      </div>
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:18px;width:36px;height:36px;">🧠</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Use the System Prompt (⌘/) for role-setting</h3>
+          <p>Set a system prompt before synthesizing to frame all models in a specific context — "you are advising a startup CTO" will shift all five responses meaningfully.</p>
+        </div>
+      </div>
+      <div class="step" style="padding:16px 0;">
+        <div class="step-num" style="font-size:18px;width:36px;height:36px;">📊</div>
+        <div class="step-body">
+          <h3 style="font-size:14px;">Watch the Disagreement Bar</h3>
+          <p>The bar below the Synthesize button shows Agreement, Divergence, Consensus %, and Confidence in real-time. High divergence on a factual question = a model might be wrong.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="guide-footer">
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M12 2.5C15.5 2.5 18.5 4.8 19.5 8C21.2 8.6 22.5 10.2 22.5 12C22.5 13.8 21.2 15.4 19.5 16C18.5 19.2 15.5 21.5 12 21.5C8.5 21.5 5.5 19.2 4.5 16C2.8 15.4 1.5 13.8 1.5 12C1.5 10.2 2.8 8.6 4.5 8C5.5 4.8 8.5 2.5 12 2.5Z" stroke="#22C55E" stroke-width="1.5" fill="rgba(34,197,94,0.1)"/><path d="M9 8.5L15 8.5L15 10L13 10L13 15.5L11 15.5L11 10L9 10Z" fill="#22C55E"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><circle cx="12" cy="12" r="9" stroke="#7C3AED" stroke-width="1.5" fill="rgba(124,58,237,0.1)"/><path d="M8.5 10Q10 7.5 12 7.5Q14 7.5 15.5 10" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M7 13.5Q9.5 17 12 17Q14.5 17 17 13.5" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="9.5" cy="12" r="1.2" fill="#7C3AED"/><circle cx="14.5" cy="12" r="1.2" fill="#7C3AED"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M12 2C12 2 13 8.5 17 12C13 15.5 12 22 12 22C12 22 11 15.5 7 12C11 8.5 12 2 12 2Z" fill="#3B82F6" opacity="0.95"/><path d="M2 12C2 12 8.5 11 12 7C15.5 11 22 12 22 12C22 12 15.5 13 12 17C8.5 13 2 12 2 12Z" fill="#3B82F6" opacity="0.60"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.95"/><rect x="15" y="2" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.95"/><rect x="2" y="15" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.55"/><rect x="15" y="15" width="7" height="7" rx="1" fill="#DA8E20" opacity="0.55"/><path d="M9 5.5L12 9L15 5.5" stroke="#DA8E20" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><line x1="4" y1="4" x2="20" y2="20" stroke="#CD4E14" stroke-width="3.5" stroke-linecap="round"/><line x1="20" y1="4" x2="4" y2="20" stroke="#CD4E14" stroke-width="3.5" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="rgba(205,78,20,0.2)" stroke="#CD4E14" stroke-width="1"/></svg>
+    </div>
+    <p>
+      <strong style="color:rgba(255,255,255,0.5);">5i — Ensemble Intelligence Interface</strong><br/>
+      Five Intelligences. One Answer. No winners.<br/>
+      <a href="https://github.com/papjamzzz/5i" target="_blank">github.com/papjamzzz/5i</a> ·
+      <a href="/health" target="_blank">/health</a> ·
+      <a href="/">← Back to App</a>
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

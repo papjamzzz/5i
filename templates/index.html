@@ -1309,6 +1309,12 @@ header:hover .btn-fullscreen { opacity: 1; }
           </div>
           <div class="api-rows" id="apiRows"></div>
         </div>
+        <a href="/guide" target="_blank" class="byok-btn" style="text-decoration:none;margin-bottom:0;">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px;flex-shrink:0;">
+            <circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.5v.5"/>
+          </svg>
+          USER GUIDE
+        </a>
         <button class="byok-btn" onclick="openBYOK()" data-info="BYOK — Bring Your Own Keys|Clears all loaded API keys so you can enter your own. Models will go offline until new keys are added via the Set button on each model row above.">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M11 7H3a1 1 0 00-1 1v5a1 1 0 001 1h10a1 1 0 001-1V8a1 1 0 00-1-1h-1"/>
@@ -2507,19 +2513,41 @@ async function synthesize() {
       /* Stream the synthesis */
       try {
         const synthResult = await callModelStreaming(synthKey, {
-          sysPrompt: 'You are a synthesis engine. Distill multiple AI perspectives into one clean, definitive, well-written answer. No meta-commentary. Just the best answer.',
+          sysPrompt: 'You are a neutral synthesis engine. Aggregate without bias. Follow the output structure exactly as specified in the user message.',
           userPrompt: synthUserPrompt,
           maxTokens: MAX_TOKENS * 2,
           signal: synthController?.signal,
           onToken: (chunk) => {
             consensusText += chunk;
-            consensusOutEl.textContent = consensusText;
-            out.scrollTop = 0; /* keep consensus in view */
+            /* Show only the Unified Synthesis section while streaming */
+            const splitIdx = consensusText.search(/\n\*\*(Consensus Points|Divergences|Unique Contributions|Open Questions)\*\*/i);
+            const display = splitIdx > 0 ? consensusText.slice(0, splitIdx) : consensusText;
+            consensusOutEl.innerHTML = renderMd(display.replace(/^\*\*Unified Synthesis\*\*\s*[—–-]?\s*/i, '').trim());
+            out.scrollTop = 0;
           }
         });
         const synthCost = estimateStepCost(synthKey, synthUserPrompt, MAX_TOKENS * 2);
         totalEstCost += synthCost;
         totalOutTokens += estimateTokens(consensusText);
+
+        /* ── Post-process: split main answer from details ── */
+        const splitIdx = consensusText.search(/\n\*\*(Consensus Points|Divergences|Unique Contributions|Open Questions)\*\*/i);
+        if (splitIdx > 0) {
+          const mainPart = consensusText.slice(0, splitIdx).replace(/^\*\*Unified Synthesis\*\*\s*[—–-]?\s*/i, '').trim();
+          const detailPart = consensusText.slice(splitIdx).trim();
+          consensusOutEl.innerHTML = `
+            <div id="synth-main-answer">${renderMd(mainPart)}</div>
+            <button id="synth-more-btn" onclick="toggleSynthDetails(this)" style="
+              margin-top:16px;background:rgba(61,255,122,0.06);
+              border:1px solid rgba(61,255,122,0.2);color:rgba(61,255,122,0.7);
+              font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+              padding:6px 14px;border-radius:4px;cursor:pointer;width:100%;text-align:left;
+              transition:all 0.15s;
+            ">▸ Tell me more — consensus, divergences &amp; unique insights</button>
+            <div id="synth-details" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
+              ${renderMd(detailPart)}
+            </div>`;
+        }
       } catch (err) {
         if (err.name !== 'AbortError') {
           consensusOutEl.innerHTML = `<span style="color:#F07C5A;">⚠ Synthesis failed: ${err.message}</span>`;
@@ -2601,6 +2629,32 @@ function showSynthesisMethod() {
   `;
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
   document.body.appendChild(modal);
+}
+
+/* ── MARKDOWN RENDERER (minimal) ─────────────────────── */
+function renderMd(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^[—–•\-] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>)(\n<li>|$)/g, '$1$2')
+    .replace(/(<li>)/g, '<ul style="margin:6px 0 6px 16px;padding:0;list-style:disc;"><li>')
+    .replace(/(<\/li>)(?!\n<li>)/g, '</li></ul>')
+    .replace(/\n{2,}/g, '</p><p style="margin:10px 0;">')
+    .replace(/^(?!<)(.+)$/gm, (m) => `<p style="margin:8px 0;">${m}</p>`)
+    .replace(/<p[^>]*><\/p>/g, '');
+}
+
+/* ── TELL ME MORE toggle ──────────────────────────────── */
+function toggleSynthDetails(btn) {
+  const d = document.getElementById('synth-details');
+  if (!d) return;
+  const open = d.style.display !== 'none';
+  d.style.display = open ? 'none' : 'block';
+  btn.textContent = open
+    ? '▸ Tell me more — consensus, divergences & unique insights'
+    : '▾ Hide details';
 }
 
 function resetBtn(btn) {

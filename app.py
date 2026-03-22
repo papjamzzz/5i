@@ -394,6 +394,11 @@ def proxy_grok():
     )
 
 
+@app.route('/guide')
+def guide():
+    return render_template('guide.html')
+
+
 @app.route('/health')
 def health():
     return jsonify({
