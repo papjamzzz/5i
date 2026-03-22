@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>5i — AI Synthesis</title>
+<link rel="icon" href="/static/favicon.png" type="image/png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -516,10 +517,17 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .hero-logo-canvas {
   width: 200px; height: 200px;
-  filter: drop-shadow(0 0 40px rgba(88,222,131,0.55))
-          drop-shadow(0 0 90px rgba(88,222,131,0.22))
-          drop-shadow(0 0 4px rgba(195,253,216,0.4));
   cursor: crosshair;
+}
+.hero-logo-img {
+  position: absolute;
+  width: 96px; height: 96px;
+  object-fit: cover;
+  object-position: center 47%;
+  border-radius: 22px;
+  filter: drop-shadow(0 0 28px rgba(0,210,240,0.55))
+          drop-shadow(0 0 8px rgba(0,210,240,0.30));
+  pointer-events: none;
 }
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
@@ -1409,7 +1417,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   <!-- ── HEADER ─────────────────────────────────────── -->
   <header>
     <div class="logo-mark">
-      <canvas class="logo-icon" id="logo-icon-canvas" width="76" height="76"></canvas>
+      <img src="/static/logo.png" class="logo-icon" id="logo-icon-img" alt="5i" onerror="this.style.display='none'" style="object-fit:cover;object-position:center 47%;border-radius:9px;"/>
       <div class="logo-5i">5i</div>
     </div>
 
@@ -1436,8 +1444,8 @@ header:hover .btn-fullscreen { opacity: 1; }
       <div class="hero-logo-section">
         <div class="hero-logo-wrap">
           <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
+          <img src="/static/logo.png" class="hero-logo-img" alt="5i logo" onerror="this.style.display='none'"/>
         </div>
-        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:50px;color:var(--mint);letter-spacing:-2px;text-align:center;margin-top:10px;line-height:1;">5i</div>
         <div class="hero-subtitle">The AI Synthesis Consortium</div>
       </div>
 
@@ -3248,7 +3256,8 @@ function initOrbitalBackground() {
    HERO LOGO CANVAS — the big glowing orbital logo
 ═══════════════════════════════════════════════════════ */
 function drawHeroLogo(canvas) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!ctx) return;
   const W = canvas.width, H = canvas.height;
   const cx = W / 2, cy = H / 2;
 
@@ -3461,9 +3470,7 @@ function initHeroLogo() {
   }
   requestAnimationFrame(animate);
 
-  /* Small logo icon for header */
-  const icon = document.getElementById('logo-icon-canvas');
-  if (icon) { drawHeroLogo(icon); }
+  /* Small logo icon for header — now an <img>, drawHeroLogo is a no-op on non-canvas */
 }
 
 /* ═══════════════════════════════════════════════════════

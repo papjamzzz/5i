@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>5i — User Guide</title>
+<link rel="icon" href="/static/favicon.png" type="image/png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -41,9 +42,15 @@
     display: flex; align-items: center; gap: 16px;
   }
   .nav-logo {
+    display: flex; align-items: center; gap: 10px;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 18px; font-weight: 700;
     color: var(--green); letter-spacing: 2px;
+  }
+  .nav-logo img {
+    width: 32px; height: 32px;
+    object-fit: cover; object-position: center 47%;
+    border-radius: 7px;
   }
   .nav-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--dim); letter-spacing: 1px; }
   .nav-back {
@@ -316,7 +323,10 @@
 
 <!-- NAV -->
 <nav class="nav">
-  <div class="nav-logo">5i</div>
+  <div class="nav-logo">
+    <img src="/static/logo.png" alt="5i" onerror="this.style.display='none'"/>
+    5i
+  </div>
   <div class="nav-sub">USER GUIDE</div>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
     <button class="nav-action nav-copy" id="copyBtn" onclick="copyGuide()" title="Copy guide text to clipboard">
