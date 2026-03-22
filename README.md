@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/logo.png" width="120" alt="5i logo"/>
+</p>
+
 # 5i — Five Intelligences
 
 **One prompt. Five AI models. One synthesized verdict.**
