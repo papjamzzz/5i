@@ -34,6 +34,86 @@
   --inset:       rgba(0,0,0,0.25);
   --led-off:     rgba(31,90,56,0.28);
 }
+/* ── LIGHT MODE THEME ────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #F2F6F4;
+  --bg2:         #E8EEeb;
+  --bg3:         #DDE6E1;
+  --bg4:         #E4EDE8;
+  --border:      #2A7A48;
+  --border-dim:  #9ABFAC;
+  --border-hi:   #2A7A48;
+  --green:       #1A6B35;
+  --green-bright:#1A6B35;
+  --green-deep:  #C0DECE;
+  --mint:        #0D1F16;
+  --mint-dim:    rgba(13,31,22,0.65);
+  --amber:       #966000;
+  --ember:       #A83000;
+  --panel-bg:    rgba(235,242,238,0.96);
+  --inset:       rgba(0,0,0,0.06);
+  --led-off:     rgba(100,170,130,0.25);
+}
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--mint);
+}
+[data-theme="light"] .panel,
+[data-theme="light"] .right-panel {
+  background: var(--panel-bg) !important;
+  border-color: var(--border-dim) !important;
+}
+[data-theme="light"] .output-area,
+[data-theme="light"] .prompt-textarea,
+[data-theme="light"] .sys-prompt-input {
+  background: rgba(0,0,0,0.04) !important;
+  color: var(--mint) !important;
+  border-color: var(--border-dim) !important;
+}
+[data-theme="light"] .prompt-textarea::placeholder,
+[data-theme="light"] .sys-prompt-input::placeholder { color: rgba(13,31,22,0.35) !important; }
+[data-theme="light"] .btn-synth {
+  background: rgba(26,107,53,0.1) !important;
+  border-color: var(--border) !important;
+  color: var(--green) !important;
+}
+[data-theme="light"] .btn-synth:hover { background: rgba(26,107,53,0.18) !important; }
+[data-theme="light"] .cost-bar,
+[data-theme="light"] .info-view,
+[data-theme="light"] .ghost-hud { background: rgba(220,234,228,0.95) !important; }
+[data-theme="light"] .disagree-bar { background: rgba(0,0,0,0.05) !important; border-color: var(--border-dim) !important; }
+[data-theme="light"] .tab-btn { color: rgba(13,31,22,0.5) !important; }
+[data-theme="light"] .tab-btn.active { color: var(--green) !important; border-color: var(--green) !important; }
+[data-theme="light"] .kbd-key,
+[data-theme="light"] .key { background: rgba(0,0,0,0.08) !important; border-color: rgba(0,0,0,0.15) !important; color: var(--mint) !important; }
+[data-theme="light"] .byok-btn { background: rgba(0,0,0,0.05) !important; border-color: var(--border-dim) !important; color: var(--mint-dim) !important; }
+[data-theme="light"] .byok-btn:hover { border-color: var(--green) !important; color: var(--green) !important; }
+[data-theme="light"] .panel-label { color: var(--green) !important; }
+[data-theme="light"] #orbital-canvas { opacity: 0.25; }
+
+/* Default mode = follow OS preference */
+@media (prefers-color-scheme: light) {
+  [data-theme="default"] {
+    --bg:          #F2F6F4;
+    --bg2:         #E8EEeb;
+    --bg3:         #DDE6E1;
+    --bg4:         #E4EDE8;
+    --border:      #2A7A48;
+    --border-dim:  #9ABFAC;
+    --border-hi:   #2A7A48;
+    --green:       #1A6B35;
+    --green-bright:#1A6B35;
+    --green-deep:  #C0DECE;
+    --mint:        #0D1F16;
+    --mint-dim:    rgba(13,31,22,0.65);
+    --amber:       #966000;
+    --ember:       #A83000;
+    --panel-bg:    rgba(235,242,238,0.96);
+    --inset:       rgba(0,0,0,0.06);
+    --led-off:     rgba(100,170,130,0.25);
+  }
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -1568,6 +1648,16 @@ header:hover .btn-fullscreen { opacity: 1; }
         </div>
       </div>
 
+      <!-- Theme Toggle -->
+      <div>
+        <div class="panel-label">Display</div>
+        <div id="themeToggle" style="display:flex;gap:4px;margin-top:2px;">
+          <button onclick="setTheme('dark')"   id="theme-dark"    style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
+          <button onclick="setTheme('default')" id="theme-default" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
+          <button onclick="setTheme('light')"  id="theme-light"   style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
+        </div>
+      </div>
+
       <!-- Keyboard Shortcuts -->
       <div>
         <div class="panel-label">Shortcuts</div>
@@ -1980,6 +2070,25 @@ function loadKeysFromStorage() {
     const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
     Object.entries(saved).forEach(([k, v]) => { if (MODELS[k]) MODELS[k].apiKey = v; });
   } catch(e) {}
+}
+
+/* ── THEME ───────────────────────────────────────────── */
+function setTheme(mode) {
+  document.documentElement.setAttribute('data-theme', mode);
+  localStorage.setItem('5i_theme', mode);
+  ['dark','default','light'].forEach(m => {
+    const btn = document.getElementById('theme-' + m);
+    if (!btn) return;
+    const active = m === mode;
+    btn.style.background    = active ? 'rgba(61,255,122,0.12)'        : 'var(--inset)';
+    btn.style.borderColor   = active ? 'var(--green)'                 : 'var(--border-dim)';
+    btn.style.color         = active ? 'var(--green)'                 : 'var(--mint-dim)';
+    btn.style.fontWeight    = active ? '700'                          : '400';
+  });
+}
+function loadTheme() {
+  const saved = localStorage.getItem('5i_theme') || 'dark';
+  setTheme(saved);
 }
 
 /* ── AI LOGO CARICATURES — inline SVG per model ─────── */
@@ -3285,6 +3394,7 @@ window.addEventListener('DOMContentLoaded', () => {
   buildApiRows();
   updateUI();
   initFileDrop();
+  loadTheme();
 });
 
 
