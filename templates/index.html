@@ -196,28 +196,6 @@
 /* ── LIGHT: panel label ── */
 [data-theme="light"] .panel-label { color: var(--green) !important; }
 
-/* Default mode = follow OS preference */
-@media (prefers-color-scheme: light) {
-  [data-theme="default"] {
-    --bg:          #FFFFFF;
-    --bg2:         #F5F5F5;
-    --bg3:         #EFEFEF;
-    --bg4:         #F8F8F8;
-    --border:      #2A7A48;
-    --border-dim:  #BBCFC5;
-    --border-hi:   #1D6B3C;
-    --green:       #166130;
-    --green-bright:#1D8040;
-    --green-deep:  #C8E6D6;
-    --mint:        #0A0A0A;
-    --mint-dim:    rgba(10,10,10,0.70);
-    --amber:       #8A5200;
-    --ember:       #9A2800;
-    --panel-bg:    rgba(255,255,255,0.98);
-    --inset:       rgba(0,0,0,0.04);
-    --led-off:     rgba(100,170,130,0.20);
-  }
-}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -1782,9 +1760,8 @@ header:hover .btn-fullscreen { opacity: 1; }
       <div>
         <div class="panel-label">Display</div>
         <div id="themeToggle" style="display:flex;gap:4px;margin-top:2px;">
-          <button onclick="setTheme('dark')"    id="theme-dark"    data-info="Dark Mode|Forces the dark theme regardless of your OS setting. Deep green-black palette. Easy on the eyes for long sessions." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
-          <button onclick="setTheme('default')" id="theme-default" data-info="Auto Mode|Follows your OS appearance setting. Dark on macOS dark mode, light on macOS light mode. Updates automatically when you switch." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
-          <button onclick="setTheme('light')"   id="theme-light"   data-info="Light Mode|Forces the light theme. Light green-grey palette, dark text. Good for presentations, bright environments, or when your eyes need a break from dark UI." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
+          <button onclick="setTheme('dark')"  id="theme-dark"  data-info="Dark Mode|Default. Deep green-black palette. Easy on the eyes for long sessions." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
+          <button onclick="setTheme('light')" id="theme-light" data-info="Light Mode|White background, dark text. Good for bright environments and presentations." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
         </div>
       </div>
 
@@ -2206,7 +2183,7 @@ function loadKeysFromStorage() {
 function setTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
   localStorage.setItem('5i_theme', mode);
-  ['dark','default','light'].forEach(m => {
+  ['dark','light'].forEach(m => {
     const btn = document.getElementById('theme-' + m);
     if (!btn) return;
     const active = m === mode;
