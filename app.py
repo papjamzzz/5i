@@ -146,22 +146,45 @@ CALLERS = {
 
 # ── Synthesis / Judge pass ────────────────────────────────────────────────────
 
-SYNTHESIS_PROMPT = """You are a neutral synthesis engine. Multiple AI models have answered the same question.
-Your job is to produce ONE clear, unified answer by:
-1. Identifying what all models agree on (core consensus)
-2. Noting any meaningful disagreements or unique insights
-3. Delivering a final synthesized answer that is more reliable than any single response
+SYNTHESIS_PROMPT = """You are a neutral synthesis engine. Your function is to aggregate outputs from multiple independent AI models into a single coherent analysis — without preference, ranking, or bias toward any source.
+
+You will be given {n} independent AI responses to the same prompt.
+
+Your task:
+1. Preserve all materially distinct insights across all responses
+2. Do NOT prefer, rank, or bias toward any model
+3. Identify areas of consensus and divergence with precision
+4. Resolve redundancy by merging overlapping points — do not repeat them
+5. Clearly distinguish between:
+   — Shared conclusions (agreement across models)
+   — Divergent perspectives (meaningful disagreement between models)
+   — Unique insights (present in only one response)
+
+Output Requirements:
+— Do NOT mention model names
+— Do NOT evaluate which response is "better"
+— Do NOT discard minority viewpoints unless clearly erroneous
+— Do NOT infer agreement unless it is explicitly present across responses
+— Do NOT merge statements that differ in meaning even if they sound similar
+— Maintain technical precision suitable for software developers and researchers
+— Explicitly flag uncertainty or ambiguity where it exists
+
+Structure your output as:
+
+**Unified Synthesis** — a clean, coherent answer to the original question
+**Consensus Points** — what all or most responses agreed on (bullet list)
+**Divergences** — meaningful disagreements or contrasting positions (bullet list)
+**Unique Contributions** — notable insights that appeared in only one response
+**Open Questions** — unresolved uncertainty or gaps across all responses (omit if none)
+
+Style: concise, information-dense, no filler language, preserve technical terminology.
 
 Original question: {question}
 
 Model responses:
 {responses}
 
-Output format:
-**Consensus:** (1-2 sentences — what all models agreed on)
-**Key Disagreements:** (brief — only if meaningful, otherwise "None significant")
-**Influence:** (which model(s) contributed most to the final answer and why)
-**Verdict:** (the final synthesized answer — clear, direct, authoritative)"""
+Begin synthesis."""
 
 
 async def synthesize(session, question, results):
@@ -176,6 +199,7 @@ async def synthesize(session, question, results):
         return "Error: No valid model responses to synthesize."
 
     full_prompt = SYNTHESIS_PROMPT.format(
+        n=len(results),
         question=question,
         responses=responses_text
     )
