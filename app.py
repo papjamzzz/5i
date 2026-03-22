@@ -288,7 +288,7 @@ def proxy_claude():
         'https://api.anthropic.com/v1/messages',
         {'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
          'content-type': 'application/json'},
-        {'model': 'claude-3-5-haiku-20241022', 'max_tokens': d.get('maxTokens', 600),
+        {'model': 'claude-haiku-4-5-20251001', 'max_tokens': d.get('maxTokens', 600),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -309,7 +309,7 @@ def proxy_gpt():
 @app.route('/proxy/gemini', methods=['POST'])
 def proxy_gemini():
     d = request.json
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key={GOOGLE_KEY}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key={GOOGLE_KEY}'
     return _stream_proxy(
         url,
         {'Content-Type': 'application/json'},
