@@ -497,16 +497,6 @@ header:hover .btn-fullscreen { opacity: 1; }
   width: 200px; height: 200px;
   cursor: crosshair;
 }
-.hero-logo-img {
-  position: absolute;
-  width: 96px; height: 96px;
-  object-fit: cover;
-  object-position: center 47%;
-  border-radius: 22px;
-  filter: drop-shadow(0 0 28px rgba(0,210,240,0.55))
-          drop-shadow(0 0 8px rgba(0,210,240,0.30));
-  pointer-events: none;
-}
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 19px; font-weight: 700; color: var(--mint);
@@ -1395,7 +1385,6 @@ header:hover .btn-fullscreen { opacity: 1; }
   <!-- ── HEADER ─────────────────────────────────────── -->
   <header>
     <div class="logo-mark">
-      <img src="/static/logo.png" class="logo-icon" id="logo-icon-img" alt="5i" onerror="this.style.display='none'" style="object-fit:cover;object-position:center 47%;border-radius:9px;"/>
       <div class="logo-5i">5i</div>
     </div>
 
@@ -1409,6 +1398,7 @@ header:hover .btn-fullscreen { opacity: 1; }
           <path d="M1 1h4M1 1v4M15 1h-4M15 1v4M1 15h4M1 15v-4M15 15h-4M15 15v-4"/>
         </svg>
       </button>
+      <img src="/static/logo.png" alt="5i" style="width:34px;height:34px;object-fit:cover;object-position:center 47%;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'"/>
     </div>
   </header>
 
@@ -1422,7 +1412,6 @@ header:hover .btn-fullscreen { opacity: 1; }
       <div class="hero-logo-section">
         <div class="hero-logo-wrap">
           <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
-          <img src="/static/logo.png" class="hero-logo-img" alt="5i logo" onerror="this.style.display='none'"/>
         </div>
         <div class="hero-subtitle">The AI Synthesis Consortium</div>
       </div>
