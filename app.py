@@ -1,3 +1,8 @@
+try:
+    from gevent import monkey; monkey.patch_all()
+except ImportError:
+    pass
+
 import os
 import asyncio
 import aiohttp
@@ -272,7 +277,8 @@ def _stream_proxy(upstream_url, upstream_headers, upstream_body):
                         yield chunk
         except Exception as e:
             yield f"data: {{\"error\": \"{str(e)}\"}}\n\n".encode()
-    return Response(stream_with_context(generate()), content_type='text/event-stream')
+    return Response(stream_with_context(generate()), content_type='text/event-stream',
+                    headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
 
 
 @app.route('/proxy/claude', methods=['POST'])
