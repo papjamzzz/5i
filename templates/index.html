@@ -1047,6 +1047,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   padding: 1px 5px; border-radius: 2px;
 }
 .api-status.set { background: rgba(88,222,131,0.1); color: var(--green); border: 1px solid var(--green-deep); }
+.api-status.byok { background: rgba(218,142,32,0.12); color: var(--amber); border: 1px solid rgba(218,142,32,0.4); }
 .api-status.unset { background: rgba(205,78,20,0.1); color: var(--ember); border: 1px solid rgba(205,78,20,0.3); }
 .api-set-btn {
   font-family: 'JetBrains Mono', monospace; font-size: 7px; color: var(--mint-dim);
@@ -2035,8 +2036,10 @@ function buildApiRows() {
     name.style.color = m.colorHi;
     name.textContent = m.name;
     const status = document.createElement('div');
-    status.className = 'api-status ' + (m.apiKey ? 'set' : 'unset');
-    status.textContent = m.apiKey ? 'SET' : 'UNSET';
+    const isBYOK = m.apiKey && m.apiKey !== 'server';
+    const isServer = m.apiKey === 'server';
+    status.className = 'api-status ' + (isBYOK ? 'byok' : isServer ? 'set' : 'unset');
+    status.textContent = isBYOK ? 'BYOK' : isServer ? 'SERVER' : 'UNSET';
     const btn = document.createElement('button');
     btn.className = 'api-set-btn';
     btn.textContent = m.apiKey ? 'Edit' : 'Set';
@@ -2674,10 +2677,14 @@ async function callModelStreaming(modelKey, { sysPrompt, userPrompt, maxTokens, 
   };
   const p = proxyMap[modelKey];
   if (!p) throw new Error('Unknown model: ' + modelKey);
+  const m = MODELS[modelKey];
+  const body = { sysPrompt, userPrompt, maxTokens };
+  /* Pass user-supplied key only — never echo 'server' back to the proxy */
+  if (m.apiKey && m.apiKey !== 'server') body.apiKey = m.apiKey;
   const res = await fetch(p.url, {
     method: 'POST', signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sysPrompt, userPrompt, maxTokens })
+    body: JSON.stringify(body)
   });
   return streamSSE(res, signal, onToken, p.extract);
 }

@@ -321,10 +321,12 @@ def _stream_proxy(upstream_url, upstream_headers, upstream_body):
 @app.route('/proxy/claude', methods=['POST'])
 def proxy_claude():
     d = request.json
+    key = d.get('apiKey') or ANTHROPIC_KEY
+    if not key:
+        return jsonify({"error": "No Anthropic API key — add one via BYOK or set ANTHROPIC_API_KEY on the server"}), 503
     return _stream_proxy(
         'https://api.anthropic.com/v1/messages',
-        {'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
-         'content-type': 'application/json'},
+        {'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
         {'model': 'claude-haiku-4-5-20251001', 'max_tokens': d.get('maxTokens', 600),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
@@ -334,9 +336,12 @@ def proxy_claude():
 @app.route('/proxy/gpt', methods=['POST'])
 def proxy_gpt():
     d = request.json
+    key = d.get('apiKey') or OPENAI_KEY
+    if not key:
+        return jsonify({"error": "No OpenAI API key — add one via BYOK or set OPENAI_API_KEY on the server"}), 503
     return _stream_proxy(
         'https://api.openai.com/v1/chat/completions',
-        {'Authorization': f'Bearer {OPENAI_KEY}', 'Content-Type': 'application/json'},
+        {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
         {'model': 'gpt-4o', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
@@ -346,7 +351,10 @@ def proxy_gpt():
 @app.route('/proxy/gemini', methods=['POST'])
 def proxy_gemini():
     d = request.json
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key={GOOGLE_KEY}'
+    key = d.get('apiKey') or GOOGLE_KEY
+    if not key:
+        return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key={key}'
     return _stream_proxy(
         url,
         {'Content-Type': 'application/json'},
@@ -359,9 +367,12 @@ def proxy_gemini():
 @app.route('/proxy/mistral', methods=['POST'])
 def proxy_mistral():
     d = request.json
+    key = d.get('apiKey') or MISTRAL_KEY
+    if not key:
+        return jsonify({"error": "No Mistral API key — add one via BYOK or set MISTRAL_API_KEY on the server"}), 503
     return _stream_proxy(
         'https://api.mistral.ai/v1/chat/completions',
-        {'Authorization': f'Bearer {MISTRAL_KEY}', 'Content-Type': 'application/json'},
+        {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
         {'model': 'mistral-small-latest', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
@@ -371,9 +382,12 @@ def proxy_mistral():
 @app.route('/proxy/grok', methods=['POST'])
 def proxy_grok():
     d = request.json
+    key = d.get('apiKey') or GROK_KEY
+    if not key:
+        return jsonify({"error": "No xAI API key — add one via BYOK or set GROK_API_KEY on the server"}), 503
     return _stream_proxy(
         'https://api.x.ai/v1/chat/completions',
-        {'Authorization': f'Bearer {GROK_KEY}', 'Content-Type': 'application/json'},
+        {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
         {'model': 'grok-3-mini-beta', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
