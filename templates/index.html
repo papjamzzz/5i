@@ -114,12 +114,13 @@
 [data-theme="light"] .model-orbit-num { color: rgba(10,10,10,0.45) !important; }
 
 /* ── LIGHT: tool strip (analysis tools) ── */
-[data-theme="light"] .tool-unit { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.10) !important; }
-[data-theme="light"] .tool-toggle:hover { background: rgba(0,0,0,0.06) !important; border-color: rgba(0,0,0,0.18) !important; }
-[data-theme="light"] .tool-unit-label { color: rgba(10,10,10,0.60) !important; }
-[data-theme="light"] .tool-toggle.active .tool-unit-label { color: var(--green-bright) !important; }
-[data-theme="light"] .tool-big-val { color: rgba(10,10,10,0.50) !important; }
-[data-theme="light"] .tool-state-badge { color: rgba(10,10,10,0.25) !important; }
+[data-theme="light"] .analysis-btn { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .analysis-btn:hover { background: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .analysis-btn-label { color: rgba(10,10,10,0.60) !important; }
+[data-theme="light"] .analysis-btn-state { color: rgba(10,10,10,0.28) !important; }
+[data-theme="light"] .analysis-ind { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .analysis-ind-val { color: rgba(10,10,10,0.35) !important; }
+[data-theme="light"] .analysis-ind-label { color: rgba(10,10,10,0.45) !important; }
 
 /* ── LIGHT: tabs ── */
 [data-theme="light"] .tab-btn { color: rgba(10,10,10,0.50) !important; }
@@ -691,47 +692,73 @@ header:hover .btn-fullscreen { opacity: 1; }
 .fader-unit[data-type="rely"]    .fader-thumb::after { background: #22C55E; box-shadow: 0 0 6px #22C55E; }
 .fader-unit[data-type="rely"]    .fader-thumb { color: rgba(34,197,94,0.4); }
 
-/* ── ANALYSIS TOOL STRIP ─────────────────────────────── */
-.tool-strip {
-  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;
+/* ── ANALYSIS STRIP — 2 buttons left, 2 indicators right ── */
+.analysis-strip {
+  display: flex; gap: 8px; align-items: stretch;
 }
-.tool-unit {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 11px 8px;
-  background: rgba(0,0,0,0.30);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 7px; text-align: center; position: relative;
+.analysis-btns {
+  display: flex; gap: 6px; flex: 1;
 }
-.tool-toggle { cursor: pointer; transition: border-color 0.2s, background 0.2s; }
-.tool-toggle:hover { border-color: rgba(255,255,255,0.20); background: rgba(255,255,255,0.03); }
-.tool-toggle.active { border-color: var(--green); background: rgba(61,255,122,0.07); }
+.analysis-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 8px; border-radius: 7px;
+  border: 1px solid var(--border-dim);
+  background: rgba(0,0,0,0.22);
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.analysis-btn:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); }
 .tool-led {
-  width: 10px; height: 10px; border-radius: 50%;
+  width: 9px; height: 9px; border-radius: 50%;
   background: rgba(31,90,56,0.38);
   transition: background 0.2s, box-shadow 0.2s; flex-shrink: 0;
 }
-.tool-toggle.active .tool-led { background: #3DFF7A; box-shadow: 0 0 10px #3DFF7A; animation: led-pulse 2s ease-in-out infinite; }
-.tool-unit-label {
+.analysis-btn-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.68); line-height: 1.45;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.50); line-height: 1.45; text-align: center;
 }
-.tool-toggle.active .tool-unit-label { color: #86F5B4; }
-.tool-state-badge {
+.analysis-btn-state {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.22); margin-top: 2px;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.20);
 }
-.tool-toggle.active .tool-state-badge { color: #3DFF7A; }
-.tool-big-val {
+#tool-agreement.active {
+  border-color: #3DFF7A;
+  background: rgba(61,255,122,0.08);
+  box-shadow: 0 0 18px rgba(61,255,122,0.20), inset 0 0 16px rgba(61,255,122,0.04);
+}
+#tool-agreement.active .tool-led { background: #3DFF7A; box-shadow: 0 0 10px #3DFF7A; animation: led-pulse 2s ease-in-out infinite; }
+#tool-agreement.active .analysis-btn-label { color: #86F5B4; }
+#tool-agreement.active .analysis-btn-state { color: #3DFF7A; }
+#tool-delta.active {
+  border-color: #FFD400;
+  background: rgba(255,212,0,0.07);
+  box-shadow: 0 0 18px rgba(255,212,0,0.20), inset 0 0 16px rgba(255,212,0,0.04);
+}
+#tool-delta.active .tool-led { background: #FFD400; box-shadow: 0 0 10px #FFD400; animation: led-pulse 2s ease-in-out infinite; }
+#tool-delta.active .analysis-btn-label { color: #FFE566; }
+#tool-delta.active .analysis-btn-state { color: #FFD400; }
+.analysis-indicators { display: flex; gap: 6px; }
+.analysis-ind {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 10px 18px;
+  border-radius: 7px; border: 1px solid var(--border-dim);
+  background: rgba(0,0,0,0.22); min-width: 80px;
+}
+.analysis-ind-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 24px; font-weight: 800; line-height: 1;
-  color: rgba(255,255,255,0.60); font-variant-numeric: tabular-nums;
+  font-size: 22px; font-weight: 800; line-height: 1;
+  color: rgba(255,255,255,0.28); font-variant-numeric: tabular-nums;
   transition: color 0.4s, text-shadow 0.4s;
 }
-.tool-big-val.green { color: #3DFF7A; text-shadow: 0 0 16px rgba(61,255,122,0.35); }
-.tool-big-val.amber { color: #FFD400; text-shadow: 0 0 16px rgba(255,212,0,0.35); }
-.tool-big-val.red   { color: #FF4422; text-shadow: 0 0 16px rgba(255,68,34,0.35); }
+.analysis-ind-val.green { color: #3DFF7A; text-shadow: 0 0 18px rgba(61,255,122,0.55); }
+.analysis-ind-val.amber { color: #FFD400; text-shadow: 0 0 18px rgba(255,212,0,0.55); }
+.analysis-ind-val.red   { color: #FF4422; text-shadow: 0 0 18px rgba(255,68,34,0.55); }
+.analysis-ind-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.38);
+}
 
 /* ── RANDOMIZE BTN ───────────────────────────────────── */
 .btn-randomize {
@@ -1548,39 +1575,39 @@ header:hover .btn-fullscreen { opacity: 1; }
         </div>
       </div>
 
-      <!-- Analysis Tools — functional controls -->
+      <!-- Analysis Strip — 2 buttons left, 2 live indicators right -->
       <div>
         <div class="panel-label">Analysis Tools</div>
-        <div class="tool-strip">
+        <div class="analysis-strip">
 
-          <!-- AGREE DETECT: toggle button, arms post-synthesis agreement scan -->
-          <div class="tool-unit tool-toggle" id="tool-agreement" onclick="toggleTool('agreement')"
-               data-info="Agreement Detection|Arms agreement analysis. After synthesis, scans all model outputs for shared concepts and phrases. Results appear in the Agreement tab — shows exactly what all 5 models converged on.">
-            <div class="tool-led"></div>
-            <div class="tool-unit-label">AGREE<br>DETECT</div>
-            <div class="tool-state-badge" id="tbadge-agreement">OFF</div>
+          <!-- LEFT: toggle buttons -->
+          <div class="analysis-btns">
+            <button class="analysis-btn" id="tool-agreement" onclick="toggleTool('agreement')"
+                data-info="Agree Detect|Toggle on before running. After synthesis, scans all model outputs and highlights every concept the models converged on. Results appear in the Agreement tab.">
+              <div class="tool-led"></div>
+              <div class="analysis-btn-label">AGREE<br>DETECT</div>
+              <div class="analysis-btn-state" id="tbadge-agreement">OFF</div>
+            </button>
+            <button class="analysis-btn" id="tool-delta" onclick="toggleTool('delta')"
+                data-info="Delta Analysis|Toggle on before running. After synthesis, shows exactly what each model added or changed vs the previous step. Results appear in the Delta tab.">
+              <div class="tool-led" style="background:rgba(255,212,0,0.25)"></div>
+              <div class="analysis-btn-label">DELTA<br>ANALYSIS</div>
+              <div class="analysis-btn-state" id="tbadge-delta">OFF</div>
+            </button>
           </div>
 
-          <!-- CONSENSUS MAP: auto gauge, updates after every run -->
-          <div class="tool-unit"
-               data-info="Consensus Map|Live consensus score across all active models. Updates automatically after every synthesis run. Green = strong consensus, amber = moderate divergence, red = high disagreement.">
-            <div class="tool-big-val" id="tval-consensus">—</div>
-            <div class="tool-unit-label">CONSENSUS<br>MAP</div>
-          </div>
-
-          <!-- DELTA ANALYSIS: toggle button, arms per-step diff -->
-          <div class="tool-unit tool-toggle" id="tool-delta" onclick="toggleTool('delta')"
-               data-info="Delta Analysis|Arms delta tracking. After synthesis, shows exactly what each model added, removed, and reframed at every step in the chain. Results appear in the Delta tab.">
-            <div class="tool-led" style="background:rgba(255,212,0,0.25)"></div>
-            <div class="tool-unit-label">DELTA<br>ANALYSIS</div>
-            <div class="tool-state-badge" id="tbadge-delta">OFF</div>
-          </div>
-
-          <!-- CONFIDENCE SCORE: auto numeric readout -->
-          <div class="tool-unit"
-               data-info="Confidence Score|Composite certainty metric computed after each synthesis run. Factors in agreement level, output consistency, and cross-model convergence. High = reliable output, low = treat with skepticism.">
-            <div class="tool-big-val" id="tval-confidence">—</div>
-            <div class="tool-unit-label">CONFIDENCE<br>SCORE</div>
+          <!-- RIGHT: live readout indicators -->
+          <div class="analysis-indicators">
+            <div class="analysis-ind"
+                data-info="Consensus|How much the models agreed with each other. Computed automatically after every run. Green = strong agreement. Amber = moderate divergence. Red = models disagreed.">
+              <div class="analysis-ind-val" id="tval-consensus">—</div>
+              <div class="analysis-ind-label">CONSENSUS</div>
+            </div>
+            <div class="analysis-ind"
+                data-info="Confidence|How reliable the synthesis output is. Factors in agreement level and cross-model convergence. High = trust the verdict. Low = treat with skepticism.">
+              <div class="analysis-ind-val" id="tval-confidence">—</div>
+              <div class="analysis-ind-label">CONFIDENCE</div>
+            </div>
           </div>
 
         </div>
@@ -2403,8 +2430,8 @@ function updateToolGauges(agreePct, confidencePct) {
   const colorCls = v => v >= 70 ? 'green' : v >= 45 ? 'amber' : 'red';
   const cv = document.getElementById('tval-consensus');
   const cf = document.getElementById('tval-confidence');
-  if (cv) { cv.textContent = agreePct + '%'; cv.className = 'tool-big-val ' + colorCls(agreePct); }
-  if (cf) { cf.textContent = confidencePct + '%'; cf.className = 'tool-big-val ' + colorCls(confidencePct); }
+  if (cv) { cv.textContent = agreePct + '%'; cv.className = 'analysis-ind-val ' + colorCls(agreePct); }
+  if (cf) { cf.textContent = confidencePct + '%'; cf.className = 'analysis-ind-val ' + colorCls(confidencePct); }
 }
 
 /* ── SYS PROMPT TOGGLE ───────────────────────────────── */
