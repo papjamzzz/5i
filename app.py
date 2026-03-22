@@ -295,7 +295,7 @@ def _stream_proxy(upstream_url, upstream_headers, upstream_body):
     # Eagerly open the connection so we can check status before streaming
     try:
         r = req_lib.post(upstream_url, headers=upstream_headers,
-                         json=upstream_body, stream=True, timeout=60)
+                         json=upstream_body, stream=True, timeout=90)
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
@@ -327,7 +327,7 @@ def proxy_claude():
     return _stream_proxy(
         'https://api.anthropic.com/v1/messages',
         {'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
-        {'model': 'claude-haiku-4-5-20251001', 'max_tokens': d.get('maxTokens', 600),
+        {'model': 'claude-haiku-4-5-20251001', 'max_tokens': d.get('maxTokens', 1500),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -342,7 +342,7 @@ def proxy_gpt():
     return _stream_proxy(
         'https://api.openai.com/v1/chat/completions',
         {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-        {'model': 'gpt-4o', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+        {'model': 'gpt-4o', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -360,7 +360,7 @@ def proxy_gemini():
         {'Content-Type': 'application/json'},
         {'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
          'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
-         'generationConfig': {'maxOutputTokens': d.get('maxTokens', 600), 'temperature': 0.7}}
+         'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7}}
     )
 
 
@@ -373,7 +373,7 @@ def proxy_mistral():
     return _stream_proxy(
         'https://api.mistral.ai/v1/chat/completions',
         {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-        {'model': 'mistral-small-latest', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+        {'model': 'mistral-small-latest', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -388,7 +388,7 @@ def proxy_grok():
     return _stream_proxy(
         'https://api.x.ai/v1/chat/completions',
         {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-        {'model': 'grok-3-mini-beta', 'max_tokens': d.get('maxTokens', 600), 'stream': True,
+        {'model': 'grok-3-mini-beta', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )

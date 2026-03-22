@@ -2354,10 +2354,8 @@ async function synthesize() {
   const sysPromptEl = document.getElementById('sysPromptInput');
   const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
 
-  /* Token budget — default 600 per step (cheap + fast) */
-  const MAX_TOKENS = 600;
-  /* Context passed to next model capped at ~3000 chars (~750 tokens) to control input cost */
-  const MAX_CTX_CHARS = 3000;
+  /* Token budget — 1500 per model for substantive parallel responses */
+  const MAX_TOKENS = 1500;
 
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
   btn.style.opacity = '0.75';
@@ -2369,68 +2367,62 @@ async function synthesize() {
   const t0 = performance.now();
   let totalEstCost = 0;
   let totalOutTokens = 0;
-  let context = prompt;
-  const stepOutputs = []; /* collect per-model text for disagreement analysis */
+  const stepOutputs = []; /* all model outputs collected for synthesis */
 
-  for (let i = 0; i < activeModels.length; i++) {
-    if (synthController.signal.aborted) break;
-
-    const k   = activeModels[i];
-    const m   = MODELS[k];
-    const step = i + 1;
-    const isLast = step === activeModels.length;
-
-    /* Cost estimate for this step */
-    const ctxToSend = compressContext(context, MAX_CTX_CHARS);
-    const stepCost  = estimateStepCost(k, ctxToSend, MAX_TOKENS);
-    totalEstCost   += stepCost;
-
-    /* Create output block immediately — user sees progress */
+  /* ── BUILD ALL OUTPUT BLOCKS FIRST ────────────────────── */
+  /* Users see all panels appear immediately, then they fill in parallel */
+  activeModels.forEach(k => {
+    const m = MODELS[k];
     const block = document.createElement('div');
     block.style.cssText = `margin-bottom:12px;padding-left:10px;border-left:2px solid ${m.color};animation:fadeIn 0.15s ease;`;
     block.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit} · ${step}/${activeModels.length}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,0.35);">est $${stepCost.toFixed(5)}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit}</span>
       </div>
       <div id="si-out-${k}" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:rgba(255,255,255,0.80);">
         <span style="opacity:0.3;font-style:italic;">Waiting for ${m.name}…</span>
       </div>`;
     out.appendChild(block);
-    out.scrollTop = out.scrollHeight;
+  });
+  out.scrollTop = out.scrollHeight;
 
+  /* ── PARALLEL FIRE — all models get the original prompt simultaneously ── */
+  const parallelSysPrompt = userSysPrompt || `Answer the following question directly and thoroughly. Be substantive and complete.`;
+
+  const modelPromises = activeModels.map(async k => {
+    const m     = MODELS[k];
     const outEl = document.getElementById('si-out-' + k);
 
     if (!m.apiKey) {
-      /* No key — clear placeholder, leave instructional note */
-      outEl.innerHTML = `<span style="color:rgba(255,255,255,0.30);font-style:italic;">[${m.name}: add API key in Connected Models → output would stream here]</span>`;
-      /* Pass prompt through unmodified so chain can continue */
-    } else {
-      /* ── REAL STREAMING FETCH ────────────────────────── */
-      /* Architecture ready for each model's streaming API. */
-      /* Replace the throw below with model-specific fetch. */
-      try {
-        const result = await callModelStreaming(k, {
-          sysPrompt:  userSysPrompt || chainSysPrompt(m, step, activeModels.length, MAX_TOKENS),
-          userPrompt: ctxToSend,
-          maxTokens:  MAX_TOKENS,
-          signal:     synthController.signal,
-          onToken: (chunk) => {
-            /* Stream tokens in as they arrive */
-            if (outEl.querySelector('span[style*="opacity:0.3"]')) outEl.innerHTML = '';
-            outEl.textContent += chunk;
-            out.scrollTop = out.scrollHeight;
-          }
-        });
-        context = result.text;
-        totalOutTokens += result.outputTokens || estimateTokens(result.text);
-        stepOutputs.push({ key: k, text: result.text });
-      } catch (err) {
-        if (err.name === 'AbortError') break;
-        outEl.innerHTML += `<span style="color:#F07C5A;font-size:10px;display:block;margin-top:4px;">⚠ ${err.message}</span>`;
-      }
+      outEl.innerHTML = `<span style="color:rgba(255,255,255,0.30);font-style:italic;">[${m.name}: add API key → output streams here]</span>`;
+      return null;
     }
-  }
+
+    try {
+      const result = await callModelStreaming(k, {
+        sysPrompt:  parallelSysPrompt,
+        userPrompt: prompt,
+        maxTokens:  MAX_TOKENS,
+        signal:     synthController.signal,
+        onToken: chunk => {
+          if (outEl.querySelector('span[style*="opacity:0.3"]')) outEl.innerHTML = '';
+          outEl.textContent += chunk;
+          out.scrollTop = out.scrollHeight;
+        }
+      });
+      totalEstCost   += estimateStepCost(k, prompt, MAX_TOKENS);
+      totalOutTokens += result.outputTokens || estimateTokens(result.text);
+      return { key: k, text: result.text };
+    } catch (err) {
+      if (err.name === 'AbortError') return null;
+      outEl.innerHTML += `<span style="color:#F07C5A;font-size:10px;display:block;margin-top:4px;">⚠ ${err.message}</span>`;
+      return null;
+    }
+  });
+
+  /* Wait for all 5 to finish, then synthesize */
+  const modelResults = await Promise.all(modelPromises);
+  modelResults.forEach(r => { if (r) stepOutputs.push(r); });
 
   /* ══ CONSENSUS SYNTHESIS — the actual payoff ══════════ */
   /* Take all model outputs + original prompt → one clean answer */
