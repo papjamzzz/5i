@@ -2197,7 +2197,7 @@ function runDeltaAnalysis(stepOutputs) {
 
 /* ── UPDATE CONSENSUS + CONFIDENCE GAUGES ────────────── */
 function updateToolGauges(agreePct, confidencePct) {
-  const colorCls = v => v >= 65 ? 'green' : v >= 40 ? 'amber' : 'red';
+  const colorCls = v => v >= 70 ? 'green' : v >= 45 ? 'amber' : 'red';
   const cv = document.getElementById('tval-consensus');
   const cf = document.getElementById('tval-confidence');
   if (cv) { cv.textContent = agreePct + '%'; cv.className = 'tool-big-val ' + colorCls(agreePct); }
@@ -2672,26 +2672,56 @@ function updateDisagreeBar(stepOutputs) {
   const dConf = document.getElementById('dConfidence');
   if (!bar || !stepOutputs || stepOutputs.length < 2) return;
 
-  /* Length variance as divergence proxy */
-  const lengths = stepOutputs.map(o => o.text.split(/\s+/).length);
-  const avgLen  = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  const n = stepOutputs.length;
+
+  /* ── Word sets per model ──────────────────────────────
+     Use 4+ char words to filter out noise (the, and, etc.) */
+  const wordSets = stepOutputs.map(o =>
+    new Set((o.text.toLowerCase().match(/\b\w{4,}\b/g) || []))
+  );
+
+  /* ── Pairwise Jaccard similarity across ALL model pairs ─
+     Old code only compared first vs last — that missed everything.
+     10 pairs for 5 models. Jaccard = intersection / union.
+     Typical range for same-topic AI outputs: 0.08 (low) – 0.40 (high) */
+  let pairSum = 0, pairCount = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const a = wordSets[i], b = wordSets[j];
+      const inter = [...a].filter(w => b.has(w)).length;
+      const union = new Set([...a, ...b]).size;
+      pairSum += union > 0 ? inter / union : 0;
+      pairCount++;
+    }
+  }
+  const avgJaccard = pairCount > 0 ? pairSum / pairCount : 0;
+
+  /* Scale Jaccard → agreePct. Calibrated for AI text:
+     Jaccard 0.10 → ~30%   (low agreement)
+     Jaccard 0.20 → ~60%   (moderate)
+     Jaccard 0.30 → ~90%   (strong convergence)
+     Jaccard 0.40 → ~97%   (near-full convergence, capped) */
+  const agreePct = Math.min(97, Math.round(avgJaccard * 300));
+
+  /* ── Length variance → divergence (secondary signal, dampened) ── */
+  const lengths  = stepOutputs.map(o => o.text.split(/\s+/).length);
+  const avgLen   = lengths.reduce((a,b) => a+b, 0) / lengths.length;
   const variance = lengths.reduce((a,b) => a + Math.abs(b - avgLen), 0) / lengths.length;
-  const divergePct = Math.min(100, Math.round((variance / Math.max(avgLen, 1)) * 100));
+  const divergePct = Math.min(55, Math.round((variance / Math.max(avgLen, 1)) * 70));
 
-  /* Word overlap between first and last output as agreement proxy */
-  const words1 = new Set(stepOutputs[0].text.toLowerCase().match(/\b\w{4,}\b/g) || []);
-  const wordsN = (stepOutputs[stepOutputs.length-1].text.toLowerCase().match(/\b\w{4,}\b/g) || []);
-  const overlap = wordsN.filter(w => words1.has(w)).length;
-  const agreePct = Math.min(100, Math.round((overlap / Math.max(words1.size, 1)) * 80));
+  /* Consensus = inverse of divergence, floored at 40 so it doesn't
+     tank confidence just because models gave different-length answers */
+  const consensusPct = Math.max(40, 100 - divergePct);
 
-  /* Consensus — how similar lengths are (low variance = high consensus) */
-  const consensusPct = Math.max(0, 100 - divergePct);
+  /* ── Confidence: non-linear, rewards convergence ─────────────────
+     Base is agreement-weighted. Bonus kicks in above 65% agreement
+     so that strong multi-model convergence reaches 88–96%. */
+  const base   = Math.round(agreePct * 0.80 + consensusPct * 0.20);
+  const bonus  = agreePct > 65 ? Math.round((agreePct - 65) * 0.45) : 0;
+  const confidencePct = Math.min(96, base + bonus);
 
-  /* Confidence — composite */
-  const confidencePct = Math.round((agreePct * 0.6 + consensusPct * 0.4));
-
-  /* Color helpers */
-  const cls = v => v >= 65 ? 'green' : v >= 40 ? 'amber' : 'red';
+  /* Color thresholds — tuned to match new scale */
+  const cls = v => v >= 70 ? 'green' : v >= 45 ? 'amber' : 'red';
 
   dA.textContent    = agreePct + '%';    dA.className    = 'disagree-cell-val ' + cls(agreePct);
   dD.textContent    = divergePct + '%';  dD.className    = 'disagree-cell-val ' + cls(100 - divergePct);
@@ -2700,10 +2730,10 @@ function updateDisagreeBar(stepOutputs) {
   updateToolGauges(agreePct, confidencePct);
 
   bar.className = 'disagree-bar';
-  if (agreePct < 30 || divergePct > 70) {
+  if (agreePct < 35 || divergePct > 50) {
     bar.classList.add('critical');
     label.textContent = 'HIGH MODEL DISAGREEMENT DETECTED';
-  } else if (agreePct < 55 || divergePct > 45) {
+  } else if (agreePct < 65 || divergePct > 30) {
     bar.classList.add('warning');
     label.textContent = 'ELEVATED DIVERGENCE DETECTED';
   } else {
