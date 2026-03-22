@@ -86,8 +86,10 @@
 [data-theme="light"] .tab-btn.active { color: var(--green) !important; border-color: var(--green) !important; }
 [data-theme="light"] .kbd-key,
 [data-theme="light"] .key { background: rgba(0,0,0,0.08) !important; border-color: rgba(0,0,0,0.15) !important; color: var(--mint) !important; }
-[data-theme="light"] .byok-btn { background: rgba(0,0,0,0.05) !important; border-color: var(--border-dim) !important; color: var(--mint-dim) !important; }
-[data-theme="light"] .byok-btn:hover { border-color: var(--green) !important; color: var(--green) !important; }
+[data-theme="light"] .byok-btn { background: rgba(100,200,80,0.06) !important; border-color: rgba(100,180,70,0.4) !important; color: #3A8C25 !important; }
+[data-theme="light"] .byok-btn:hover { border-color: #3A8C25 !important; color: #2A6C15 !important; }
+[data-theme="light"] .guide-btn { background: rgba(56,189,248,0.07) !important; border-color: rgba(56,189,248,0.35) !important; color: #0284C7 !important; }
+[data-theme="light"] .guide-btn:hover { border-color: #0284C7 !important; color: #0369A1 !important; }
 [data-theme="light"] .panel-label { color: var(--green) !important; }
 [data-theme="light"] #orbital-canvas { opacity: 0.25; }
 
@@ -1136,24 +1138,42 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .api-set-btn:hover { border-color: var(--green); color: var(--green); }
 
-/* ── BYOK MODAL ──────────────────────────────────────── */
+/* ── BYOK / GUIDE BUTTONS ────────────────────────────── */
 .byok-btn {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   width: 100%; margin-top: 6px;
-  background: rgba(218,142,32,0.06);
-  border: 1px dashed rgba(218,142,32,0.35);
+  background: rgba(120,230,100,0.07);
+  border: 1px dashed rgba(120,230,100,0.45);
   border-radius: 4px; padding: 7px 10px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(218,142,32,0.65); cursor: pointer;
+  color: #7BE868; cursor: pointer;
   transition: all 0.2s;
 }
 .byok-btn:hover {
-  background: rgba(218,142,32,0.12);
-  border-color: var(--amber); color: var(--amber);
-  box-shadow: 0 0 12px rgba(218,142,32,0.15);
+  background: rgba(120,230,100,0.15);
+  border-color: #9EF58A; color: #9EF58A;
+  box-shadow: 0 0 14px rgba(120,230,100,0.2);
 }
 .byok-btn svg { width: 10px; height: 10px; flex-shrink: 0; }
+
+/* User Guide button — sky blue */
+.guide-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 6px; text-decoration: none;
+  background: rgba(56,189,248,0.09);
+  border: 1px solid rgba(56,189,248,0.45);
+  border-radius: 5px; padding: 9px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #38BDF8; cursor: pointer;
+  transition: all 0.2s;
+}
+.guide-btn:hover {
+  background: rgba(56,189,248,0.18);
+  border-color: #7DD3FC; color: #7DD3FC;
+  box-shadow: 0 0 16px rgba(56,189,248,0.2);
+}
 
 .byok-overlay {
   position: fixed; inset: 0; z-index: 2000;
@@ -1389,8 +1409,8 @@ header:hover .btn-fullscreen { opacity: 1; }
           </div>
           <div class="api-rows" id="apiRows"></div>
         </div>
-        <a href="/guide" target="_blank" class="byok-btn" style="text-decoration:none;margin-bottom:0;">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px;flex-shrink:0;">
+        <a href="/guide" target="_blank" class="guide-btn" data-info="User Guide|Full documentation for 5i — meet the 5 models, learn the synthesis method, BYOK setup, keyboard shortcuts, and pro tips. Opens in a new tab. PDF and copy options available inside.">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px;flex-shrink:0;">
             <circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.5v.5"/>
           </svg>
           USER GUIDE
@@ -1652,9 +1672,9 @@ header:hover .btn-fullscreen { opacity: 1; }
       <div>
         <div class="panel-label">Display</div>
         <div id="themeToggle" style="display:flex;gap:4px;margin-top:2px;">
-          <button onclick="setTheme('dark')"   id="theme-dark"    style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
-          <button onclick="setTheme('default')" id="theme-default" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
-          <button onclick="setTheme('light')"  id="theme-light"   style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
+          <button onclick="setTheme('dark')"    id="theme-dark"    data-info="Dark Mode|Forces the dark theme regardless of your OS setting. Deep green-black palette. Easy on the eyes for long sessions." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
+          <button onclick="setTheme('default')" id="theme-default" data-info="Auto Mode|Follows your OS appearance setting. Dark on macOS dark mode, light on macOS light mode. Updates automatically when you switch." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
+          <button onclick="setTheme('light')"   id="theme-light"   data-info="Light Mode|Forces the light theme. Light green-grey palette, dark text. Good for presentations, bright environments, or when your eyes need a break from dark UI." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
         </div>
       </div>
 
@@ -2916,15 +2936,52 @@ function toggleInfoView() {
   const iv = document.getElementById('infoView');
   if (iv) iv.classList.toggle('hidden', !infoViewOn);
 }
+/* Fallback descriptions for common element types when no data-info is set */
+const INFO_FALLBACKS = {
+  'BUTTON':   (el) => [el.title || el.textContent.trim().slice(0,32) || 'Button', 'Click to activate this control.'],
+  'INPUT':    (el) => [el.placeholder || el.getAttribute('aria-label') || 'Input field', 'Type a value here.'],
+  'TEXTAREA': (el) => [el.placeholder?.slice(0,32) || 'Text area', 'Enter text here.'],
+  'SELECT':   (el) => ['Selector', 'Choose an option from the list.'],
+  'A':        (el) => [el.textContent.trim().slice(0,32) || 'Link', el.title || 'Click to navigate.'],
+  'SVG':      (el) => { const p = el.closest('[data-info],button,a'); return p ? null : ['Icon', '']; },
+};
+
 document.addEventListener('mouseover', function(e) {
   if (!infoViewOn) return;
-  const el = e.target.closest('[data-info]');
-  if (!el) return;
-  const parts = el.dataset.info.split('|');
   const titleEl = document.getElementById('infoTitle');
   const descEl  = document.getElementById('infoDesc');
-  if (titleEl) titleEl.textContent = parts[0] || '';
-  if (descEl)  descEl.textContent  = parts[1] || '';
+  if (!titleEl || !descEl) return;
+
+  /* Priority 1: explicit data-info on this element or any ancestor */
+  const explicit = e.target.closest('[data-info]');
+  if (explicit) {
+    const parts = explicit.dataset.info.split('|');
+    titleEl.textContent = parts[0] || '';
+    descEl.textContent  = parts[1] || '';
+    return;
+  }
+
+  /* Priority 2: smart fallback — nearest interactive ancestor */
+  const interactive = e.target.closest('button, a, input, textarea, select, [role="button"], [role="tab"], label');
+  if (!interactive) return;
+
+  /* Skip internal info-view controls */
+  if (interactive.closest('.info-view')) return;
+
+  const tag = interactive.tagName;
+  const fallbackFn = INFO_FALLBACKS[tag];
+  if (!fallbackFn) return;
+  const result = fallbackFn(interactive);
+  if (!result) return;
+
+  /* Prefer title attr as description if available */
+  const name = interactive.getAttribute('title') && tag !== 'A'
+    ? interactive.getAttribute('title')
+    : result[0];
+  const desc = interactive.getAttribute('aria-label') || result[1] || 'Click to interact.';
+
+  titleEl.textContent = name.slice(0, 40);
+  descEl.textContent  = desc;
 });
 
 /* ── FULLSCREEN ──────────────────────────────────────── */
