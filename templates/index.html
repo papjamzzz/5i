@@ -21,8 +21,8 @@
   --green:       #5EE88A;
   --green-bright:#86F5B4;
   --green-deep:  #1F5A38;
-  --mint:        #E8FAF2;
-  --mint-dim:    rgba(232,250,242,0.62);
+  --mint:        #FFFFFF;
+  --mint-dim:    rgba(232,250,242,0.85);
   --amber:       #F0A030;
   --ember:       #E05520;
   --claude:      #7C3AED; --claude-hi: #B8A0FA;
@@ -124,7 +124,7 @@ body {
   color: var(--mint);
   min-height: 100vh;
   overflow-x: hidden;
-  font-size: 15px;
+  font-size: 18px;
   user-select: none;
 }
 
@@ -192,7 +192,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .logo-5i {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 26px;
   color: var(--mint);
   letter-spacing: -0.5px;
   line-height: 1;
@@ -208,21 +208,21 @@ header:hover .btn-fullscreen { opacity: 1; }
   cursor: help; position: relative;
 }
 .cost-meter:hover .cost-tooltip { opacity: 1; pointer-events: auto; }
-.cost-label { font-size: 7px; color: var(--amber); opacity: 0.75; letter-spacing: 2px; text-transform: uppercase; }
+.cost-label { font-size: 8px; color: var(--amber); opacity: 0.90; letter-spacing: 2px; text-transform: uppercase; }
 .cost-readout { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
 .cost-value {
-  font-size: 12px; font-weight: 600; color: var(--amber);
+  font-size: 14px; font-weight: 600; color: var(--amber);
   letter-spacing: -0.5px; min-width: 64px; text-align: right;
   transition: color 0.4s;
 }
 .cost-value.fresh { color: var(--green-bright); }
-.cost-quip { font-size: 7px; color: rgba(255,255,255,0.38); letter-spacing: 0.5px; text-align: right; white-space: nowrap; }
-.cost-session { font-size: 7px; color: rgba(255,255,255,0.28); letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
+.cost-quip { font-size: 8px; color: rgba(255,255,255,0.62); letter-spacing: 0.5px; text-align: right; white-space: nowrap; }
+.cost-session { font-size: 8px; color: rgba(255,255,255,0.55); letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
 .cost-tooltip {
   position: absolute; top: calc(100% + 8px); right: 0; width: 230px;
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 6px; padding: 10px 12px;
-  font-size: 10px; line-height: 1.6; color: var(--mint-dim);
+  font-size: 12px; line-height: 1.6; color: var(--mint-dim);
   opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 999;
 }
 
@@ -243,18 +243,18 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .info-view-name {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
   color: var(--green); font-weight: 500;
 }
 .info-view-close {
   background: none; border: none; color: var(--mint-dim);
-  cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  cursor: pointer; font-size: 17px; line-height: 1; padding: 0;
   transition: color 0.15s;
 }
 .info-view-close:hover { color: var(--green); }
 .info-view-body {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; line-height: 1.6;
+  font-size: 12px; line-height: 1.6;
   color: var(--mint);
   padding: 8px 10px;
   min-height: 48px;
@@ -275,8 +275,8 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .monitor-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--green); opacity: 0.75; white-space: nowrap; flex-shrink: 0;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.90; white-space: nowrap; flex-shrink: 0;
 }
 .monitor-bar-wrap {
   flex: 1; height: 3px; background: rgba(31,90,56,0.3);
@@ -289,11 +289,11 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .monitor-value {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--mint); min-width: 32px; text-align: right;
+  font-size: 11px; color: var(--mint); min-width: 32px; text-align: right;
 }
 .monitor-cost-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--amber); text-align: right;
+  font-size: 11px; color: var(--amber); text-align: right;
 }
 .monitor-divider {
   height: 1px; background: var(--border-dim); opacity: 0.5;
@@ -313,13 +313,13 @@ header:hover .btn-fullscreen { opacity: 1; }
   position: relative; cursor: help;
 }
 .cpu-meter:hover .cpu-tooltip { opacity: 1; pointer-events: auto; }
-.cpu-label { font-size: 7px; color: var(--green); opacity: 0.75; letter-spacing: 2px; text-transform: uppercase; }
+.cpu-label { font-size: 8px; color: var(--green); opacity: 0.90; letter-spacing: 2px; text-transform: uppercase; }
 .cpu-bar-track { width: 64px; height: 3px; background: rgba(31,90,56,0.3); border-radius: 2px; overflow: hidden; }
 .cpu-bar-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--green-deep), var(--green-bright)); transition: width 0.5s ease, background 0.5s ease; }
-.cpu-value     { font-size: 10px; color: var(--mint); min-width: 30px; text-align: right; }
+.cpu-value     { font-size: 12px; color: var(--mint); min-width: 30px; text-align: right; }
 .cpu-sparkline { display: flex; align-items: flex-end; gap: 1px; height: 12px; }
 .spark-bar     { width: 2px; border-radius: 1px; background: var(--green-bright); opacity: 0.6; transition: height 0.4s ease; }
-.cpu-mode      { font-size: 7px; color: var(--green); opacity: 0.60; letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
+.cpu-mode      { font-size: 8px; color: var(--green); opacity: 0.80; letter-spacing: 1px; border-left: 1px solid var(--border-dim); padding-left: 8px; }
 .longtask-flash {
   position: absolute; inset: 0; border-radius: 5px;
   border: 1px solid var(--ember); opacity: 0; transition: opacity 0.1s; pointer-events: none;
@@ -329,7 +329,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   position: absolute; top: calc(100% + 8px); right: 0; width: 240px;
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 6px; padding: 10px 12px;
-  font-size: 10px; line-height: 1.6; color: var(--mint-dim);
+  font-size: 12px; line-height: 1.6; color: var(--mint-dim);
   opacity: 0; pointer-events: none; transition: opacity 0.2s;
   z-index: 999;
 }
@@ -337,7 +337,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .header-right { display: flex; align-items: center; gap: 10px; }
 .status-dot {
   display: flex; align-items: center; gap: 6px;
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mint-dim);
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: led-pulse 2s ease-in-out infinite; }
 
@@ -379,7 +379,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .panel:last-child { border-right: none; }
 .panel-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
   color: var(--green); opacity: 0.70; margin-bottom: 2px;
 }
 
@@ -421,13 +421,13 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px; font-weight: 700; color: var(--mint);
+  font-size: 19px; font-weight: 700; color: var(--mint);
   letter-spacing: -0.3px; text-align: center; margin-top: 10px;
 }
 .hero-title span { color: var(--green); }
 .hero-subtitle {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; color: var(--green);
+  font-size: 10px; letter-spacing: 2px; color: var(--green);
   opacity: 0.5; text-transform: uppercase; text-align: center; margin-top: 3px;
 }
 
@@ -462,7 +462,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .knob-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--mint); opacity: 0.90; text-align: center;
   line-height: 1.4; font-weight: 500;
 }
@@ -480,12 +480,12 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .fader-name {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
   color: #ffffff; opacity: 0.92; text-align: center;
 }
 .fader-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; color: #ffffff; font-weight: 700; text-align: center;
+  font-size: 16px; color: #ffffff; font-weight: 700; text-align: center;
   min-width: 42px; background: rgba(255,255,255,0.09);
   border: 1px solid rgba(255,255,255,0.20); border-radius: 3px; padding: 2px 6px;
 }
@@ -635,19 +635,19 @@ header:hover .btn-fullscreen { opacity: 1; }
 .tool-toggle.active .tool-led { background: #3DFF7A; box-shadow: 0 0 10px #3DFF7A; animation: led-pulse 2s ease-in-out infinite; }
 .tool-unit-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.45); line-height: 1.45;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.68); line-height: 1.45;
 }
 .tool-toggle.active .tool-unit-label { color: #86F5B4; }
 .tool-state-badge {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; font-weight: 700; letter-spacing: 1px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
   color: rgba(255,255,255,0.22); margin-top: 2px;
 }
 .tool-toggle.active .tool-state-badge { color: #3DFF7A; }
 .tool-big-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 20px; font-weight: 800; line-height: 1;
+  font-size: 24px; font-weight: 800; line-height: 1;
   color: rgba(255,255,255,0.60); font-variant-numeric: tabular-nums;
   transition: color 0.4s, text-shadow 0.4s;
 }
@@ -662,7 +662,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px solid var(--border);
   border-radius: 5px; padding: 7px 12px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--green); cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
@@ -687,7 +687,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .console-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
   color: var(--green); opacity: 0.65;
   writing-mode: vertical-lr; transform: rotate(180deg);
   flex-shrink: 0;
@@ -710,22 +710,22 @@ header:hover .btn-fullscreen { opacity: 1; }
 .model-node.active .model-led { animation: led-pulse 2s ease-in-out infinite; }
 .model-orbit-num {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px; color: rgba(232,250,242,0.50); letter-spacing: 0.5px;
+  font-size: 8px; color: rgba(232,250,242,0.50); letter-spacing: 0.5px;
 }
 .model-name-sm {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 0.5px; font-weight: 700;
+  font-size: 10px; letter-spacing: 0.5px; font-weight: 700;
   color: #ffffff;
 }
 .model-weight {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: #ffffff;
+  font-size: 11px; color: #ffffff;
   background: rgba(255,255,255,0.08); border-radius: 3px;
   padding: 1px 6px; border: 1px solid rgba(255,255,255,0.18);
   font-weight: 600;
 }
 .flow-arrow {
-  font-size: 10px; color: var(--green); opacity: 0.60;
+  font-size: 12px; color: var(--green); opacity: 0.80;
   flex-shrink: 0;
 }
 
@@ -739,7 +739,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px solid var(--border-dim);
   border-radius: 4px; padding: 6px 10px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 0.5px;
+  font-size: 11px; letter-spacing: 0.5px;
   color: var(--mint-dim); cursor: pointer;
   transition: all 0.15s;
   position: relative;
@@ -760,12 +760,12 @@ header:hover .btn-fullscreen { opacity: 1; }
 .input-header { display: flex; align-items: center; justify-content: space-between; }
 .input-title {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--green); opacity: 0.72;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.88;
 }
 .token-counter {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: rgba(255,255,255,0.70);
+  font-size: 11px; color: rgba(255,255,255,0.70);
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
   border-radius: 3px; padding: 2px 8px;
 }
@@ -783,11 +783,11 @@ header:hover .btn-fullscreen { opacity: 1; }
   width: 100%; min-height: 140px;
   background: transparent; border: none; outline: none;
   color: #ffffff; font-family: 'Inter', sans-serif;
-  font-size: 16px; line-height: 1.65;
+  font-size: 19px; line-height: 1.65;
   padding: 14px 16px; resize: vertical;
   user-select: text;
 }
-.prompt-textarea::placeholder { color: rgba(232,250,242,0.38); font-size: 15px; }
+.prompt-textarea::placeholder { color: rgba(232,250,242,0.55); font-size: 18px; }
 
 /* ── DEVELOPER TOOLBAR ───────────────────────────────── */
 .dev-toolbar {
@@ -802,12 +802,12 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px solid var(--border-dim);
   border-radius: 3px; padding: 4px 8px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--mint-dim);
+  font-size: 11px; color: var(--mint-dim);
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
 .dbt-btn:hover { border-color: var(--green); color: var(--green); }
 .dbt-btn .kbd {
-  font-size: 8px; color: var(--green); opacity: 0.6;
+  font-size: 10px; color: var(--green); opacity: 0.6;
   background: var(--inset); border-radius: 2px; padding: 0 3px;
 }
 .dbt-btn svg { width: 10px; height: 10px; opacity: 0.7; }
@@ -817,7 +817,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   flex: 1; min-width: 80px;
   border: 1px dashed var(--border-dim);
   border-radius: 3px; padding: 4px 8px;
-  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
   color: rgba(195,253,216,0.25); text-align: center; cursor: pointer;
   transition: all 0.15s;
 }
@@ -833,7 +833,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .fmt-opt {
   padding: 4px 7px;
-  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5px;
   color: var(--mint-dim); cursor: pointer; transition: all 0.12s;
   background: transparent; border: none; border-right: 1px solid var(--border-dim);
 }
@@ -843,7 +843,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 /* sys prompt toggle */
 .sys-toggle {
   display: flex; align-items: center; gap: 5px;
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mint-dim);
   cursor: pointer; padding: 4px 8px;
   border: 1px solid var(--border-dim); border-radius: 3px;
   transition: all 0.15s;
@@ -864,7 +864,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .sys-prompt-input {
   width: 100%; background: var(--inset); border: 1px solid var(--border-dim);
   border-radius: 3px; padding: 6px 8px;
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
   color: var(--mint); outline: none; resize: none; height: 50px;
   user-select: text;
 }
@@ -879,7 +879,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px solid var(--green);
   border-radius: 6px; padding: 15px;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+  font-size: 19px; font-weight: 700; letter-spacing: 0.5px;
   color: var(--green); cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 0 24px rgba(94,232,138,0.14), inset 0 1px 0 rgba(94,232,138,0.15);
@@ -893,7 +893,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .btn-synth svg { width: 16px; height: 16px; }
 .synth-kbd {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--green); opacity: 0.45;
+  font-size: 11px; color: var(--green); opacity: 0.88;
 }
 .model-seq-display {
   display: flex; gap: 3px; align-items: center; flex-shrink: 0;
@@ -902,7 +902,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   width: 10px; height: 10px; border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.15);
 }
-.seq-arrow { font-size: 8px; color: var(--green); opacity: 0.55; }
+.seq-arrow { font-size: 10px; color: var(--green); opacity: 0.78; }
 
 /* ── RESULTS PANEL ───────────────────────────────────── */
 .results-section { flex: 1; display: flex; flex-direction: column; gap: 0; min-height: 200px; }
@@ -912,7 +912,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .tab-btn {
   padding: 8px 16px;
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
   color: rgba(255,255,255,0.65); cursor: pointer; background: none; border: none;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: all 0.15s;
@@ -925,7 +925,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .output-body {
   min-height: 120px; background: rgba(14,24,20,0.55);
   border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
   color: var(--mint);
 }
 .output-empty { color: rgba(232,250,242,0.28); font-style: italic; }
@@ -934,10 +934,10 @@ header:hover .btn-fullscreen { opacity: 1; }
 .agree-marker { background: rgba(88,222,131,0.12); border-left: 2px solid var(--green); padding-left: 6px; border-radius: 0 3px 3px 0; }
 .flag-card {
   background: var(--inset); border: 1px solid var(--border-dim);
-  border-radius: 5px; padding: 8px 10px; margin-bottom: 6px; font-size: 10px; line-height: 1.6;
+  border-radius: 5px; padding: 8px 10px; margin-bottom: 6px; font-size: 12px; line-height: 1.6;
 }
 .flag-card .flag-label {
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.6; margin-bottom: 3px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.6; margin-bottom: 3px;
 }
 
 /* ── RIGHT PANEL ─────────────────────────────────────── */
@@ -948,8 +948,8 @@ header:hover .btn-fullscreen { opacity: 1; }
 .rank-category { }
 .rank-cat-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--green); opacity: 0.72; margin-bottom: 5px;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); opacity: 0.88; margin-bottom: 5px;
 }
 .rank-list { display: flex; flex-direction: column; gap: 3px; }
 .rank-item {
@@ -962,7 +962,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .rank-medal {
   width: 18px; height: 18px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 7px; font-weight: 700; flex-shrink: 0;
+  font-size: 8px; font-weight: 700; flex-shrink: 0;
   font-family: 'JetBrains Mono', monospace;
 }
 .medal-1 { background: radial-gradient(circle at 35% 30%, #FDE68A, #DA8E20); color: #5a3800; box-shadow: 0 0 8px rgba(218,142,32,0.5); }
@@ -970,11 +970,11 @@ header:hover .btn-fullscreen { opacity: 1; }
 .medal-3 { background: radial-gradient(circle at 35% 30%, #A7C4B0, #58DE83 70%, #1F5A38); color: #0a2016; }
 .medal-4, .medal-5 { background: rgba(31,90,56,0.12); color: rgba(195,253,216,0.2); }
 .rank-model-name {
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; flex: 1;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; flex: 1;
   color: #ffffff;
 }
 .rank-value {
-  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #ffffff;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ffffff;
   background: rgba(255,255,255,0.07); border-radius: 2px; padding: 1px 6px;
   border: 1px solid rgba(255,255,255,0.12);
 }
@@ -995,7 +995,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .monitor-dot { width: 7px; height: 7px; border-radius: 50%; }
 .monitor-title {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.72;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); opacity: 0.88;
 }
 .monitor-rows { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
 .monitor-row {
@@ -1013,13 +1013,13 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .monitor-row.active .m-led { animation: led-pulse 2s ease-in-out infinite; }
 .m-name {
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; flex: 1;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; flex: 1;
 }
 .m-stats {
   display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
 }
 .m-stat {
-  font-family: 'JetBrains Mono', monospace; font-size: 7px; color: rgba(255,255,255,0.75);
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: rgba(255,255,255,0.75);
 }
 .m-bar-track { width: 40px; height: 2px; background: var(--border-dim); border-radius: 1px; overflow: hidden; }
 .m-bar-fill  { height: 100%; border-radius: 1px; transition: width 0.5s ease; }
@@ -1058,12 +1058,12 @@ header:hover .btn-fullscreen { opacity: 1; }
 .disagree-cell:last-child { border-right: none; }
 .disagree-cell-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(255,255,255,0.38); white-space: nowrap;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.62); white-space: nowrap;
 }
 .disagree-cell-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75);
+  font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.75);
   white-space: nowrap;
 }
 .disagree-cell-val.green  { color: #3DFF7A; }
@@ -1076,12 +1076,12 @@ header:hover .btn-fullscreen { opacity: 1; }
   border-right: 1px solid rgba(255,255,255,0.06);
 }
 .disagree-warn-icon {
-  font-size: 14px; line-height: 1; flex-shrink: 0;
+  font-size: 17px; line-height: 1; flex-shrink: 0;
 }
 .disagree-warn-text {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.35); white-space: nowrap;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.60); white-space: nowrap;
   transition: color 0.3s;
 }
 .disagree-bar.warning .disagree-warn-text { color: #FFD400; }
@@ -1093,13 +1093,13 @@ header:hover .btn-fullscreen { opacity: 1; }
 .shortcut-item {
   display: flex; align-items: center; justify-content: space-between;
   padding: 4px 6px; border-radius: 3px;
-  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mint-dim);
   border: 1px solid var(--border-dim); background: rgba(0,0,0,0.2);
 }
 .shortcut-keys { display: flex; gap: 3px; }
 .kbd-key {
   background: var(--inset); border: 1px solid var(--border-hi);
-  border-radius: 2px; padding: 1px 4px; font-size: 7px; color: var(--green);
+  border-radius: 2px; padding: 1px 4px; font-size: 8px; color: var(--green);
 }
 
 /* ── API KEY PANEL ───────────────────────────────────── */
@@ -1112,7 +1112,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   display: flex; align-items: center; justify-content: space-between;
 }
 .api-title {
-  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
   color: var(--green); opacity: 0.70;
 }
 .api-rows { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
@@ -1123,16 +1123,16 @@ header:hover .btn-fullscreen { opacity: 1; }
 .api-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .api-logo { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: filter 0.3s; }
 .api-logo svg { display: block; }
-.api-model { font-family: 'JetBrains Mono', monospace; font-size: 8px; flex: 1; }
+.api-model { font-family: 'JetBrains Mono', monospace; font-size: 10px; flex: 1; }
 .api-status {
-  font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 1px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 1px;
   padding: 1px 5px; border-radius: 2px;
 }
 .api-status.set { background: rgba(88,222,131,0.1); color: var(--green); border: 1px solid var(--green-deep); }
 .api-status.byok { background: rgba(218,142,32,0.12); color: var(--amber); border: 1px solid rgba(218,142,32,0.4); }
 .api-status.unset { background: rgba(205,78,20,0.1); color: var(--ember); border: 1px solid rgba(205,78,20,0.3); }
 .api-set-btn {
-  font-family: 'JetBrains Mono', monospace; font-size: 7px; color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--mint-dim);
   background: var(--inset); border: 1px solid var(--border-dim); border-radius: 2px;
   padding: 1px 6px; cursor: pointer; transition: all 0.15s;
 }
@@ -1146,7 +1146,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px dashed rgba(120,230,100,0.45);
   border-radius: 4px; padding: 7px 10px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
   color: #7BE868; cursor: pointer;
   transition: all 0.2s;
 }
@@ -1165,7 +1165,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   border: 1px solid rgba(56,189,248,0.45);
   border-radius: 5px; padding: 9px 12px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
   color: #38BDF8; cursor: pointer;
   transition: all 0.2s;
 }
@@ -1197,12 +1197,12 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .byok-modal-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px; font-weight: 700; color: var(--amber);
+  font-size: 22px; font-weight: 700; color: var(--amber);
   letter-spacing: -0.5px;
 }
 .byok-modal-sub {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
   color: rgba(240,160,48,0.55); margin-top: 3px;
 }
 .byok-modal-body {
@@ -1211,13 +1211,13 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .byok-modal-body p {
   font-family: 'Inter', sans-serif;
-  font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.72);
+  font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.72);
   margin: 0;
 }
 .byok-modal-body strong { color: #ffffff; }
 .byok-modal-body .byok-note {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: rgba(255,255,255,0.35);
+  font-size: 12px; color: rgba(255,255,255,0.60);
   background: rgba(0,0,0,0.25); border-radius: 4px;
   padding: 8px 10px; border-left: 2px solid var(--border-dim);
   line-height: 1.6;
@@ -1232,9 +1232,9 @@ header:hover .btn-fullscreen { opacity: 1; }
   flex: 1; padding: 10px;
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--border-dim); border-radius: 6px;
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
   letter-spacing: 1px; text-transform: uppercase;
-  color: rgba(255,255,255,0.45); cursor: pointer;
+  color: rgba(255,255,255,0.68); cursor: pointer;
   transition: all 0.15s;
 }
 .byok-cancel:hover { border-color: var(--border-hi); color: rgba(255,255,255,0.7); }
@@ -1242,7 +1242,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   flex: 2; padding: 10px;
   background: rgba(218,142,32,0.12);
   border: 1px solid var(--amber); border-radius: 6px;
-  font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700;
   color: var(--amber); cursor: pointer;
   transition: all 0.15s;
 }
@@ -1268,14 +1268,14 @@ header:hover .btn-fullscreen { opacity: 1; }
   transition: opacity 0.35s ease;
   pointer-events: none;
 }
-.ghost-hud:hover { opacity: 0.60; pointer-events: auto; }
+.ghost-hud:hover { opacity: 0.80; pointer-events: auto; }
 .ghost-line {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 1.8px; text-transform: uppercase;
+  font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
   color: rgba(255,255,255,0.7); white-space: nowrap;
   display: flex; gap: 7px; align-items: center;
 }
-.ghost-line .g-label { color: rgba(255,255,255,0.35); }
+.ghost-line .g-label { color: rgba(255,255,255,0.60); }
 .ghost-line .g-val-green { color: var(--green); }
 .ghost-line .g-val-amber { color: var(--amber); }
 .ghost-divider {
@@ -1335,7 +1335,7 @@ header:hover .btn-fullscreen { opacity: 1; }
         <div class="hero-logo-wrap">
           <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
         </div>
-        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:42px;color:var(--mint);letter-spacing:-2px;text-align:center;margin-top:10px;line-height:1;">5i</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:50px;color:var(--mint);letter-spacing:-2px;text-align:center;margin-top:10px;line-height:1;">5i</div>
         <div class="hero-subtitle">The AI Synthesis Consortium</div>
       </div>
 
@@ -1672,9 +1672,9 @@ header:hover .btn-fullscreen { opacity: 1; }
       <div>
         <div class="panel-label">Display</div>
         <div id="themeToggle" style="display:flex;gap:4px;margin-top:2px;">
-          <button onclick="setTheme('dark')"    id="theme-dark"    data-info="Dark Mode|Forces the dark theme regardless of your OS setting. Deep green-black palette. Easy on the eyes for long sessions." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
-          <button onclick="setTheme('default')" id="theme-default" data-info="Auto Mode|Follows your OS appearance setting. Dark on macOS dark mode, light on macOS light mode. Updates automatically when you switch." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
-          <button onclick="setTheme('light')"   id="theme-light"   data-info="Light Mode|Forces the light theme. Light green-grey palette, dark text. Good for presentations, bright environments, or when your eyes need a break from dark UI." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
+          <button onclick="setTheme('dark')"    id="theme-dark"    data-info="Dark Mode|Forces the dark theme regardless of your OS setting. Deep green-black palette. Easy on the eyes for long sessions." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☽ DARK</button>
+          <button onclick="setTheme('default')" id="theme-default" data-info="Auto Mode|Follows your OS appearance setting. Dark on macOS dark mode, light on macOS light mode. Updates automatically when you switch." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">◉ AUTO</button>
+          <button onclick="setTheme('light')"   id="theme-light"   data-info="Light Mode|Forces the light theme. Light green-grey palette, dark text. Good for presentations, bright environments, or when your eyes need a break from dark UI." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 4px;border-radius:3px;cursor:pointer;border:1px solid var(--border-dim);background:var(--inset);color:var(--mint-dim);transition:all 0.15s;">☀ LIGHT</button>
         </div>
       </div>
 
@@ -2263,14 +2263,14 @@ function runAgreementAnalysis(stepOutputs) {
       background:rgba(61,255,122,${strength * 0.18});
       border:1px solid rgba(61,255,122,${strength * 0.55});
       border-radius:4px;font-family:'JetBrains Mono',monospace;
-      font-size:10px;color:#3DFF7A;cursor:default;"
+      font-size:12px;color:#3DFF7A;cursor:default;"
       title="${count}/${stepOutputs.length} models">${word}
-      <span style="opacity:0.5;font-size:8px">${count}/${stepOutputs.length}</span></span>`;
+      <span style="opacity:0.5;font-size:10px">${count}/${stepOutputs.length}</span></span>`;
   }).join('');
 
   container.innerHTML = `<div class="flag-card">
     <div class="flag-label">Shared Concepts — ${agreed.length} terms in ${threshold}+ models</div>
-    <p style="font-size:10px;color:rgba(255,255,255,0.4);margin:6px 0 10px;">
+    <p style="font-size:12px;color:rgba(255,255,255,0.4);margin:6px 0 10px;">
       Concepts agreed upon by the majority of models in the chain. Chip size reflects agreement strength.
     </p>
     <div>${chips}</div>
@@ -2301,20 +2301,20 @@ function runDeltaAnalysis(stepOutputs) {
     html += `<div style="margin-bottom:12px;padding:10px 12px;
       border-left:3px solid ${cm.color};
       background:rgba(255,255,255,0.025);border-radius:0 6px 6px 0;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;
         color:${cm.colorHi};letter-spacing:1.5px;margin-bottom:8px;display:flex;gap:12px;align-items:center;">
         <span>${pm.name} → ${cm.name}</span>
         <span style="opacity:0.5">${sign}${lenDelta} concept words</span>
       </div>
       ${added.length ? `<div style="margin-bottom:5px;">
-        <span style="font-size:7.5px;letter-spacing:1px;color:rgba(61,255,122,0.55);font-family:'JetBrains Mono',monospace;">INTRODUCED &nbsp;</span>
-        ${added.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;
+        <span style="font-size:9px;letter-spacing:1px;color:rgba(61,255,122,0.55);font-family:'JetBrains Mono',monospace;">INTRODUCED &nbsp;</span>
+        ${added.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;
           color:#3DFF7A;background:rgba(61,255,122,0.10);
           padding:1px 7px;border-radius:3px;margin:2px;display:inline-block;">${w}</span>`).join('')}
       </div>` : ''}
       ${dropped.length ? `<div>
-        <span style="font-size:7.5px;letter-spacing:1px;color:rgba(255,68,34,0.55);font-family:'JetBrains Mono',monospace;">DROPPED &nbsp;</span>
-        ${dropped.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;
+        <span style="font-size:9px;letter-spacing:1px;color:rgba(255,68,34,0.55);font-family:'JetBrains Mono',monospace;">DROPPED &nbsp;</span>
+        ${dropped.map(w => `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;
           color:#FF4422;background:rgba(255,68,34,0.10);
           padding:1px 7px;border-radius:3px;margin:2px;display:inline-block;">${w}</span>`).join('')}
       </div>` : ''}
@@ -2512,9 +2512,9 @@ async function synthesize() {
     block.style.cssText = `margin-bottom:12px;padding-left:10px;border-left:2px solid ${m.color};animation:fadeIn 0.15s ease;`;
     block.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
-        <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit}</span>
       </div>
-      <div id="si-out-${k}" style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:rgba(255,255,255,0.80);">
+      <div id="si-out-${k}" style="font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.92);">
         <span style="opacity:0.3;font-style:italic;">Waiting for ${m.name}…</span>
       </div>`;
     out.appendChild(block);
@@ -2550,7 +2550,7 @@ async function synthesize() {
       return { key: k, text: result.text };
     } catch (err) {
       if (err.name === 'AbortError') return null;
-      outEl.innerHTML += `<span style="color:#F07C5A;font-size:10px;display:block;margin-top:4px;">⚠ ${err.message}</span>`;
+      outEl.innerHTML += `<span style="color:#F07C5A;font-size:12px;display:block;margin-top:4px;">⚠ ${err.message}</span>`;
       return null;
     }
   });
@@ -2617,11 +2617,11 @@ async function synthesize() {
       consensusBlock.innerHTML = `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 10px #3DFF7A;flex-shrink:0;"></div>
-          <span style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Consensus</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:1px;">neutral synthesis · ${stepOutputs.length} models</span>
-          <button onclick="showSynthesisMethod()" style="margin-left:auto;background:rgba(61,255,122,0.08);border:1px solid rgba(61,255,122,0.25);color:rgba(61,255,122,0.6);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:3px;cursor:pointer;" title="How synthesis works">METHOD ?</button>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Consensus</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;">neutral synthesis · ${stepOutputs.length} models</span>
+          <button onclick="showSynthesisMethod()" style="margin-left:auto;background:rgba(61,255,122,0.08);border:1px solid rgba(61,255,122,0.25);color:rgba(61,255,122,0.6);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;padding:2px 7px;border-radius:3px;cursor:pointer;" title="How synthesis works">METHOD ?</button>
         </div>
-        <div id="consensus-out" style="font-family:'Inter',sans-serif;font-size:15px;line-height:1.75;color:#E8FAF2;"></div>
+        <div id="consensus-out" style="font-family:'Inter',sans-serif;font-size:18px;line-height:1.75;color:#FFFFFF;"></div>
       `;
       /* Prepend consensus above individual outputs */
       out.insertBefore(consensusBlock, out.firstChild);
@@ -2633,7 +2633,7 @@ async function synthesize() {
       divider.style.cssText = `
         margin:18px 0 14px;
         display:flex;align-items:center;gap:12px;
-        font-family:'JetBrains Mono',monospace;font-size:8px;
+        font-family:'JetBrains Mono',monospace;font-size:10px;
         letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);
       `;
       divider.innerHTML = `<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>MODEL CHAIN — HOW WE GOT HERE<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>`;
@@ -2669,7 +2669,7 @@ async function synthesize() {
             <button id="synth-more-btn" onclick="toggleSynthDetails(this)" style="
               margin-top:16px;background:rgba(61,255,122,0.06);
               border:1px solid rgba(61,255,122,0.2);color:rgba(61,255,122,0.7);
-              font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+              font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;
               padding:6px 14px;border-radius:4px;cursor:pointer;width:100%;text-align:left;
               transition:all 0.15s;
             ">▸ Tell me more — consensus, divergences &amp; unique insights</button>
@@ -2688,7 +2688,7 @@ async function synthesize() {
   /* ── Run summary bar ─────────────────────────────────── */
   const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
   const summary = document.createElement('div');
-  summary.style.cssText = 'margin-top:14px;padding:7px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:4px;display:flex;gap:14px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:9px;color:rgba(255,255,255,0.45);';
+  summary.style.cssText = 'margin-top:14px;padding:7px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:4px;display:flex;gap:14px;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:11px;color:rgba(255,255,255,0.68);';
   summary.innerHTML = `<span>⏱ ${elapsed}s</span><span>🔗 ${activeModels.length} models + synthesis</span><span>~${totalOutTokens} tokens</span><span>est $${totalEstCost.toFixed(5)}</span>`;
   out.appendChild(summary);
 
@@ -2720,19 +2720,19 @@ function showSynthesisMethod() {
     ">
       <button onclick="document.getElementById('synthMethodModal').remove()" style="
         position:absolute;top:14px;right:16px;background:none;border:none;
-        color:rgba(255,255,255,0.35);font-size:18px;cursor:pointer;line-height:1;
+        color:rgba(255,255,255,0.60);font-size:22px;cursor:pointer;line-height:1;
       ">✕</button>
 
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
         <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 8px #3DFF7A;"></div>
-        <span style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Synthesis Methodology</span>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Synthesis Methodology</span>
       </div>
 
-      <p style="font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin:0 0 18px;">
+      <p style="font-family:'Inter',sans-serif;font-size:16px;color:rgba(255,255,255,0.6);line-height:1.6;margin:0 0 18px;">
         The consensus block is not a summary. It is produced by a <strong style="color:rgba(255,255,255,0.85);">neutral synthesis engine</strong> — an AI instance constrained to act as a meta-analyst, not a judge.
       </p>
 
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;margin-bottom:18px;border-left:2px solid rgba(61,255,122,0.3);">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;margin-bottom:18px;border-left:2px solid rgba(61,255,122,0.3);">
         <div style="color:#3DFF7A;margin-bottom:8px;letter-spacing:1px;">CONSTRAINTS APPLIED:</div>
         — Does NOT prefer, rank, or bias toward any model<br>
         — Does NOT pick a "best" answer or smooth over disagreement<br>
@@ -2742,7 +2742,7 @@ function showSynthesisMethod() {
         — Flags uncertainty or ambiguity explicitly
       </div>
 
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;border-left:2px solid rgba(61,255,122,0.3);">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;border-left:2px solid rgba(61,255,122,0.3);">
         <div style="color:#3DFF7A;margin-bottom:8px;letter-spacing:1px;">OUTPUT STRUCTURE:</div>
         <span style="color:rgba(255,255,255,0.7);">Unified Synthesis</span> — coherent answer to the original question<br>
         <span style="color:rgba(255,255,255,0.7);">Consensus Points</span> — what all or most models agreed on<br>
@@ -2751,7 +2751,7 @@ function showSynthesisMethod() {
         <span style="color:rgba(255,255,255,0.7);">Open Questions</span> — unresolved gaps across all responses
       </div>
 
-      <p style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.25);margin:14px 0 0;text-align:right;letter-spacing:0.5px;">
+      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.25);margin:14px 0 0;text-align:right;letter-spacing:0.5px;">
         5i · Ensemble Intelligence Interface
       </p>
     </div>
@@ -3334,7 +3334,7 @@ function initHeroLogo() {
       ctx.beginPath(); ctx.arc(px,py,ps,0,Math.PI*2); ctx.fillStyle=m.color; ctx.fill();
       /* specular */
       ctx.beginPath(); ctx.arc(px-ps*0.28, py-ps*0.28, ps*0.22, 0, Math.PI*2);
-      ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.68)'; ctx.fill();
 
       /* connector line */
       ctx.shadowBlur = 0;
