@@ -54,6 +54,27 @@
     transition: all 0.15s;
   }
   .nav-back:hover { color: var(--green); border-color: rgba(61,255,122,0.3); }
+  .nav-action {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    padding: 4px 10px; border-radius: 3px; cursor: pointer; transition: all 0.15s;
+    text-transform: uppercase; border: none;
+  }
+  .nav-pdf {
+    background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.35);
+    color: #38BDF8;
+  }
+  .nav-pdf:hover { background: rgba(56,189,248,0.2); border-color: #7DD3FC; color: #7DD3FC; }
+  .nav-copy {
+    background: rgba(61,255,122,0.08); border: 1px solid rgba(61,255,122,0.3);
+    color: #3DFF7A;
+  }
+  .nav-copy:hover { background: rgba(61,255,122,0.16); border-color: #3DFF7A; }
+  @media print {
+    .nav, .guide-footer a { display: none; }
+    body { background: #fff; color: #111; }
+    .model-card { border-color: #ccc !important; break-inside: avoid; }
+    .section { break-inside: avoid; }
+  }
 
   /* ── LAYOUT ── */
   .page { max-width: 820px; margin: 0 auto; padding: 48px 24px 96px; }
@@ -297,8 +318,29 @@
 <nav class="nav">
   <div class="nav-logo">5i</div>
   <div class="nav-sub">USER GUIDE</div>
-  <a href="/" class="nav-back">← Back to App</a>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    <button class="nav-action nav-copy" id="copyBtn" onclick="copyGuide()" title="Copy guide text to clipboard">
+      ⎘ COPY
+    </button>
+    <button class="nav-action nav-pdf" onclick="window.print()" title="Save as PDF via browser print dialog">
+      ⬇ PDF
+    </button>
+    <a href="/" class="nav-back" style="margin-left:0;">← App</a>
+  </div>
 </nav>
+<script>
+function copyGuide() {
+  const btn = document.getElementById('copyBtn');
+  const text = document.querySelector('.page').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ COPIED';
+    setTimeout(() => { btn.textContent = '⎘ COPY'; }, 2000);
+  }).catch(() => {
+    btn.textContent = '✗ FAILED';
+    setTimeout(() => { btn.textContent = '⎘ COPY'; }, 2000);
+  });
+}
+</script>
 
 <div class="page">
 
