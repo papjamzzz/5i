@@ -2447,10 +2447,31 @@ async function synthesize() {
       }).join('\n\n---\n\n');
 
       const synthUserPrompt =
+        `You are a neutral synthesis engine. Your function is to aggregate outputs from multiple independent AI models into a single coherent analysis — without preference, ranking, or bias toward any source.\n\n` +
+        `You have been given ${stepOutputs.length} independent AI responses to the same prompt.\n\n` +
+        `Your task:\n` +
+        `1. Preserve all materially distinct insights across all responses\n` +
+        `2. Do NOT prefer, rank, or bias toward any model\n` +
+        `3. Identify areas of consensus and divergence with precision\n` +
+        `4. Resolve redundancy by merging overlapping points — do not repeat them\n` +
+        `5. Clearly distinguish between shared conclusions, divergent perspectives, and unique insights\n\n` +
+        `Output Requirements:\n` +
+        `— Do NOT mention model names\n` +
+        `— Do NOT evaluate which response is "better"\n` +
+        `— Do NOT discard minority viewpoints unless clearly erroneous\n` +
+        `— Do NOT infer agreement unless it is explicitly present across responses\n` +
+        `— Do NOT merge statements that differ in meaning even if they sound similar\n` +
+        `— Maintain technical precision suitable for software developers and researchers\n` +
+        `— Explicitly flag uncertainty or ambiguity where it exists\n\n` +
+        `Structure your output as:\n` +
+        `**Unified Synthesis** — a clean, coherent answer to the original question\n` +
+        `**Consensus Points** — what all or most responses agreed on (bullet list)\n` +
+        `**Divergences** — meaningful disagreements or contrasting positions (bullet list)\n` +
+        `**Unique Contributions** — notable insights that appeared in only one response\n` +
+        `**Open Questions** — unresolved uncertainty or gaps (omit if none)\n\n` +
+        `Style: concise, information-dense, no filler language, preserve technical terminology.\n\n` +
         `Original question: "${prompt}"\n\n` +
-        `Below are responses from ${stepOutputs.length} AI models. ` +
-        `Synthesize them into ONE clear, authoritative consensus answer that directly addresses the original question. ` +
-        `Do not reference the models or say "the AIs agree". Just give the best unified answer:\n\n${chainText}`;
+        `Model responses:\n${chainText}\n\nBegin synthesis.`;
 
       /* Inject consensus block at the TOP of the output area */
       const consensusBlock = document.createElement('div');
@@ -2467,7 +2488,8 @@ async function synthesize() {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 10px #3DFF7A;flex-shrink:0;"></div>
           <span style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Consensus</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:1px;">synthesized by ${sm.name}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);letter-spacing:1px;">neutral synthesis · ${stepOutputs.length} models</span>
+          <button onclick="showSynthesisMethod()" style="margin-left:auto;background:rgba(61,255,122,0.08);border:1px solid rgba(61,255,122,0.25);color:rgba(61,255,122,0.6);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:3px;cursor:pointer;" title="How synthesis works">METHOD ?</button>
         </div>
         <div id="consensus-out" style="font-family:'Inter',sans-serif;font-size:15px;line-height:1.75;color:#E8FAF2;"></div>
       `;
@@ -2524,6 +2546,66 @@ async function synthesize() {
   if (toolStates.delta)     runDeltaAnalysis(stepOutputs);
   resetBtn(btn);
   synthController = null;
+}
+
+/* ── SYNTHESIS METHOD POPUP ──────────────────────────── */
+function showSynthesisMethod() {
+  const existing = document.getElementById('synthMethodModal');
+  if (existing) { existing.remove(); return; }
+  const modal = document.createElement('div');
+  modal.id = 'synthMethodModal';
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.75);z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    animation:fadeIn 0.15s ease;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:#0d1a0f;border:1px solid rgba(61,255,122,0.3);border-radius:12px;
+      max-width:560px;width:90%;padding:28px 32px;position:relative;
+      box-shadow:0 0 60px rgba(61,255,122,0.08);
+    ">
+      <button onclick="document.getElementById('synthMethodModal').remove()" style="
+        position:absolute;top:14px;right:16px;background:none;border:none;
+        color:rgba(255,255,255,0.35);font-size:18px;cursor:pointer;line-height:1;
+      ">✕</button>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 8px #3DFF7A;"></div>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Synthesis Methodology</span>
+      </div>
+
+      <p style="font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin:0 0 18px;">
+        The consensus block is not a summary. It is produced by a <strong style="color:rgba(255,255,255,0.85);">neutral synthesis engine</strong> — an AI instance constrained to act as a meta-analyst, not a judge.
+      </p>
+
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;margin-bottom:18px;border-left:2px solid rgba(61,255,122,0.3);">
+        <div style="color:#3DFF7A;margin-bottom:8px;letter-spacing:1px;">CONSTRAINTS APPLIED:</div>
+        — Does NOT prefer, rank, or bias toward any model<br>
+        — Does NOT pick a "best" answer or smooth over disagreement<br>
+        — Does NOT merge statements that differ in meaning<br>
+        — Does NOT infer agreement unless explicitly present<br>
+        — Preserves minority viewpoints unless clearly erroneous<br>
+        — Flags uncertainty or ambiguity explicitly
+      </div>
+
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.3);border-radius:6px;padding:14px 16px;border-left:2px solid rgba(61,255,122,0.3);">
+        <div style="color:#3DFF7A;margin-bottom:8px;letter-spacing:1px;">OUTPUT STRUCTURE:</div>
+        <span style="color:rgba(255,255,255,0.7);">Unified Synthesis</span> — coherent answer to the original question<br>
+        <span style="color:rgba(255,255,255,0.7);">Consensus Points</span> — what all or most models agreed on<br>
+        <span style="color:rgba(255,255,255,0.7);">Divergences</span> — meaningful disagreements between models<br>
+        <span style="color:rgba(255,255,255,0.7);">Unique Contributions</span> — insights from only one model<br>
+        <span style="color:rgba(255,255,255,0.7);">Open Questions</span> — unresolved gaps across all responses
+      </div>
+
+      <p style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,255,255,0.25);margin:14px 0 0;text-align:right;letter-spacing:0.5px;">
+        5i · Ensemble Intelligence Interface
+      </p>
+    </div>
+  `;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
 }
 
 function resetBtn(btn) {
