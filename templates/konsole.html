@@ -1438,6 +1438,107 @@ header:hover .btn-fullscreen { opacity: 1; }
   .main-grid { grid-template-columns: 1fr; }
   .panel, .right-panel { border-right: none; border-bottom: 1px solid var(--border-dim); }
 }
+
+/* ══ KONSOLE MOBILE ═══════════════════════════════════ */
+.mobile-model-strip { display: none; }
+
+@media (max-width: 768px) {
+  #orbital-bg { display: none; }
+
+  header { padding: 0 14px; height: 46px; }
+  .logo-mark { width: 28px; height: 28px; }
+
+  .main-grid {
+    grid-template-columns: 1fr !important;
+    height: auto; overflow: visible;
+    display: flex; flex-direction: column;
+  }
+
+  /* Left panel — compact strip at top */
+  .panel {
+    order: -1;
+    max-height: none;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-dim) !important;
+    border-right: none !important;
+    overflow: visible;
+  }
+
+  /* Model mix — horizontal scrolling pill strip */
+  .model-mix {
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px; padding-bottom: 2px;
+  }
+  .model-mix::-webkit-scrollbar { display: none; }
+  .mix-btn {
+    flex-shrink: 0;
+    flex-direction: column;
+    padding: 8px 12px;
+    min-height: 52px;
+    min-width: 64px;
+    align-items: center;
+    gap: 4px;
+  }
+  .mix-name { font-size: 10px; text-align: center; }
+  .mix-status { font-size: 8px; }
+
+  /* History — horizontal scroll on mobile */
+  .history-panel {
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .history-panel::-webkit-scrollbar { display: none; }
+  .history-item { flex-shrink: 0; max-width: 160px; }
+
+  /* Hide less critical left panel sections on mobile */
+  .panel > div:nth-child(n+3) { display: none; }
+  /* But keep first 2 (model mix + history) */
+  .panel > div:nth-child(1),
+  .panel > div:nth-child(2) { display: block; }
+
+  /* Right panel — hide */
+  .right-panel { display: none !important; }
+
+  /* Center panel */
+  .center-panel { padding: 12px; height: auto; overflow: visible; }
+
+  /* Input */
+  .prompt-textarea { font-size: 16px !important; min-height: 90px; }
+
+  /* Synth button */
+  .synth-row { flex-direction: column; }
+  .btn-synth { width: 100%; height: 50px; justify-content: center; }
+
+  /* Tabs */
+  .tabs-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+
+  /* Output */
+  .output-body { min-height: 180px; max-height: 55vh; overflow-y: auto; font-size: 13px; }
+
+  /* Analysis strip */
+  .analysis-strip { flex-wrap: wrap; }
+
+  /* Touch targets */
+  .analysis-btn { min-height: 52px; }
+  .tab-btn { min-height: 38px; padding: 0 14px; }
+  .dbt-btn { min-height: 32px; }
+
+  /* Disagreement bar */
+  .disagree-bar { overflow-x: auto; flex-wrap: nowrap; gap: 6px; }
+}
+
+@media (max-width: 420px) {
+  .btn-fullscreen { display: none; }
+}
 </style>
 </head>
 <body>
