@@ -10,6 +10,12 @@ import requests as req_lib
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
 import time
+import sqlite3
+import uuid
+import hmac
+import hashlib
+import json
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -20,6 +26,11 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GOOGLE_KEY    = os.getenv("GOOGLE_API_KEY", "")
 GROK_KEY      = os.getenv("GROK_API_KEY", "")
 MISTRAL_KEY   = os.getenv("MISTRAL_API_KEY", "")
+
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+RESEND_API_KEY        = os.getenv("RESEND_API_KEY", "")
+FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
+DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
 
 MAX_INPUT_CHARS = 500
 
@@ -55,6 +66,105 @@ MODELS = {
         "enabled": lambda: bool(MISTRAL_KEY),
     },
 }
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+def get_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    with get_db() as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS subscribers (
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                email               TEXT UNIQUE NOT NULL,
+                token               TEXT UNIQUE NOT NULL,
+                plan                TEXT NOT NULL,
+                usage_count         INTEGER DEFAULT 0,
+                monthly_limit       INTEGER NOT NULL,
+                reset_date          TEXT NOT NULL,
+                stripe_customer_id  TEXT,
+                created_at          TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        db.commit()
+
+try:
+    init_db()
+except Exception:
+    pass  # /data may not exist locally — ok, DB init retried on first use
+
+
+def _check_and_reset(row):
+    """Reset usage counter if billing period has rolled over. Returns current usage_count."""
+    reset_date = datetime.fromisoformat(row["reset_date"])
+    if datetime.utcnow() >= reset_date:
+        next_reset = (reset_date + timedelta(days=30)).isoformat()
+        with get_db() as db:
+            db.execute("UPDATE subscribers SET usage_count=0, reset_date=? WHERE token=?",
+                       (next_reset, row["token"]))
+            db.commit()
+        return 0
+    return row["usage_count"]
+
+
+def verify_token(token):
+    """Returns (ok, reason, row_or_None)"""
+    if not token:
+        return False, "no_token", None
+    try:
+        with get_db() as db:
+            row = db.execute("SELECT * FROM subscribers WHERE token=?", (token,)).fetchone()
+    except Exception:
+        return False, "db_error", None
+    if not row:
+        return False, "invalid_token", None
+    usage = _check_and_reset(row)
+    limit = row["monthly_limit"]
+    if limit != -1 and usage >= limit:
+        return False, "limit_reached", row
+    return True, "ok", row
+
+
+def increment_usage(token):
+    try:
+        with get_db() as db:
+            db.execute("UPDATE subscribers SET usage_count=usage_count+1 WHERE token=?", (token,))
+            db.commit()
+    except Exception:
+        pass
+
+
+def send_token_email(to_email, token, plan_name):
+    if not RESEND_API_KEY:
+        print(f"[TOKEN] {to_email} → {token} ({plan_name})")  # fallback: log it
+        return
+    try:
+        req_lib.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "from": FROM_EMAIL,
+                "to": [to_email],
+                "subject": "Your 5i Access Token",
+                "html": f"""
+                <div style="font-family:monospace;background:#0B1210;color:#5EE88A;padding:32px;border-radius:8px;max-width:520px;">
+                  <h2 style="color:#fff;margin:0 0 16px;">Welcome to 5i — {plan_name}</h2>
+                  <p style="color:rgba(255,255,255,0.65);margin:0 0 12px;">Your access token:</p>
+                  <pre style="background:#0F1A16;padding:16px;border-radius:4px;font-size:16px;color:#86F5B4;border:1px solid #2E8C52;word-break:break-all;">{token}</pre>
+                  <p style="color:rgba(255,255,255,0.65);margin:16px 0 0;">Open <a href="https://web-production-94a13.up.railway.app" style="color:#5EE88A;">5i</a>, click the TOKEN field in the toolbar, and paste it in. It saves automatically.</p>
+                  <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:24px 0 0;">Keep this token private. It is tied to your subscription.</p>
+                </div>
+                """
+            },
+            timeout=10
+        )
+    except Exception as e:
+        print(f"[EMAIL ERROR] {e}")
 
 
 # ── Individual model callers ──────────────────────────────────────────────────
@@ -264,11 +374,20 @@ def index():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    data = request.json
-    prompt = data.get("prompt", "").strip()[:MAX_INPUT_CHARS]
+    data         = request.json
+    token        = data.get("token", "").strip()
+    prompt       = data.get("prompt", "").strip()[:MAX_INPUT_CHARS]
     want_verdict = data.get("verdict", False)
-    selected = [k for k in data.get("models", list(MODELS.keys()))
-                if k in MODELS and MODELS[k]["enabled"]()]
+    selected     = [k for k in data.get("models", list(MODELS.keys()))
+                    if k in MODELS and MODELS[k]["enabled"]()]
+
+    # Token gate — only enforced when a token is provided
+    use_token = False
+    if token:
+        ok, reason, _ = verify_token(token)
+        if not ok:
+            return jsonify({"error": f"Access denied: {reason}"}), 403
+        use_token = True
 
     if not prompt:
         return jsonify({"error": "Empty prompt"}), 400
@@ -282,6 +401,9 @@ def ask():
     else:
         results = asyncio.run(query_all(prompt, selected))
         verdict = None
+
+    if use_token:
+        increment_usage(token)
 
     elapsed = round(time.time() - start, 1)
     return jsonify({"results": results, "verdict": verdict, "elapsed": elapsed, "prompt": prompt})
@@ -410,6 +532,78 @@ def proxy_grok():
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
+
+
+@app.route("/verify-token", methods=["POST"])
+def verify_token_endpoint():
+    token = (request.json or {}).get("token", "").strip()
+    ok, reason, row = verify_token(token)
+    if not ok:
+        return jsonify({"valid": False, "reason": reason}), 200
+    return jsonify({
+        "valid":       True,
+        "plan":        row["plan"],
+        "usage_count": row["usage_count"],
+        "monthly_limit": row["monthly_limit"],
+        "reset_date":  row["reset_date"]
+    }), 200
+
+
+@app.route("/webhook/stripe", methods=["POST"])
+def stripe_webhook():
+    payload    = request.get_data()
+    sig_header = request.headers.get("Stripe-Signature", "")
+
+    if STRIPE_WEBHOOK_SECRET:
+        try:
+            parts    = dict(p.split("=", 1) for p in sig_header.split(","))
+            ts       = parts.get("t", "")
+            v1       = parts.get("v1", "")
+            signed   = ts.encode() + b"." + payload
+            expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(expected, v1):
+                return jsonify({"error": "invalid signature"}), 400
+        except Exception:
+            return jsonify({"error": "signature error"}), 400
+
+    event = request.get_json(force=True)
+    if not event or event.get("type") != "checkout.session.completed":
+        return jsonify({"ok": True}), 200
+
+    obj         = event["data"]["object"]
+    email       = obj.get("customer_details", {}).get("email", "")
+    customer_id = obj.get("customer", "")
+    metadata    = obj.get("metadata", {})
+    plan_key    = metadata.get("plan", "base")
+
+    if plan_key == "foundational":
+        monthly_limit = -1
+        plan_name     = "Foundational Synthesis"
+    else:
+        monthly_limit = 100
+        plan_name     = "Base Synthesis"
+
+    token      = str(uuid.uuid4())
+    reset_date = (datetime.utcnow() + timedelta(days=30)).isoformat()
+
+    try:
+        with get_db() as db:
+            db.execute("""
+                INSERT INTO subscribers (email, token, plan, usage_count, monthly_limit, reset_date, stripe_customer_id)
+                VALUES (?, ?, ?, 0, ?, ?, ?)
+                ON CONFLICT(email) DO UPDATE SET
+                    token=excluded.token, plan=excluded.plan,
+                    monthly_limit=excluded.monthly_limit,
+                    reset_date=excluded.reset_date,
+                    stripe_customer_id=excluded.stripe_customer_id,
+                    usage_count=0
+            """, (email, token, plan_key, monthly_limit, reset_date, customer_id))
+            db.commit()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    send_token_email(email, token, plan_name)
+    return jsonify({"ok": True}), 200
 
 
 @app.route('/guide')

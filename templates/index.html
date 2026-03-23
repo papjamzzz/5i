@@ -1285,6 +1285,36 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .byok-btn svg { width: 10px; height: 10px; flex-shrink: 0; }
 
+/* ── SUBSCRIPTION TOKEN ────────────────────────────── */
+.token-gate {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; margin-top: 6px;
+  background: rgba(94,232,138,0.05);
+  border: 1px solid rgba(94,232,138,0.30);
+  border-radius: 4px; padding: 7px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  transition: border-color 0.2s;
+}
+.token-gate:focus-within { border-color: rgba(94,232,138,0.65); }
+.token-gate-label {
+  color: rgba(94,232,138,0.50); letter-spacing: 1.5px;
+  text-transform: uppercase; flex-shrink: 0;
+}
+.token-gate input {
+  background: transparent; border: none; outline: none;
+  color: var(--green); font-family: inherit; font-size: 11px;
+  flex: 1; min-width: 0; letter-spacing: 0.5px;
+}
+.token-gate input::placeholder { color: rgba(94,232,138,0.25); }
+.token-gate-status {
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(94,232,138,0.35); flex-shrink: 0;
+  transition: color 0.2s;
+}
+.token-gate-status.valid   { color: var(--green); }
+.token-gate-status.invalid { color: #f87171; }
+
 /* User Guide button — sky blue */
 .guide-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -1691,6 +1721,14 @@ header:hover .btn-fullscreen { opacity: 1; }
           </svg>
           BYOK — Bring Your Own Keys
         </button>
+        <div class="token-gate" data-info="Subscription Token|Paste your 5i access token here. You receive it by email after subscribing at creativekonsoles.com. Tokens are stored in your browser — we never see them again after sending.">
+          <span class="token-gate-label">TOKEN</span>
+          <input type="password" id="subscriptionToken"
+                 placeholder="paste access token…"
+                 autocomplete="off"
+                 oninput="onTokenInput(this.value)"/>
+          <span class="token-gate-status" id="tokenStatus">—</span>
+        </div>
       </div>
 
       <!-- Monitoring — CPU + Cost -->
@@ -2747,6 +2785,9 @@ async function synthesize() {
     return;
   }
 
+  /* Free trial gate */
+  if (!checkFreeLimit()) return;
+
   /* Cancel any running synthesis */
   if (synthController) { synthController.abort(); synthController = null; }
   synthController = new AbortController();
@@ -3739,7 +3780,73 @@ window.addEventListener('DOMContentLoaded', () => {
   updateUI();
   initFileDrop();
   loadTheme();
+  loadTokenFromStorage();
 });
+
+
+/* ── SUBSCRIPTION TOKEN ──────────────────────────────── */
+const TOKEN_LS_KEY   = '5i_sub_token';
+const FREE_COUNT_KEY = '5i_free_uses';
+
+function loadTokenFromStorage() {
+  const t = localStorage.getItem(TOKEN_LS_KEY) || '';
+  if (t) {
+    const el = document.getElementById('subscriptionToken');
+    if (el) el.value = t;
+    validateToken(t);
+  }
+}
+
+function onTokenInput(val) {
+  const t = val.trim();
+  localStorage.setItem(TOKEN_LS_KEY, t);
+  if (t.length >= 32) validateToken(t);
+  else setTokenStatus('—', '');
+}
+
+function setTokenStatus(text, cls) {
+  const el = document.getElementById('tokenStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'token-gate-status ' + cls;
+}
+
+async function validateToken(token) {
+  if (!token) { setTokenStatus('—', ''); return; }
+  setTokenStatus('…', '');
+  try {
+    const r = await fetch('/verify-token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ token })
+    });
+    const d = await r.json();
+    if (d.valid) {
+      const lim = d.monthly_limit === -1 ? '∞' : `${d.usage_count}/${d.monthly_limit}`;
+      setTokenStatus(`${d.plan.toUpperCase()} · ${lim}`, 'valid');
+    } else {
+      setTokenStatus('INVALID', 'invalid');
+    }
+  } catch(e) {
+    setTokenStatus('ERR', 'invalid');
+  }
+}
+
+function getActiveToken() {
+  return (localStorage.getItem(TOKEN_LS_KEY) || '').trim();
+}
+
+function checkFreeLimit() {
+  const tok = getActiveToken();
+  if (tok) return true; // paid user — pass through
+  const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
+  if (used >= 5) {
+    showToast('Free trial limit reached (5 syntheses). Subscribe at creativekonsoles.com to continue.');
+    return false;
+  }
+  localStorage.setItem(FREE_COUNT_KEY, String(used + 1));
+  return true;
+}
 
 
 /* ── BYOK ────────────────────────────────────────────── */
