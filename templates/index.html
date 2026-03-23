@@ -1315,6 +1315,28 @@ header:hover .btn-fullscreen { opacity: 1; }
 .token-gate-status.valid   { color: var(--green); }
 .token-gate-status.invalid { color: #f87171; }
 
+/* ── PLAN STATUS BAR ───────────────────────────────── */
+.plan-status {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px;
+  padding: 7px 10px;
+  background: rgba(94,232,138,0.04);
+  border: 1px solid rgba(94,232,138,0.15);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.8px;
+  color: rgba(94,232,138,0.45);
+}
+.plan-status.free   { border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.30); }
+.plan-status.base   { border-color: rgba(94,232,138,0.25); color: rgba(94,232,138,0.65); }
+.plan-status.unlimited { border-color: rgba(94,232,138,0.40); color: var(--green); }
+.plan-status a {
+  color: inherit; text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.8; transition: opacity 0.15s;
+}
+.plan-status a:hover { opacity: 1; }
+
 /* User Guide button — sky blue */
 .guide-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -1728,6 +1750,9 @@ header:hover .btn-fullscreen { opacity: 1; }
                  autocomplete="off"
                  oninput="onTokenInput(this.value)"/>
           <span class="token-gate-status" id="tokenStatus">—</span>
+        </div>
+        <div class="plan-status free" id="planStatusBar">
+          FREE TRIAL · <span id="planStatusText">0/5 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>
         </div>
       </div>
 
@@ -3794,6 +3819,8 @@ function loadTokenFromStorage() {
     const el = document.getElementById('subscriptionToken');
     if (el) el.value = t;
     validateToken(t);
+  } else {
+    updatePlanBar(null); // show free trial status
   }
 }
 
@@ -3812,7 +3839,7 @@ function setTokenStatus(text, cls) {
 }
 
 async function validateToken(token) {
-  if (!token) { setTokenStatus('—', ''); return; }
+  if (!token) { setTokenStatus('—', ''); updatePlanBar(null); return; }
   setTokenStatus('…', '');
   try {
     const r = await fetch('/verify-token', {
@@ -3824,11 +3851,36 @@ async function validateToken(token) {
     if (d.valid) {
       const lim = d.monthly_limit === -1 ? '∞' : `${d.usage_count}/${d.monthly_limit}`;
       setTokenStatus(`${d.plan.toUpperCase()} · ${lim}`, 'valid');
+      updatePlanBar(d);
     } else {
       setTokenStatus('INVALID', 'invalid');
+      updatePlanBar(null);
     }
   } catch(e) {
     setTokenStatus('ERR', 'invalid');
+  }
+}
+
+function updatePlanBar(data) {
+  const bar  = document.getElementById('planStatusBar');
+  const text = document.getElementById('planStatusText');
+  if (!bar || !text) return;
+
+  if (!data) {
+    // Free trial
+    const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
+    bar.className = 'plan-status free';
+    bar.innerHTML = `FREE TRIAL · <span id="planStatusText">${used}/5 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>`;
+    return;
+  }
+
+  if (data.monthly_limit === -1) {
+    bar.className = 'plan-status unlimited';
+    bar.innerHTML = `FOUNDATIONAL SYNTHESIS · <span id="planStatusText">unlimited</span>`;
+  } else {
+    const remaining = data.monthly_limit - data.usage_count;
+    bar.className = 'plan-status base';
+    bar.innerHTML = `BASE SYNTHESIS · <span id="planStatusText">${data.usage_count}/${data.monthly_limit} used · ${remaining} left</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">upgrade ↗</a>`;
   }
 }
 
