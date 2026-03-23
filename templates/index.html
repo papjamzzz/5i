@@ -1423,6 +1423,133 @@ header:hover .btn-fullscreen { opacity: 1; }
   .main-grid { grid-template-columns: 1fr; }
   .panel, .right-panel { border-right: none; border-bottom: 1px solid var(--border-dim); }
 }
+
+/* ══ MOBILE REDESIGN ══════════════════════════════════ */
+.mobile-drawer-btn { display: none; }
+.drawer-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); z-index: 199;
+  backdrop-filter: blur(2px);
+}
+.drawer-overlay.active { display: block; }
+
+@media (max-width: 768px) {
+  /* Kill orbital on mobile — GPU drain */
+  #orbital-bg { display: none; }
+
+  /* Header — tighter */
+  header { padding: 0 14px; height: 46px; gap: 8px; }
+  .btn-konsole span { display: none; } /* icon only */
+  .btn-konsole { padding: 0 8px; gap: 0; }
+  .logo-mark { width: 28px; height: 28px; }
+
+  /* Show drawer toggle */
+  .mobile-drawer-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 0 10px; height: 30px;
+    background: var(--inset); border: 1px solid var(--border-dim);
+    border-radius: 5px; cursor: pointer;
+    color: var(--mint-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.08em;
+    transition: all 0.15s;
+  }
+  .mobile-drawer-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+  .mobile-drawer-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* Main grid */
+  .main-grid {
+    grid-template-columns: 1fr !important;
+    height: auto; overflow: visible;
+  }
+
+  /* Left panel — off-canvas drawer */
+  .panel {
+    position: fixed !important;
+    left: -290px !important; top: 0; bottom: 0;
+    width: 280px !important; z-index: 200;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    transition: left 0.25s ease;
+    border-right: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    padding-top: 56px;
+  }
+  .panel.drawer-open { left: 0 !important; }
+
+  /* Right panel — hide on mobile */
+  .right-panel { display: none !important; }
+
+  /* Center panel — full viewport */
+  .center-panel {
+    width: 100%; min-width: 0;
+    padding: 12px; height: auto; overflow: visible;
+  }
+
+  /* Model console — horizontal scroll */
+  .model-console { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .model-nodes { flex-wrap: nowrap; }
+
+  /* Analysis strip */
+  .analysis-strip { flex-wrap: wrap; gap: 6px; }
+  .analysis-btns { flex: 1; min-width: 130px; }
+  .analysis-indicators { flex: 1; min-width: 130px; }
+
+  /* Input */
+  .prompt-textarea {
+    font-size: 16px !important;
+    min-height: 90px;
+  }
+  .sys-prompt-input { font-size: 16px !important; }
+
+  /* Synthesize button — full width, tall */
+  .synth-row { flex-direction: column; gap: 8px; }
+  .btn-synth {
+    width: 100%; height: 50px;
+    font-size: 13px; justify-content: center;
+  }
+  .model-seq-display { justify-content: center; }
+
+  /* Disagreement bar — scrollable */
+  .disagree-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; gap: 6px; padding: 8px 10px; }
+
+  /* Tabs */
+  .tabs-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+
+  /* Output */
+  .output-body { min-height: 180px; max-height: 55vh; overflow-y: auto; font-size: 13px; }
+
+  /* Dev toolbar */
+  .dev-toolbar { flex-wrap: wrap; gap: 4px; }
+
+  /* Token counter */
+  .input-header { flex-wrap: wrap; gap: 4px; }
+
+  /* Fader bank */
+  .fader-wrap { height: 80px !important; }
+  .fader-bank { gap: 10px; justify-content: center; }
+
+  /* Panel labels */
+  .panel-label { margin-top: 14px; }
+
+  /* Monitor panel */
+  .monitor-panel { font-size: 11px; }
+
+  /* Touch targets — 44px minimum for key buttons */
+  .byok-btn, .guide-btn { min-height: 44px; justify-content: center; }
+  .analysis-btn { min-height: 52px; }
+  .tab-btn { min-height: 38px; padding: 0 14px; }
+  .dbt-btn { min-height: 32px; padding: 0 10px; }
+  .api-set-btn { min-height: 30px; padding: 0 10px; }
+
+  /* Shortcut strip hidden (in right panel, already hidden) */
+}
+
+@media (max-width: 420px) {
+  .btn-konsole { display: none; }
+  .btn-fullscreen { display: none; }
+  header { gap: 6px; }
+}
 </style>
 </head>
 <body>
@@ -1433,8 +1560,17 @@ header:hover .btn-fullscreen { opacity: 1; }
 <div class="app">
 
   <!-- ── HEADER ─────────────────────────────────────── -->
+  <!-- Mobile drawer overlay -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeMobileDrawer()"></div>
+
   <header>
     <div class="logo-mark"></div>
+    <button class="mobile-drawer-btn" onclick="toggleMobileDrawer()" title="Settings & Controls">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M2 4h12M2 8h12M2 12h12"/>
+      </svg>
+      CONTROLS
+    </button>
 
     <div class="header-right">
       <div class="status-dot">
@@ -3114,6 +3250,27 @@ document.addEventListener('mouseover', function(e) {
   titleEl.textContent = name.slice(0, 40);
   descEl.textContent  = desc;
 });
+
+/* ── MOBILE DRAWER ───────────────────────────────────── */
+function toggleMobileDrawer() {
+  const panel = document.getElementById('leftPanel');
+  const overlay = document.getElementById('drawerOverlay');
+  if (!panel) return;
+  const isOpen = panel.classList.contains('drawer-open');
+  if (isOpen) {
+    panel.classList.remove('drawer-open');
+    overlay.classList.remove('active');
+  } else {
+    panel.classList.add('drawer-open');
+    overlay.classList.add('active');
+  }
+}
+function closeMobileDrawer() {
+  const panel = document.getElementById('leftPanel');
+  const overlay = document.getElementById('drawerOverlay');
+  if (panel) panel.classList.remove('drawer-open');
+  if (overlay) overlay.classList.remove('active');
+}
 
 /* ── FULLSCREEN ──────────────────────────────────────── */
 function toggleFullscreen() {
