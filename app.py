@@ -577,7 +577,7 @@ def stripe_webhook():
     plan_key    = metadata.get("plan", "base")
 
     if plan_key == "foundational":
-        monthly_limit = -1
+        monthly_limit = 1000
         plan_name     = "Foundational Synthesis"
     else:
         monthly_limit = 100
