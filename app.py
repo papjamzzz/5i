@@ -59,13 +59,19 @@ MODELS = {
 
 # ── Individual model callers ──────────────────────────────────────────────────
 
-async def call_openai(session, prompt):
+MODEL_TIMEOUT  = aiohttp.ClientTimeout(total=25)   # fail fast
+SYNTH_TIMEOUT  = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroom
+MAX_TOKENS     = 500   # model calls — enough for most answers, faster generation
+MAX_TOKENS_SYNTH = 900 # synthesis output — needs room to cover all 5 responses
+
+
+async def call_openai(session, prompt, max_tokens=MAX_TOKENS):
     try:
         async with session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {OPENAI_KEY}", "Content-Type": "application/json"},
-            json={"model": "gpt-4o", "messages": [{"role": "user", "content": prompt}], "max_tokens": 800},
-            timeout=aiohttp.ClientTimeout(total=30)
+            json={"model": "gpt-4o", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
             return data["choices"][0]["message"]["content"]
@@ -73,7 +79,7 @@ async def call_openai(session, prompt):
         return f"Error: {str(e)}"
 
 
-async def call_anthropic(session, prompt):
+async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS):
     try:
         async with session.post(
             "https://api.anthropic.com/v1/messages",
@@ -82,9 +88,9 @@ async def call_anthropic(session, prompt):
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json"
             },
-            json={"model": "claude-3-5-sonnet-20241022", "max_tokens": 800,
+            json={"model": "claude-3-5-sonnet-20241022", "max_tokens": max_tokens,
                   "messages": [{"role": "user", "content": prompt}]},
-            timeout=aiohttp.ClientTimeout(total=30)
+            timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
             return data["content"][0]["text"]
@@ -92,14 +98,17 @@ async def call_anthropic(session, prompt):
         return f"Error: {str(e)}"
 
 
-async def call_gemini(session, prompt):
+async def call_gemini(session, prompt, max_tokens=MAX_TOKENS):
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GOOGLE_KEY}"
         async with session.post(
             url,
             headers={"Content-Type": "application/json"},
-            json={"contents": [{"parts": [{"text": prompt}]}]},
-            timeout=aiohttp.ClientTimeout(total=30)
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens}
+            },
+            timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
             return data["candidates"][0]["content"]["parts"][0]["text"]
@@ -107,13 +116,13 @@ async def call_gemini(session, prompt):
         return f"Error: {str(e)}"
 
 
-async def call_grok(session, prompt):
+async def call_grok(session, prompt, max_tokens=MAX_TOKENS):
     try:
         async with session.post(
             "https://api.x.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROK_KEY}", "Content-Type": "application/json"},
-            json={"model": "grok-4-1-fast", "messages": [{"role": "user", "content": prompt}], "max_tokens": 800},
-            timeout=aiohttp.ClientTimeout(total=30)
+            json={"model": "grok-4-1-fast", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
             return data["choices"][0]["message"]["content"]
@@ -121,13 +130,13 @@ async def call_grok(session, prompt):
         return f"Error: {str(e)}"
 
 
-async def call_mistral(session, prompt):
+async def call_mistral(session, prompt, max_tokens=MAX_TOKENS):
     try:
         async with session.post(
             "https://api.mistral.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {MISTRAL_KEY}", "Content-Type": "application/json"},
-            json={"model": "mistral-large-latest", "messages": [{"role": "user", "content": prompt}], "max_tokens": 800},
-            timeout=aiohttp.ClientTimeout(total=30)
+            json={"model": "mistral-large-latest", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
             return data["choices"][0]["message"]["content"]
@@ -204,13 +213,15 @@ async def synthesize(session, question, results):
         responses=responses_text
     )
 
-    # Use best available judge in priority order
-    if OPENAI_KEY:
-        return await call_openai(session, full_prompt)
+    # Synthesis judge priority: fastest first (Gemini Flash > Mistral > GPT > Claude)
+    if GOOGLE_KEY:
+        return await call_gemini(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+    elif MISTRAL_KEY:
+        return await call_mistral(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+    elif OPENAI_KEY:
+        return await call_openai(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
     elif ANTHROPIC_KEY:
-        return await call_anthropic(session, full_prompt)
-    elif GOOGLE_KEY:
-        return await call_gemini(session, full_prompt)
+        return await call_anthropic(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
     else:
         return "Error: Need at least one API key to render a verdict."
 
@@ -219,15 +230,22 @@ async def synthesize(session, question, results):
 
 async def query_all(prompt, selected):
     async with aiohttp.ClientSession() as session:
-        tasks = {k: asyncio.create_task(CALLERS[k](session, prompt)) for k in selected}
-        results = {k: await t for k, t in tasks.items()}
-        return results
+        tasks = [CALLERS[k](session, prompt) for k in selected]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        return {
+            k: (r if isinstance(r, str) else f"Error: {str(r)}")
+            for k, r in zip(selected, responses)
+        }
 
 
 async def query_all_with_verdict(prompt, selected):
     async with aiohttp.ClientSession() as session:
-        tasks = {k: asyncio.create_task(CALLERS[k](session, prompt)) for k in selected}
-        results = {k: await t for k, t in tasks.items()}
+        tasks = [CALLERS[k](session, prompt) for k in selected]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        results = {
+            k: (r if isinstance(r, str) else f"Error: {str(r)}")
+            for k, r in zip(selected, responses)
+        }
         verdict = await synthesize(session, prompt, results)
         return results, verdict
 
