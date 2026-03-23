@@ -3874,9 +3874,9 @@ function updatePlanBar(data) {
     return;
   }
 
-  if (data.monthly_limit === -1) {
+  if (data.monthly_limit >= 1000) {
     bar.className = 'plan-status unlimited';
-    bar.innerHTML = `FOUNDATIONAL SYNTHESIS · <span id="planStatusText">unlimited</span>`;
+    bar.innerHTML = `FOUNDATIONAL SYNTHESIS · <span id="planStatusText">${data.usage_count}/1,000 used</span>`;
   } else {
     const remaining = data.monthly_limit - data.usage_count;
     bar.className = 'plan-status base';
