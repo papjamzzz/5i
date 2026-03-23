@@ -1844,7 +1844,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 
       <!-- Synthesize Button -->
       <div class="synth-row">
-        <button class="btn-synth" id="btnSynth" onclick="synthesize()" data-info="Synthesize|Runs your prompt sequentially through all active models. Each model receives the previous model's output as context. Press ⌘↵ to trigger.">
+        <button class="btn-synth" id="btnSynth" onclick="synthesize()" data-info="Synthesize|Fires all active models in parallel simultaneously. Each streams its response in real time. After all complete, a synthesis engine merges them into one verdict. Press ⌘↵ to trigger.">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="8" cy="8" r="6"/>
             <path d="M5 8h6M8 5l3 3-3 3"/>
@@ -2756,8 +2756,8 @@ async function synthesize() {
   const sysPromptEl = document.getElementById('sysPromptInput');
   const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
 
-  /* Token budget — 1500 per model for substantive parallel responses */
-  const MAX_TOKENS = 1500;
+  /* Token budget — 600 per model: fast generation, still substantive */
+  const MAX_TOKENS = 600;
 
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
   btn.style.opacity = '0.75';
@@ -2832,7 +2832,7 @@ async function synthesize() {
   if (stepOutputs.length >= 1 && !synthController?.signal.aborted) {
 
     /* Pick best available synthesizer: Claude first, then GPT, then whoever */
-    const synthKey = ['claude','gpt','gemini','mistral','grok'].find(k => MODELS[k].apiKey);
+    const synthKey = ['gemini','mistral','gpt','claude','grok'].find(k => MODELS[k].apiKey);
 
     if (synthKey) {
       const sm = MODELS[synthKey];
