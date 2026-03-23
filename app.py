@@ -399,6 +399,11 @@ def guide():
     return render_template('guide.html')
 
 
+@app.route('/konsole')
+def konsole():
+    return render_template('konsole.html')
+
+
 @app.route('/health')
 def health():
     return jsonify({

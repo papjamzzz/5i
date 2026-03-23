@@ -424,29 +424,6 @@ header:hover .btn-fullscreen { opacity: 1; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: led-pulse 2s ease-in-out infinite; }
 
 /* ── FULLSCREEN BTN ──────────────────────────────────── */
-.btn-konsole {
-  display: flex; align-items: center; gap: 6px;
-  padding: 0 12px; height: 28px;
-  background: rgba(61,255,122,0.08);
-  border: 1px solid var(--border);
-  border-radius: 5px; cursor: pointer;
-  color: var(--green);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 0.1em; font-weight: 500;
-  transition: all 0.15s; flex-shrink: 0;
-}
-.btn-konsole:hover {
-  background: rgba(61,255,122,0.15);
-  border-color: var(--green-bright);
-  color: var(--green-bright);
-  box-shadow: 0 0 14px rgba(61,255,122,0.25);
-}
-[data-theme="light"] .btn-konsole {
-  background: rgba(26,107,53,0.07);
-  border-color: var(--border);
-  color: var(--green);
-}
-
 .btn-fullscreen {
   display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
@@ -1419,6 +1396,44 @@ header:hover .btn-fullscreen { opacity: 1; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border); }
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
+/* ── MODEL MIX (left rail) ── */
+.model-mix { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+.mix-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: 5px;
+  border: 1px solid var(--border-dim); background: var(--inset);
+  cursor: pointer; transition: all 0.15s; width: 100%;
+}
+.mix-btn.active { border-color: var(--border); background: rgba(61,255,122,0.06); }
+.mix-btn:hover { border-color: var(--border-hi); }
+.mix-led { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: all 0.2s; }
+.mix-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--mint-dim); flex: 1; transition: color 0.15s; }
+.mix-btn.active .mix-name { color: var(--mint); }
+.mix-status { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: var(--led-off); }
+.mix-btn.active .mix-status { color: var(--green); }
+
+/* ── QUERY HISTORY ── */
+.history-panel { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.history-item {
+  display: block; text-align: left;
+  padding: 5px 8px; border-radius: 4px;
+  border: 1px solid var(--border-dim); background: var(--inset);
+  cursor: pointer; font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--mint-dim);
+  transition: all 0.15s; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis; width: 100%;
+}
+.history-item:hover { border-color: var(--green); color: var(--mint); background: rgba(61,255,122,0.05); }
+.history-empty { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mint-dim); opacity: 0.45; padding: 4px 0; }
+
+/* ── LIGHT: model mix + history ── */
+[data-theme="light"] .mix-btn { background: rgba(0,0,0,0.03) !important; border-color: var(--border-dim) !important; }
+[data-theme="light"] .mix-btn.active { background: rgba(26,107,53,0.06) !important; border-color: var(--border) !important; }
+[data-theme="light"] .mix-name { color: rgba(10,10,10,0.55) !important; }
+[data-theme="light"] .mix-btn.active .mix-name { color: #0A0A0A !important; }
+[data-theme="light"] .history-item { background: rgba(0,0,0,0.03) !important; border-color: var(--border-dim) !important; color: rgba(10,10,10,0.55) !important; }
+[data-theme="light"] .history-item:hover { border-color: var(--green) !important; color: #0A0A0A !important; }
+
 @media (max-width: 900px) {
   .main-grid { grid-template-columns: 1fr; }
   .panel, .right-panel { border-right: none; border-bottom: 1px solid var(--border-dim); }
@@ -1441,13 +1456,6 @@ header:hover .btn-fullscreen { opacity: 1; }
         <div class="dot"></div>
         <span>LIVE</span>
       </div>
-      <button class="btn-konsole" onclick="window.open('/konsole','5i-konsole','width=1280,height=820,resizable=yes')" title="Open Konsole Mode">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px;">
-          <rect x="1" y="3" width="14" height="10" rx="1.5"/>
-          <path d="M4 7l2.5 2L4 11M8.5 11h3.5"/>
-        </svg>
-        KONSOLE MODE
-      </button>
       <button class="btn-fullscreen" id="btnFullscreen" onclick="toggleFullscreen()" title="Fullscreen (F)">
         <svg id="fsIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M1 1h4M1 1v4M15 1h-4M15 1v4M1 15h4M1 15v-4M15 15h-4M15 15v-4"/>
@@ -1460,77 +1468,22 @@ header:hover .btn-fullscreen { opacity: 1; }
   <!-- ── MAIN GRID ───────────────────────────────────── -->
   <div class="main-grid">
 
-    <!-- ══ LEFT PANEL — LOGO + FADERS ════════════════ -->
+    <!-- ══ LEFT PANEL — CONTROL SURFACE ═════════════ -->
     <div class="panel" id="leftPanel">
 
-      <!-- Hero Logo -->
-      <div class="hero-logo-section">
-        <div class="hero-logo-wrap">
-          <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
-        </div>
-        <div class="hero-subtitle">The AI Synthesis Consortium</div>
-      </div>
-
-      <!-- Fader Bank -->
+      <!-- Model Mix -->
       <div>
-        <div class="panel-label">Mix Controls</div>
-        <div class="fader-bank" id="faderBank">
-
-          <div class="fader-unit" data-type="cost" data-fader="cost">
-            <div class="fader-val" id="val-cost">50%</div>
-            <div class="fader-wrap" id="wrap-cost" data-info="Cost Fader|Up = premium models weighted heavier (GPT-4, Claude). Down = budget-friendly models (Mistral, Gemini). Uses real pricing data from official API pages.">
-              <div class="fader-track">
-                <div class="fader-fill" id="fill-cost" style="height:50%"></div>
-              </div>
-              <div class="fader-thumb" id="thumb-cost" style="bottom:calc(50% - 6px)"></div>
-            </div>
-            <div class="fader-name">Cost</div>
-          </div>
-
-          <div class="fader-unit" data-type="latency" data-fader="latency">
-            <div class="fader-val" id="val-latency">50%</div>
-            <div class="fader-wrap" id="wrap-latency" data-info="Latency Fader|Up = prioritize fast low-latency models. Down = allow slower, more thorough processing. Based on TTFT benchmarks from artificialanalysis.ai.">
-              <div class="fader-track">
-                <div class="fader-fill" id="fill-latency" style="height:50%"></div>
-              </div>
-              <div class="fader-thumb" id="thumb-latency" style="bottom:calc(50% - 6px)"></div>
-            </div>
-            <div class="fader-name">Latency</div>
-          </div>
-
-          <div class="fader-unit" data-type="agree" data-fader="agree">
-            <div class="fader-val" id="val-agree">50%</div>
-            <div class="fader-wrap" id="wrap-agree" data-info="Agreeability Fader|Up = prefer consensus-building models. Down = prefer divergent, contrarian models. Source: LMSYS Chatbot Arena agreeability proxy.">
-              <div class="fader-track">
-                <div class="fader-fill" id="fill-agree" style="height:50%"></div>
-              </div>
-              <div class="fader-thumb" id="thumb-agree" style="bottom:calc(50% - 6px)"></div>
-            </div>
-            <div class="fader-name">Agree</div>
-          </div>
-
-          <div class="fader-unit" data-type="rely" data-fader="rely">
-            <div class="fader-val" id="val-rely">50%</div>
-            <div class="fader-wrap" id="wrap-rely" data-info="Reliability Fader|Up = weight models with highest uptime scores. Down = allow experimental or lower-uptime models. Source: 90-day rolling status pages.">
-              <div class="fader-track">
-                <div class="fader-fill" id="fill-rely" style="height:50%"></div>
-              </div>
-              <div class="fader-thumb" id="thumb-rely" style="bottom:calc(50% - 6px)"></div>
-            </div>
-            <div class="fader-name">Rely</div>
-          </div>
-
-        </div>
+        <div class="panel-label">Model Mix</div>
+        <div class="model-mix" id="modelMix"></div>
       </div>
 
-      <!-- Randomize -->
-      <button class="btn-randomize" id="btnRandomize" data-info="Randomize Faders|Sets all 4 faders to random positions. Explore unexpected model weightings and see how the synthesis chain responds. Press ⌘R.">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M2 5h2.5l2.5 6h2l1-3 1 3h1.5L15 5"/>
-          <path d="M13 3l2 2-2 2M13 11l2 2-2 2"/>
-        </svg>
-        Randomize
-      </button>
+      <!-- Query History -->
+      <div>
+        <div class="panel-label">History</div>
+        <div class="history-panel" id="historyPanel">
+          <div class="history-empty">No queries yet</div>
+        </div>
+      </div>
 
       <!-- API Key Quick Access -->
       <div>
@@ -1595,15 +1548,6 @@ header:hover .btn-fullscreen { opacity: 1; }
 
     <!-- ══ CENTER PANEL ════════════════════════════════ -->
     <div class="center-panel">
-
-      <!-- Model Console Strip -->
-      <div>
-        <div class="panel-label">Synthesis Chain</div>
-        <div class="model-console" id="modelConsole" data-info="Synthesis Chain|The active model sequence. Each model feeds into the next. Weight percentages update in real time based on fader positions. Click a model to toggle it on or off.">
-          <div class="console-label">FLOW</div>
-          <div class="model-nodes" id="modelNodes"></div>
-        </div>
-      </div>
 
       <!-- Analysis Strip — 2 buttons left, 2 live indicators right -->
       <div>
@@ -1778,12 +1722,6 @@ header:hover .btn-fullscreen { opacity: 1; }
     <!-- ══ RIGHT PANEL — RANKING + MONITOR ═══════════ -->
     <div class="right-panel">
 
-      <!-- Ranking -->
-      <div>
-        <div class="panel-label">Rankings</div>
-        <div class="ranking-panel" id="rankingPanel" data-info="Rankings|Real benchmark data for all 5 models ranked across Cost, Speed, Agreeability, and Reliability. Sources: official pricing pages, artificialanalysis.ai, 90-day status pages."></div>
-      </div>
-
       <!-- Model Status Monitor -->
       <div>
         <div class="panel-label">Model Monitor</div>
@@ -1824,10 +1762,6 @@ header:hover .btn-fullscreen { opacity: 1; }
           <div class="shortcut-item">
             Open File
             <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">O</span></div>
-          </div>
-          <div class="shortcut-item">
-            Randomize Faders
-            <div class="shortcut-keys"><span class="kbd-key">⌘</span><span class="kbd-key">R</span></div>
           </div>
           <div class="shortcut-item">
             Copy Output
@@ -1913,141 +1847,83 @@ const MODELS = {
 /* Model order: sequential synthesis chain */
 const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok'];
 
-/* ── FADER STATE ─────────────────────────────────────── */
-const faders = { cost:0.5, latency:0.5, agree:0.5, rely:0.5 };
-
-/* ── LERP UTILITY ────────────────────────────────────── */
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-/* ── COMPUTE WEIGHTS ─────────────────────────────────── */
+/* ── COMPUTE WEIGHTS (equal weights for active models) ── */
 function computeWeights() {
   const w = {};
-  const cv = faders.cost, lv = faders.latency, av = faders.agree, rv = faders.rely;
+  const active = Object.entries(MODELS).filter(([,m]) => m.active);
+  const share = active.length > 0 ? 1 / active.length : 0;
   for (const [k, m] of Object.entries(MODELS)) {
-    if (!m.active) { w[k] = 0; continue; }
-    const costW    = lerp(m.budgetScore,       m.premiumScore,       cv);
-    const latW     = lerp(1 - m.speedScore,    m.speedScore,         lv);
-    const agreeW   = lerp(1 - m.agreeabilityScore, m.agreeabilityScore, av);
-    const relyW    = lerp(1 - m.reliabilityScore,  m.reliabilityScore,  rv);
-    w[k] = (costW + latW + agreeW + relyW) / 4;
+    w[k] = m.active ? share : 0;
   }
-  /* normalize */
-  const total = Object.values(w).reduce((s, v) => s + v, 0);
-  if (total > 0) for (const k of Object.keys(w)) w[k] = w[k] / total;
   return w;
 }
 
-/* ═══ FADER DRAG SYSTEM (thumb-only, NO click-to-jump) ═══ */
-function initFaders() {
-  const FADER_KEYS = ['cost','latency','agree','rely'];
-  FADER_KEYS.forEach(key => {
-    const thumb = document.getElementById('thumb-' + key);
-    const wrap  = document.getElementById('wrap-' + key);
-    if (!thumb || !wrap) return;
+/* ── MODEL MIX BUILDER ───────────────────────────────── */
+function buildModelMix() {
+  const container = document.getElementById('modelMix');
+  if (!container) return;
+  container.innerHTML = '';
+  MODEL_ORDER.forEach(k => {
+    const m = MODELS[k];
+    const btn = document.createElement('button');
+    btn.className = 'mix-btn' + (m.active ? ' active' : '');
+    btn.dataset.model = k;
 
-    let dragging = false;
-    let dragStartY = 0;
-    let dragStartVal = 0;
+    const led = document.createElement('div');
+    led.className = 'mix-led';
+    led.style.background = m.active ? m.color : 'var(--led-off)';
+    led.style.boxShadow = m.active ? `0 0 7px ${m.color}90` : 'none';
 
-    let _fadeDebounce = null;
-    function setVal(v) {
-      v = Math.max(0, Math.min(1, v));
-      faders[key] = v;
-      const pct = Math.round(v * 100);
-      /* position thumb: 0% = bottom of track, 100% = top */
-      const trackH = wrap.offsetHeight - 12; /* 12 = thumb height */
-      const thumbBottom = v * trackH;
-      thumb.style.bottom = thumbBottom + 'px';
-      /* fill bar */
-      const fill = document.getElementById('fill-' + key);
-      if (fill) fill.style.height = (v * 100) + '%';
-      /* value display */
-      const valEl = document.getElementById('val-' + key);
-      if (valEl) valEl.textContent = pct + '%';
-      /* debounce the expensive DOM rebuild to one frame */
-      clearTimeout(_fadeDebounce);
-      _fadeDebounce = setTimeout(updateUI, 16);
-    }
+    const name = document.createElement('div');
+    name.className = 'mix-name';
+    name.textContent = m.name;
 
-    /* ── THUMB MOUSEDOWN only — no click-on-track ── */
-    thumb.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      dragging = true;
-      dragStartY   = e.clientY;
-      dragStartVal = faders[key];
-      thumb.classList.add('dragging');
-      document.body.style.cursor = 'ns-resize';
-    });
+    const status = document.createElement('div');
+    status.className = 'mix-status';
+    status.textContent = m.active ? 'ON' : 'OFF';
 
-    document.addEventListener('mousemove', function(e) {
-      if (!dragging) return;
-      const trackH = wrap.offsetHeight - 12;
-      if (trackH <= 0) return;
-      const dy = dragStartY - e.clientY; /* positive = up = higher value */
-      const delta = dy / trackH;
-      setVal(dragStartVal + delta);
-    });
-
-    document.addEventListener('mouseup', function() {
-      if (!dragging) return;
-      dragging = false;
-      thumb.classList.remove('dragging');
-      document.body.style.cursor = '';
-    });
-
-    /* Touch support */
-    thumb.addEventListener('touchstart', function(e) {
-      e.preventDefault();
-      const t = e.touches[0];
-      dragging = true;
-      dragStartY   = t.clientY;
-      dragStartVal = faders[key];
-      thumb.classList.add('dragging');
-    }, { passive: false });
-
-    document.addEventListener('touchmove', function(e) {
-      if (!dragging) return;
-      e.preventDefault();
-      const t = e.touches[0];
-      const trackH = wrap.offsetHeight - 12;
-      if (trackH <= 0) return;
-      const dy = dragStartY - t.clientY;
-      const delta = dy / trackH;
-      setVal(dragStartVal + delta);
-    }, { passive: false });
-
-    document.addEventListener('touchend', function() {
-      if (!dragging) return;
-      dragging = false;
-      thumb.classList.remove('dragging');
-    });
-
-    /* init position */
-    setVal(0.5);
+    btn.appendChild(led); btn.appendChild(name); btn.appendChild(status);
+    btn.addEventListener('click', () => { m.active = !m.active; updateUI(); });
+    container.appendChild(btn);
   });
 }
 
-/* ── RANDOMIZE ───────────────────────────────────────── */
-function randomizeFaders() {
-  const btn = document.getElementById('btnRandomize');
-  btn.classList.add('shaking');
-  setTimeout(() => btn.classList.remove('shaking'), 400);
-  ['cost','latency','agree','rely'].forEach(key => {
-    const thumb = document.getElementById('thumb-' + key);
-    const wrap  = document.getElementById('wrap-' + key);
-    const target = Math.random();
-    faders[key] = target;
-    const trackH = (wrap ? wrap.offsetHeight : 140) - 12;
-    if (thumb) thumb.style.bottom = (target * trackH) + 'px';
-    const fill = document.getElementById('fill-' + key);
-    if (fill) fill.style.height = (target * 100) + '%';
-    const valEl = document.getElementById('val-' + key);
-    if (valEl) valEl.textContent = Math.round(target * 100) + '%';
-  });
-  updateUI();
+/* ── QUERY HISTORY ───────────────────────────────────── */
+const HISTORY_KEY = '5i_history';
+let queryHistory = [];
+
+function loadHistory() {
+  try { queryHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { queryHistory = []; }
+  renderHistory();
 }
-document.getElementById('btnRandomize').addEventListener('click', randomizeFaders);
+
+function addToHistory(query) {
+  if (!query || !query.trim()) return;
+  queryHistory = [query, ...queryHistory.filter(q => q !== query)].slice(0, 10);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(queryHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyPanel');
+  if (!container) return;
+  if (queryHistory.length === 0) {
+    container.innerHTML = '<div class="history-empty">No queries yet</div>';
+    return;
+  }
+  container.innerHTML = '';
+  queryHistory.forEach(q => {
+    const item = document.createElement('button');
+    item.className = 'history-item';
+    item.textContent = q.length > 38 ? q.slice(0, 38) + '…' : q;
+    item.title = q;
+    item.addEventListener('click', () => {
+      const ta = document.getElementById('promptInput');
+      if (ta) { ta.value = q; ta.focus(); updateTokenCount(); }
+    });
+    container.appendChild(item);
+  });
+}
 
 /* ── RANKINGS ────────────────────────────────────────── */
 const RANKING_DEFS = [
@@ -2325,7 +2201,7 @@ function buildApiRows() {
 /* ── MASTER UPDATE ───────────────────────────────────── */
 function updateUI() {
   const weights = computeWeights();
-  buildModelConsole(weights);
+  buildModelMix();
   buildMonitorRows(weights);
   buildSeqDisplay(weights);
 }
@@ -2610,6 +2486,8 @@ async function synthesize() {
     }
     return;
   }
+
+  addToHistory(prompt);
 
   /* Cancel any running synthesis */
   if (synthController) { synthController.abort(); synthController = null; }
@@ -3564,11 +3442,10 @@ function initCpuMeter() {
    INIT
 ═══════════════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
-  initFaders();
   initOrbitalBackground();
   initHeroLogo();
   initCpuMeter();
-  buildRankings();
+  loadHistory();
   /* Auto-load from 5i-keys.js if present (local only, gitignored) */
   if (window._5I_KEYS) {
     Object.entries(window._5I_KEYS).forEach(([k, v]) => {
