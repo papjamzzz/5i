@@ -56,8 +56,8 @@ make run     # starts on http://127.0.0.1:5562
 
 ## Subscription System
 - Free: 5 trial syntheses (localStorage counter)
-- Base Synthesis: $20/mo — 100 syntheses/month
-- Foundational Synthesis: $89/mo — 1,000 syntheses/month
+- Base Synthesis: $18/mo — 100 syntheses/month
+- Foundational Synthesis: $88/mo — 1,000 syntheses/month
 - Stripe webhook → token generated → Resend emails token to subscriber
 - Token stored in browser localStorage, sent with each /ask request
 
