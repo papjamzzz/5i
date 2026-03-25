@@ -982,6 +982,10 @@ header:hover .btn-fullscreen { opacity: 1; }
   background: var(--led-off); transition: all 0.2s;
 }
 .sys-toggle.on .toggle-led { background: var(--amber); box-shadow: 0 0 5px rgba(218,142,32,0.5); }
+.research-toggle { display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mint-dim); cursor:pointer; padding:4px 8px; border:1px solid var(--border-dim); border-radius:3px; transition:all 0.15s; }
+.research-toggle.on { border-color:#60A5FF; color:#60A5FF; }
+.research-toggle .toggle-led { width:5px; height:5px; border-radius:50%; background:var(--led-off); transition:all 0.2s; }
+.research-toggle.on .toggle-led { background:#60A5FF; box-shadow:0 0 5px rgba(96,165,255,0.5); }
 
 .sys-prompt-row {
   display: none; padding: 0 10px 7px;
@@ -1891,6 +1895,12 @@ header:hover .btn-fullscreen { opacity: 1; }
               SYS <span class="kbd">⌘/</span>
             </div>
 
+            <!-- Research mode toggle -->
+            <div class="research-toggle" id="researchToggle" onclick="toggleResearch()" title="Research mode — full output, no length cap">
+              <div class="toggle-led"></div>
+              RESEARCH
+            </div>
+
             <!-- Dev shortcuts -->
             <button class="dbt-btn" title="Copy output" onclick="copyOutput()">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V2h9"/></svg>
@@ -2671,6 +2681,13 @@ function toggleSysPrompt() {
   row.classList.toggle('visible');
 }
 
+/* ── RESEARCH MODE ───────────────────────────────────── */
+let researchMode = false;
+function toggleResearch() {
+  researchMode = !researchMode;
+  document.getElementById('researchToggle').classList.toggle('on', researchMode);
+}
+
 /* ── FORMAT SELECTOR ─────────────────────────────────── */
 let currentFormat = 'text';
 function setFormat(btn) {
@@ -2822,8 +2839,8 @@ async function synthesize() {
   const sysPromptEl = document.getElementById('sysPromptInput');
   const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
 
-  /* Token budget — 600 per model: fast generation, still substantive */
-  const MAX_TOKENS = 600;
+  /* Token budget — Brief (default): 200 tokens + concise instruction. Research: 600 + full instruction. */
+  const MAX_TOKENS = researchMode ? 600 : 200;
 
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
   btn.style.opacity = '0.75';
@@ -2855,7 +2872,9 @@ async function synthesize() {
   out.scrollTop = out.scrollHeight;
 
   /* ── PARALLEL FIRE — all models get the original prompt simultaneously ── */
-  const parallelSysPrompt = userSysPrompt || `Answer the following question directly and thoroughly. Be substantive and complete.`;
+  const parallelSysPrompt = userSysPrompt || (researchMode
+    ? `Answer the following question directly and thoroughly. Be substantive and complete.`
+    : `Answer in one concise paragraph — 3 to 4 sentences maximum. Be direct and information-dense. No lists, no headers, no padding.`);
 
   const modelPromises = activeModels.map(async k => {
     const m     = MODELS[k];
