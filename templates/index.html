@@ -93,9 +93,6 @@
 [data-theme="light"] .dbt-btn { background: rgba(0,0,0,0.04) !important; border-color: var(--border-dim) !important; color: rgba(10,10,10,0.65) !important; }
 [data-theme="light"] .dbt-btn:hover { border-color: var(--green) !important; color: var(--green) !important; }
 [data-theme="light"] .file-drop { color: rgba(10,10,10,0.35) !important; }
-[data-theme="light"] .fmt-opt { color: rgba(10,10,10,0.60) !important; }
-[data-theme="light"] .fmt-opt.active,
-[data-theme="light"] .fmt-opt:hover { color: var(--green) !important; }
 [data-theme="light"] .sys-toggle { color: rgba(10,10,10,0.60) !important; }
 [data-theme="light"] .sys-toggle.on { color: var(--amber) !important; }
 [data-theme="light"] .sys-prompt-input { background: rgba(0,0,0,0.04) !important; color: #0A0A0A !important; border-color: var(--border-dim) !important; }
@@ -424,6 +421,24 @@ header:hover .btn-fullscreen { opacity: 1; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: led-pulse 2s ease-in-out infinite; }
 
 /* ── FULLSCREEN BTN ──────────────────────────────────── */
+.btn-console-toggle {
+  display: flex; align-items: center;
+  padding: 0 11px; height: 28px;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: 4px; cursor: pointer;
+  color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.12em;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.btn-console-toggle:hover,
+.btn-console-toggle.active {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(61,255,122,0.06);
+}
+.btn-console-toggle.active { box-shadow: 0 0 10px rgba(61,255,122,0.15); }
 .btn-konsole {
   display: flex; align-items: center; gap: 6px;
   padding: 0 12px; height: 28px;
@@ -472,6 +487,21 @@ header:hover .btn-fullscreen { opacity: 1; }
   gap: 0;
   min-height: 100vh;
   padding-top: 62px;
+}
+.main-grid.console-closed {
+  grid-template-columns: 0px 1fr 270px;
+}
+.main-grid.console-closed #leftPanel {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-right: none;
+  overflow: hidden;
+}
+#leftPanel {
+  transition: width 0.25s ease, padding 0.25s ease, opacity 0.18s ease;
+  width: 270px;
 }
 
 /* ── PANELS ──────────────────────────────────────────── */
@@ -955,18 +985,6 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .file-drop input { display: none; }
 
-/* format selector */
-.format-selector {
-  display: flex; border: 1px solid var(--border-dim); border-radius: 3px; overflow: hidden;
-}
-.fmt-opt {
-  padding: 4px 7px;
-  font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.5px;
-  color: var(--mint-dim); cursor: pointer; transition: all 0.12s;
-  background: transparent; border: none; border-right: 1px solid var(--border-dim);
-}
-.fmt-opt:last-child { border-right: none; }
-.fmt-opt.active, .fmt-opt:hover { background: rgba(88,222,131,0.1); color: var(--green); }
 
 /* sys prompt toggle */
 .sys-toggle {
@@ -1621,6 +1639,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 
   <header>
     <div class="logo-mark"></div>
+    <button class="btn-console-toggle" id="btnConsoleToggle" onclick="toggleConsole()" title="Toggle Console Panel">[▌ CONSOLE]</button>
     <button class="btn-konsole" onclick="window.open('/konsole','5i-konsole','width=1280,height=820,resizable=yes')" title="Open Konsole Mode">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px;">
         <rect x="1" y="3" width="14" height="10" rx="1.5"/>
@@ -1880,14 +1899,6 @@ header:hover .btn-fullscreen { opacity: 1; }
               <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="display:inline;margin-right:4px"><path d="M8 12V4M4 8l4-4 4 4"/><path d="M2 14h12"/></svg>
               Drop file / ⌘O
             </label>
-
-            <!-- Format selector -->
-            <div class="format-selector">
-              <button class="fmt-opt active" data-fmt="text" onclick="setFormat(this)">TEXT</button>
-              <button class="fmt-opt" data-fmt="json" onclick="setFormat(this)">JSON</button>
-              <button class="fmt-opt" data-fmt="md" onclick="setFormat(this)">MD</button>
-              <button class="fmt-opt" data-fmt="stream" onclick="setFormat(this)">STREAM</button>
-            </div>
 
             <!-- System prompt toggle -->
             <div class="sys-toggle" id="sysToggle" onclick="toggleSysPrompt()">
@@ -2688,13 +2699,17 @@ function toggleResearch() {
   document.getElementById('researchToggle').classList.toggle('on', researchMode);
 }
 
-/* ── FORMAT SELECTOR ─────────────────────────────────── */
-let currentFormat = 'text';
-function setFormat(btn) {
-  document.querySelectorAll('.fmt-opt').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentFormat = btn.dataset.fmt;
+/* ── CONSOLE PANEL TOGGLE ────────────────────────────── */
+let consoleOpen = true;
+function toggleConsole() {
+  consoleOpen = !consoleOpen;
+  document.querySelector('.main-grid').classList.toggle('console-closed', !consoleOpen);
+  document.getElementById('btnConsoleToggle').classList.toggle('active', consoleOpen);
 }
+// Boot with console visible, button lit
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnConsoleToggle').classList.add('active');
+});
 
 /* ── COPY / CLEAR ────────────────────────────────────── */
 function copyOutput() {
