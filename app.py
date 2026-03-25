@@ -3,6 +3,9 @@ try:
 except ImportError:
     pass
 
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+
 import os
 import asyncio
 import aiohttp
@@ -21,6 +24,13 @@ from collections import defaultdict
 
 load_dotenv()
 
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN", ""),
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=0.1,
+    send_default_pii=False,
+)
+
 app = Flask(__name__)
 
 OPENAI_KEY    = os.getenv("OPENAI_API_KEY", "")
@@ -35,7 +45,7 @@ RESEND_API_KEY        = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
 DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
 
-MAX_INPUT_CHARS = 500
+MAX_INPUT_CHARS = 2000
 
 # ── In-memory rate limiter ─────────────────────────────────────────────────────
 _rl_lock     = threading.Lock()
@@ -342,7 +352,7 @@ async def call_grok(session, prompt, max_tokens=MAX_TOKENS):
         async with session.post(
             "https://api.x.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROK_KEY}", "Content-Type": "application/json"},
-            json={"model": "grok-4-1-fast", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            json={"model": "grok-3-mini-beta", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
