@@ -421,6 +421,20 @@ header:hover .btn-fullscreen { opacity: 1; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: led-pulse 2s ease-in-out infinite; }
 
 /* ── FULLSCREEN BTN ──────────────────────────────────── */
+.amp-btn {
+  background: transparent; border: none; cursor: pointer;
+  padding: 0; display: flex; align-items: center; flex-shrink: 0;
+  border-radius: 4px; transition: filter 0.2s;
+}
+.amp-btn:hover { filter: brightness(1.4); }
+.amp-btn.playing { filter: drop-shadow(0 0 6px rgba(94,232,138,0.7)); }
+.amp-btn.playing .amp-led { fill: #5EE88A; }
+.amp-btn.playing .amp-svg rect:first-child { stroke: #5EE88A; }
+@keyframes amp-pulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+.amp-btn.playing .amp-led { animation: amp-pulse 1.8s ease-in-out infinite; }
+.amp-svg { width: 44px; height: 34px; }
 .btn-console-toggle {
   display: flex; align-items: center;
   padding: 0 11px; height: 28px;
@@ -1639,6 +1653,34 @@ header:hover .btn-fullscreen { opacity: 1; }
 
   <header>
     <div class="logo-mark"></div>
+    <!-- Amp player -->
+    <button class="amp-btn" id="ampBtn" onclick="toggleAmp()" title="Play / Pause">
+      <svg class="amp-svg" viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cabinet body -->
+        <rect x="1" y="1" width="42" height="32" rx="3" fill="#0B1210" stroke="#2E8C52" stroke-width="1.2"/>
+        <!-- Top control strip -->
+        <rect x="1" y="1" width="42" height="9" rx="3" fill="#0F1A16" stroke="#2E8C52" stroke-width="1.2"/>
+        <rect x="1" y="7" width="42" height="3" fill="#0F1A16"/>
+        <!-- Knobs -->
+        <circle cx="8"  cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+        <circle cx="16" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+        <circle cx="24" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+        <circle cx="32" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+        <!-- Power LED -->
+        <circle class="amp-led" cx="39" cy="5.5" r="2" fill="#1F5A38"/>
+        <!-- Speaker grille dots -->
+        <circle cx="9"  cy="16" r="1" fill="#1E4A32"/><circle cx="9"  cy="21" r="1" fill="#1E4A32"/><circle cx="9"  cy="26" r="1" fill="#1E4A32"/>
+        <circle cx="14" cy="16" r="1" fill="#1E4A32"/><circle cx="14" cy="21" r="1" fill="#1E4A32"/><circle cx="14" cy="26" r="1" fill="#1E4A32"/>
+        <circle cx="19" cy="16" r="1" fill="#1E4A32"/><circle cx="19" cy="21" r="1" fill="#1E4A32"/><circle cx="19" cy="26" r="1" fill="#1E4A32"/>
+        <circle cx="24" cy="16" r="1" fill="#1E4A32"/><circle cx="24" cy="21" r="1" fill="#1E4A32"/><circle cx="24" cy="26" r="1" fill="#1E4A32"/>
+        <circle cx="29" cy="16" r="1" fill="#1E4A32"/><circle cx="29" cy="21" r="1" fill="#1E4A32"/><circle cx="29" cy="26" r="1" fill="#1E4A32"/>
+        <circle cx="34" cy="16" r="1" fill="#1E4A32"/><circle cx="34" cy="21" r="1" fill="#1E4A32"/><circle cx="34" cy="26" r="1" fill="#1E4A32"/>
+        <!-- 5i badge -->
+        <text x="36" y="29" font-family="monospace" font-size="5" fill="#2E8C52" font-weight="bold">5i</text>
+      </svg>
+    </button>
+    <audio id="ampAudio" loop preload="auto" src="/static/theme.mp3"></audio>
+
     <button class="btn-console-toggle" id="btnConsoleToggle" onclick="toggleConsole()" title="Toggle Console Panel">[▌ CONSOLE]</button>
     <button class="btn-konsole" onclick="window.open('/konsole','5i-konsole','width=1280,height=820,resizable=yes')" title="Open Konsole Mode">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px;">
@@ -2710,6 +2752,20 @@ function toggleConsole() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnConsoleToggle').classList.add('active');
 });
+
+/* ── AMP PLAYER ──────────────────────────────────────── */
+function toggleAmp() {
+  const audio = document.getElementById('ampAudio');
+  const btn   = document.getElementById('ampBtn');
+  if (audio.paused) {
+    audio.volume = 0.35;
+    audio.play().then(() => btn.classList.add('playing'))
+                 .catch(() => {});
+  } else {
+    audio.pause();
+    btn.classList.remove('playing');
+  }
+}
 
 /* ── COPY / CLEAR ────────────────────────────────────── */
 function copyOutput() {
