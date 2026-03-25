@@ -30,6 +30,7 @@ GROK_KEY      = os.getenv("GROK_API_KEY", "")
 MISTRAL_KEY   = os.getenv("MISTRAL_API_KEY", "")
 
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_SECRET_KEY     = os.getenv("STRIPE_SECRET_KEY", "")
 RESEND_API_KEY        = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
 DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
@@ -199,6 +200,82 @@ def send_token_email(to_email, token, plan_name):
         )
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
+
+
+def issue_prorated_refund(customer_id, period_start_ts, period_end_ts, plan_key):
+    """Calculate unused days, find latest charge, issue prorated refund. Returns refund amount in cents or 0."""
+    if not STRIPE_SECRET_KEY:
+        print(f"[REFUND] No STRIPE_SECRET_KEY — skipping refund for {customer_id}")
+        return 0
+    try:
+        now_ts = int(datetime.utcnow().timestamp())
+        total_secs     = max(period_end_ts - period_start_ts, 1)
+        remaining_secs = max(period_end_ts - now_ts, 0)
+        prorate_ratio  = remaining_secs / total_secs
+
+        plan_price_cents = 8800 if plan_key == "foundational" else 1800
+        refund_cents = int(plan_price_cents * prorate_ratio)
+
+        if refund_cents < 50:  # Stripe minimum is 50 cents
+            return 0
+
+        # Get most recent charge for this customer
+        charges_resp = req_lib.get(
+            f"https://api.stripe.com/v1/charges?customer={customer_id}&limit=1",
+            headers={"Authorization": f"Bearer {STRIPE_SECRET_KEY}"},
+            timeout=10
+        )
+        charges = charges_resp.json().get("data", [])
+        if not charges:
+            return 0
+
+        charge_id = charges[0]["id"]
+        refund_resp = req_lib.post(
+            "https://api.stripe.com/v1/refunds",
+            headers={"Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+                     "Content-Type": "application/x-www-form-urlencoded"},
+            data={"charge": charge_id, "amount": refund_cents},
+            timeout=10
+        )
+        if refund_resp.ok:
+            print(f"[REFUND] Issued ${refund_cents/100:.2f} to {customer_id}")
+            return refund_cents
+        else:
+            print(f"[REFUND ERROR] {refund_resp.text[:200]}")
+            return 0
+    except Exception as e:
+        print(f"[REFUND ERROR] {e}")
+        return 0
+
+
+def send_cancellation_email(to_email, refund_cents):
+    if not RESEND_API_KEY:
+        print(f"[CANCEL EMAIL] {to_email} — refund ${refund_cents/100:.2f}")
+        return
+    refund_line = (f"<p style='color:rgba(255,255,255,0.65);margin:12px 0 0;'>A prorated refund of <strong style='color:#fff;'>${refund_cents/100:.2f}</strong> has been issued to your original payment method. Allow 5–10 business days.</p>"
+                   if refund_cents > 0 else "")
+    try:
+        req_lib.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "from": FROM_EMAIL,
+                "to": [to_email],
+                "subject": "Your 5i subscription has been cancelled",
+                "html": f"""
+                <div style="font-family:monospace;background:#0B1210;color:#5EE88A;padding:32px;border-radius:8px;max-width:520px;">
+                  <h2 style="color:#fff;margin:0 0 16px;">See you around.</h2>
+                  <p style="color:rgba(255,255,255,0.65);margin:0 0 12px;">Your 5i subscription has been cancelled and your access token has been deactivated.</p>
+                  {refund_line}
+                  <p style="color:rgba(255,255,255,0.65);margin:16px 0 0;">Whenever you're ready to come back, we'll be here — <a href="https://creativekonsoles.com/#pricing" style="color:#5EE88A;">creativekonsoles.com</a>.</p>
+                  <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:24px 0 0;">Creative Konsoles · support@creativekonsoles.com</p>
+                </div>
+                """
+            },
+            timeout=10
+        )
+    except Exception as e:
+        print(f"[CANCEL EMAIL ERROR] {e}")
 
 
 # ── Individual model callers ──────────────────────────────────────────────────
@@ -607,8 +684,36 @@ def stripe_webhook():
         except Exception:
             return jsonify({"error": "signature error"}), 400
 
-    event = request.get_json(force=True)
-    if not event or event.get("type") != "checkout.session.completed":
+    event      = request.get_json(force=True)
+    event_type = (event or {}).get("type", "")
+
+    if not event:
+        return jsonify({"ok": True}), 200
+
+    # ── Cancellation — prorate refund + deactivate token ──
+    if event_type == "customer.subscription.deleted":
+        sub         = event["data"]["object"]
+        customer_id = sub.get("customer", "")
+        period_start = sub.get("current_period_start", 0)
+        period_end   = sub.get("current_period_end", 0)
+
+        try:
+            with get_db() as db:
+                row = db.execute("SELECT * FROM subscribers WHERE stripe_customer_id=?",
+                                 (customer_id,)).fetchone()
+            if row:
+                refund_cents = issue_prorated_refund(
+                    customer_id, period_start, period_end, row["plan"])
+                with get_db() as db:
+                    db.execute("UPDATE subscribers SET monthly_limit=0 WHERE stripe_customer_id=?",
+                               (customer_id,))
+                    db.commit()
+                send_cancellation_email(row["email"], refund_cents)
+        except Exception as e:
+            print(f"[CANCEL ERROR] {e}")
+        return jsonify({"ok": True}), 200
+
+    if event_type != "checkout.session.completed":
         return jsonify({"ok": True}), 200
 
     obj         = event["data"]["object"]
