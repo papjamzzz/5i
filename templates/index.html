@@ -1802,7 +1802,7 @@ header:hover .btn-fullscreen { opacity: 1; }
         </div>
         <div class="knob-wrap">
           <div class="knob" id="knob-gain" data-param="gain" data-min="0" data-max="400" data-val="0"><div class="knob-dot"></div></div>
-          <div class="knob-label">GAIN</div>
+          <div class="knob-label">DRIVE</div>
           <div class="knob-val" id="kval-gain">0</div>
         </div>
         <div class="knob-wrap">
@@ -1812,12 +1812,12 @@ header:hover .btn-fullscreen { opacity: 1; }
         </div>
         <div class="knob-wrap">
           <div class="knob" id="knob-sw1" data-param="sw1" data-min="0" data-max="1" data-val="0"><div class="knob-dot"></div></div>
-          <div class="knob-label">SWEEP 1</div>
+          <div class="knob-label">BAND</div>
           <div class="knob-val" id="kval-sw1">—</div>
         </div>
         <div class="knob-wrap">
           <div class="knob" id="knob-sw2" data-param="sw2" data-min="0" data-max="1" data-val="0"><div class="knob-dot"></div></div>
-          <div class="knob-label">SWEEP 2</div>
+          <div class="knob-label">CUTOFF</div>
           <div class="knob-val" id="kval-sw2">—</div>
         </div>
       </div>
@@ -2904,7 +2904,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── VST FX ENGINE ───────────────────────────────────── */
-let _actx, _src, _gain, _dist, _filt1, _filt2, _lfo1, _lfo1g, _lfo2, _lfo2g;
+let _actx, _src, _gain, _dist, _filt1, _filt2, _lfo1, _lfo1g, _lfo2, _lfo2g, _bp_dry, _bp_wet;
 let _ampPlaying = false;
 
 function _initAudio() {
@@ -2920,14 +2920,19 @@ function _initAudio() {
   _dist.curve = _makeDistCurve(0);
   _dist.oversample = '4x';
 
+  // Bandpass: runs in parallel with dry signal — silent at 0, fades in as BAND turns up
   _filt1 = _actx.createBiquadFilter();
   _filt1.type = 'bandpass';
   _filt1.frequency.value = 1200;
-  _filt1.Q.value = 1.5;
+  _filt1.Q.value = 3;
 
+  _bp_dry = _actx.createGain(); _bp_dry.gain.value = 1;  // full dry by default
+  _bp_wet = _actx.createGain(); _bp_wet.gain.value = 0;  // bandpass silent by default
+
+  // Lowpass / cutoff filter — starts fully open (20000 Hz)
   _filt2 = _actx.createBiquadFilter();
   _filt2.type = 'lowpass';
-  _filt2.frequency.value = 18000;
+  _filt2.frequency.value = 20000;
   _filt2.Q.value = 1;
 
   _lfo1  = _actx.createOscillator(); _lfo1.type = 'sine'; _lfo1.frequency.value = 0.4;
@@ -2938,9 +2943,12 @@ function _initAudio() {
   _lfo2g = _actx.createGain();       _lfo2g.gain.value = 0;
   _lfo2.connect(_lfo2g); _lfo2g.connect(_filt2.frequency); _lfo2.start();
 
+  // Chain: src → dist → [dry path + bandpass wet path] → filt2 (cutoff) → gain → out
   _src.connect(_dist);
-  _dist.connect(_filt1);
-  _filt1.connect(_filt2);
+  _dist.connect(_bp_dry);
+  _dist.connect(_filt1); _filt1.connect(_bp_wet);
+  _bp_dry.connect(_filt2);
+  _bp_wet.connect(_filt2);
   _filt2.connect(_gain);
   _gain.connect(_actx.destination);
 }
@@ -2979,22 +2987,40 @@ function toggleAmpPower() {
 function _applyParam(param, raw) {
   _initAudio();
   const audio = document.getElementById('ampAudio');
-  if (param === 'vol')   { _gain.gain.value = raw; }
-  if (param === 'gain')  { _dist.curve = _makeDistCurve(raw); }
-  if (param === 'pitch') { audio.playbackRate = raw; }
-  if (param === 'sw1')   {
-    const rate  = 0.1 + raw * 3.9;
-    const depth = raw * 2200;
-    _lfo1.frequency.value  = rate;
-    _lfo1g.gain.value      = depth;
-    _filt1.frequency.value = 300 + raw * 2000;
+
+  if (param === 'vol') {
+    _gain.gain.value = raw;
   }
-  if (param === 'sw2')   {
-    const rate  = 0.05 + raw * 1.95;
-    const depth = raw * 5000;
-    _lfo2.frequency.value  = rate;
-    _lfo2g.gain.value      = depth;
-    _filt2.frequency.value = 2000 + raw * 14000;
+
+  if (param === 'gain') {
+    _dist.curve = _makeDistCurve(raw);
+  }
+
+  if (param === 'pitch') {
+    // preservesPitch=false lets playbackRate shift pitch (not just speed)
+    audio.preservesPitch = false;
+    audio.webkitPreservesPitch = false;
+    audio.mozPreservesPitch = false;
+    audio.playbackRate = raw;
+  }
+
+  if (param === 'sw1') {
+    // Parallel bandpass (auto-wah): dry→wet crossfade as knob turns up
+    _bp_dry.gain.value = 1 - raw;
+    _bp_wet.gain.value = raw;
+    const freq = 400 + raw * 3600;           // sweeps 400 Hz → 4000 Hz
+    _filt1.frequency.value = freq;
+    _filt1.Q.value = 2 + raw * 8;            // tighter Q as intensity rises
+    _lfo1.frequency.value = 0.3 + raw * 4.7; // LFO rate 0.3–5 Hz
+    _lfo1g.gain.value = raw * freq * 0.7;    // LFO depth scales with freq
+  }
+
+  if (param === 'sw2') {
+    // Lowpass cutoff sweep: 0 = fully open (20 kHz), 1 = dark (200 Hz)
+    const freq = 20000 * Math.pow(0.01, raw); // exponential: 20000→200
+    _filt2.frequency.value = freq;
+    _lfo2.frequency.value = 0.05 + raw * 1.95;
+    _lfo2g.gain.value = raw * Math.min(freq * 0.6, 4000);
   }
 }
 
@@ -3005,7 +3031,7 @@ function _knobRotation(val, min, max) {
 
 function _formatVal(param, val) {
   if (param === 'vol')   return Math.round(val / 1.5 * 100) + '%';
-  if (param === 'gain')  return Math.round(val);
+  if (param === 'gain')  return Math.round(val / 400 * 100) + '%';
   if (param === 'pitch') return (val >= 1 ? '+' : '') + Math.round((val - 1) * 100) + 'st';
   return val > 0 ? Math.round(val * 100) + '%' : '—';
 }
