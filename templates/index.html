@@ -2389,8 +2389,16 @@ function initFaders() {
       _fadeDebounce = setTimeout(updateUI, 16);
     }
 
+    /* ── DOUBLE-CLICK resets fader to center (0.5) — standard DAW behavior ── */
+    thumb.addEventListener('dblclick', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      setVal(0.5);
+    });
+
     /* ── THUMB MOUSEDOWN only — no click-on-track ── */
     thumb.addEventListener('mousedown', function(e) {
+      if (e.detail >= 2) return; // ignore mousedown on dblclick
       e.preventDefault();
       e.stopPropagation();
       dragging = true;
@@ -3046,12 +3054,13 @@ function _formatVal(param, val) {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.knob').forEach(knob => {
-    const param   = knob.dataset.param;
-    const min     = parseFloat(knob.dataset.min);
-    const max     = parseFloat(knob.dataset.max);
-    let   val     = parseFloat(knob.dataset.val);
-    const dot     = knob.querySelector('.knob-dot');
-    const valEl   = document.getElementById('kval-' + param);
+    const param      = knob.dataset.param;
+    const min        = parseFloat(knob.dataset.min);
+    const max        = parseFloat(knob.dataset.max);
+    const defaultVal = parseFloat(knob.dataset.val); // stored once for reset
+    let   val        = defaultVal;
+    const dot        = knob.querySelector('.knob-dot');
+    const valEl      = document.getElementById('kval-' + param);
 
     const setKnob = v => {
       val = Math.min(max, Math.max(min, v));
@@ -3062,8 +3071,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setKnob(val); // init position
 
+    // Double-click resets to default — standard DAW behavior
+    knob.addEventListener('dblclick', e => {
+      e.preventDefault();
+      setKnob(defaultVal);
+    });
+
     let dragging = false, startY = 0, startVal = 0;
     knob.addEventListener('mousedown', e => {
+      if (e.detail >= 2) return; // ignore mousedown on dblclick
       dragging = true; startY = e.clientY; startVal = val;
       document.body.style.cursor = 'ns-resize';
       e.preventDefault();
