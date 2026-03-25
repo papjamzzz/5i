@@ -16,6 +16,8 @@ import hmac
 import hashlib
 import json
 from datetime import datetime, timedelta
+import threading
+from collections import defaultdict
 
 load_dotenv()
 
@@ -33,6 +35,38 @@ FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
 DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
 
 MAX_INPUT_CHARS = 500
+
+# ── In-memory rate limiter ─────────────────────────────────────────────────────
+_rl_lock     = threading.Lock()
+_ip_log      = defaultdict(list)   # key → [timestamp, ...]
+
+FREE_WINDOW  = 86400   # 24 h
+FREE_LIMIT   = 5       # free (no-token) requests per IP per day
+BURST_WINDOW = 60      # 1 min
+BURST_LIMIT  = 8       # max requests per IP per minute, any tier
+
+
+def _rl_check(ip, token):
+    """Returns (allowed, reason). Burst-gates everyone; day-gates no-token users."""
+    now = time.time()
+    burst_key = f"b:{ip}"
+    free_key  = f"f:{ip}"
+
+    with _rl_lock:
+        # Burst gate — everyone
+        _ip_log[burst_key] = [t for t in _ip_log[burst_key] if now - t < BURST_WINDOW]
+        if len(_ip_log[burst_key]) >= BURST_LIMIT:
+            return False, "too_many_requests"
+        _ip_log[burst_key].append(now)
+
+        # Free-tier gate — no-token requests only
+        if not token:
+            _ip_log[free_key] = [t for t in _ip_log[free_key] if now - t < FREE_WINDOW]
+            if len(_ip_log[free_key]) >= FREE_LIMIT:
+                return False, "free_limit_reached"
+            _ip_log[free_key].append(now)
+
+    return True, "ok"
 
 MODELS = {
     "gpt": {
@@ -381,7 +415,14 @@ def ask():
     selected     = [k for k in data.get("models", list(MODELS.keys()))
                     if k in MODELS and MODELS[k]["enabled"]()]
 
-    # Token gate — only enforced when a token is provided
+    ip = (request.headers.get("X-Forwarded-For", "") or request.remote_addr or "").split(",")[0].strip()
+
+    # Rate limiting — burst gate for everyone, day gate for no-token users
+    allowed, rl_reason = _rl_check(ip, token)
+    if not allowed:
+        return jsonify({"error": f"Rate limit: {rl_reason}"}), 429
+
+    # Token gate
     use_token = False
     if token:
         ok, reason, _ = verify_token(token)
