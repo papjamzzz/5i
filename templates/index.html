@@ -4408,5 +4408,75 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
+<!-- ── LAUNCH COUNTDOWN OVERLAY ─────────────────────── -->
+<div id="launchOverlay" style="
+  position:fixed;inset:0;z-index:99999;
+  background:rgba(8,9,13,0.96);
+  backdrop-filter:blur(12px);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+">
+  <div style="
+    font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;
+    color:rgba(94,232,138,0.5);margin-bottom:32px;
+  ">Creative Konsoles · 5i</div>
+
+  <div style="
+    font-size:clamp(1rem,3vw,1.1rem);letter-spacing:0.2em;text-transform:uppercase;
+    color:rgba(255,255,255,0.35);margin-bottom:20px;
+  ">Launching in</div>
+
+  <div id="launchTimer" style="
+    font-size:clamp(3rem,10vw,7rem);font-weight:800;letter-spacing:-0.02em;
+    background:linear-gradient(90deg,#5EE88A,#22d3ee);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    line-height:1;margin-bottom:12px;
+  ">--:--:--</div>
+
+  <div style="
+    font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;
+    color:rgba(255,255,255,0.18);margin-top:24px;
+  ">click anywhere or press any key to enter</div>
+</div>
+
+<script>
+(function() {
+  const overlay = document.getElementById('launchOverlay');
+  const timerEl = document.getElementById('launchTimer');
+  if (!overlay || !timerEl) return;
+
+  // Target: next midnight in local time
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(24, 0, 0, 0); // next midnight
+
+  function dismiss() {
+    overlay.style.transition = 'opacity 0.4s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 420);
+  }
+
+  function tick() {
+    const diff = target - new Date();
+    if (diff <= 0) {
+      timerEl.textContent = 'LIVE NOW';
+      return;
+    }
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    timerEl.textContent = `${h}:${m}:${s}`;
+  }
+
+  tick();
+  const iv = setInterval(tick, 1000);
+
+  overlay.addEventListener('click', dismiss);
+  document.addEventListener('keydown', dismiss, { once: true });
+})();
+</script>
+
 </body>
 </html>
