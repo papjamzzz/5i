@@ -536,8 +536,9 @@ header:hover .btn-fullscreen { opacity: 1; }
 .panel:last-child { border-right: none; }
 .panel-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--green); opacity: 0.70; margin-bottom: 2px;
+  font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 700;
+  color: var(--green-bright); opacity: 1; margin-bottom: 2px;
+  text-shadow: 0 0 10px rgba(134,245,180,0.6);
 }
 
 /* ── HERO LOGO ───────────────────────────────────────── */
@@ -789,13 +790,15 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .analysis-btn-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.50); line-height: 1.45; text-align: center;
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
+  color: rgba(255,255,255,0.90); line-height: 1.45; text-align: center;
+  text-shadow: 0 0 8px rgba(255,255,255,0.25);
 }
 .analysis-btn-state {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.20);
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.55);
+  text-shadow: 0 0 6px rgba(255,255,255,0.2);
 }
 #tool-agreement.active {
   border-color: #3DFF7A;
@@ -803,16 +806,16 @@ header:hover .btn-fullscreen { opacity: 1; }
   box-shadow: 0 0 18px rgba(61,255,122,0.20), inset 0 0 16px rgba(61,255,122,0.04);
 }
 #tool-agreement.active .tool-led { background: #3DFF7A; box-shadow: 0 0 10px #3DFF7A; animation: led-pulse 2s ease-in-out infinite; }
-#tool-agreement.active .analysis-btn-label { color: #86F5B4; }
-#tool-agreement.active .analysis-btn-state { color: #3DFF7A; }
+#tool-agreement.active .analysis-btn-label { color: #86F5B4; text-shadow: 0 0 12px rgba(61,255,122,0.7); }
+#tool-agreement.active .analysis-btn-state { color: #3DFF7A; text-shadow: 0 0 10px rgba(61,255,122,0.8); }
 #tool-delta.active {
   border-color: #FFD400;
   background: rgba(255,212,0,0.07);
   box-shadow: 0 0 18px rgba(255,212,0,0.20), inset 0 0 16px rgba(255,212,0,0.04);
 }
 #tool-delta.active .tool-led { background: #FFD400; box-shadow: 0 0 10px #FFD400; animation: led-pulse 2s ease-in-out infinite; }
-#tool-delta.active .analysis-btn-label { color: #FFE566; }
-#tool-delta.active .analysis-btn-state { color: #FFD400; }
+#tool-delta.active .analysis-btn-label { color: #FFE566; text-shadow: 0 0 12px rgba(255,212,0,0.7); }
+#tool-delta.active .analysis-btn-state { color: #FFD400; text-shadow: 0 0 10px rgba(255,212,0,0.8); }
 .analysis-indicators { display: flex; gap: 6px; }
 .analysis-ind {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -823,16 +826,18 @@ header:hover .btn-fullscreen { opacity: 1; }
 .analysis-ind-val {
   font-family: 'JetBrains Mono', monospace;
   font-size: 22px; font-weight: 800; line-height: 1;
-  color: rgba(255,255,255,0.28); font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.80); font-variant-numeric: tabular-nums;
   transition: color 0.4s, text-shadow 0.4s;
+  text-shadow: 0 0 12px rgba(255,255,255,0.2);
 }
 .analysis-ind-val.green { color: #3DFF7A; text-shadow: 0 0 18px rgba(61,255,122,0.55); }
 .analysis-ind-val.amber { color: #FFD400; text-shadow: 0 0 18px rgba(255,212,0,0.55); }
 .analysis-ind-val.red   { color: #FF4422; text-shadow: 0 0 18px rgba(255,68,34,0.55); }
 .analysis-ind-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(255,255,255,0.38);
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 0 6px rgba(255,255,255,0.2);
 }
 
 /* ── RANDOMIZE BTN ───────────────────────────────────── */
@@ -867,8 +872,9 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .console-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--green); opacity: 0.65;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  color: var(--green-bright); opacity: 1;
+  text-shadow: 0 0 8px rgba(134,245,180,0.5);
   writing-mode: vertical-lr; transform: rotate(180deg);
   flex-shrink: 0;
 }
