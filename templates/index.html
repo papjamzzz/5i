@@ -3569,11 +3569,20 @@ function updateDisagreeBar(stepOutputs) {
   const dConf = document.getElementById('dConfidence');
   if (!bar || !stepOutputs || stepOutputs.length < 2) return;
 
-  const n = stepOutputs.length;
+  /* ── Filter out error responses before scoring ───────
+     An errored model (HTTP 502, timeout, etc.) would tank
+     the agreement score for the remaining working models */
+  const scorable = stepOutputs.filter(o =>
+    o.text && o.text.length > 20 &&
+    !/^(HTTP \d|Error:|Failed|error|timeout)/i.test(o.text.trim())
+  );
+  if (scorable.length < 2) return;
+
+  const n = scorable.length;
 
   /* ── Word sets per model ──────────────────────────────
      Use 4+ char words to filter out noise (the, and, etc.) */
-  const wordSets = stepOutputs.map(o =>
+  const wordSets = scorable.map(o =>
     new Set((o.text.toLowerCase().match(/\b\w{4,}\b/g) || []))
   );
 
@@ -3601,7 +3610,7 @@ function updateDisagreeBar(stepOutputs) {
   const agreePct = Math.min(97, Math.round(avgJaccard * 300));
 
   /* ── Length variance → divergence (secondary signal, dampened) ── */
-  const lengths  = stepOutputs.map(o => o.text.split(/\s+/).length);
+  const lengths  = scorable.map(o => o.text.split(/\s+/).length);
   const avgLen   = lengths.reduce((a,b) => a+b, 0) / lengths.length;
   const variance = lengths.reduce((a,b) => a + Math.abs(b - avgLen), 0) / lengths.length;
   const divergePct = Math.min(55, Math.round((variance / Math.max(avgLen, 1)) * 70));
