@@ -296,13 +296,20 @@ SYNTH_TIMEOUT  = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroo
 MAX_TOKENS     = 500   # model calls — enough for most answers, faster generation
 MAX_TOKENS_SYNTH = 900 # synthesis output — needs room to cover all 5 responses
 
+# Injected into every model call to keep responses tight and comparable
+RESPONSE_SYSTEM = "Be concise. Answer in 3 sentences or fewer. Do not pad, repeat, or add filler."
 
-async def call_openai(session, prompt, max_tokens=MAX_TOKENS):
+
+async def call_openai(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
         async with session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {OPENAI_KEY}", "Content-Type": "application/json"},
-            json={"model": "gpt-4o", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            json={"model": "gpt-4o", "messages": messages, "max_tokens": max_tokens},
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
@@ -311,8 +318,15 @@ async def call_openai(session, prompt, max_tokens=MAX_TOKENS):
         return f"Error: {str(e)}"
 
 
-async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS):
+async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
+        body = {
+            "model": "claude-3-5-sonnet-20241022",
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}]
+        }
+        if system:
+            body["system"] = system
         async with session.post(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -320,8 +334,7 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS):
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json"
             },
-            json={"model": "claude-3-5-sonnet-20241022", "max_tokens": max_tokens,
-                  "messages": [{"role": "user", "content": prompt}]},
+            json=body,
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
@@ -330,30 +343,44 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS):
         return f"Error: {str(e)}"
 
 
-async def call_gemini(session, prompt, max_tokens=MAX_TOKENS):
+async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GOOGLE_KEY}"
+        body = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": max_tokens}
+        }
+        if system:
+            body["system_instruction"] = {"parts": [{"text": system}]}
         async with session.post(
             url,
             headers={"Content-Type": "application/json"},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": max_tokens}
-            },
+            json=body,
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
-            return data["candidates"][0]["content"]["parts"][0]["text"]
+            if "candidates" not in data:
+                block = data.get("promptFeedback", {}).get("blockReason", "no candidates returned")
+                return f"Error: {block}"
+            candidate = data["candidates"][0]
+            # Handle safety-blocked or empty candidates
+            if candidate.get("finishReason") in ("SAFETY", "RECITATION", "OTHER"):
+                return f"Error: blocked ({candidate.get('finishReason')})"
+            return candidate["content"]["parts"][0]["text"]
     except Exception as e:
         return f"Error: {str(e)}"
 
 
-async def call_grok(session, prompt, max_tokens=MAX_TOKENS):
+async def call_grok(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
         async with session.post(
             "https://api.x.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROK_KEY}", "Content-Type": "application/json"},
-            json={"model": "grok-3-mini-beta", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            json={"model": "grok-3-mini-beta", "messages": messages, "max_tokens": max_tokens},
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
@@ -362,12 +389,16 @@ async def call_grok(session, prompt, max_tokens=MAX_TOKENS):
         return f"Error: {str(e)}"
 
 
-async def call_mistral(session, prompt, max_tokens=MAX_TOKENS):
+async def call_mistral(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
         async with session.post(
             "https://api.mistral.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {MISTRAL_KEY}", "Content-Type": "application/json"},
-            json={"model": "mistral-large-latest", "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens},
+            json={"model": "mistral-large-latest", "messages": messages, "max_tokens": max_tokens},
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
@@ -442,16 +473,38 @@ async def synthesize(session, question, results):
     )
 
     # Judge priority: Gemini Flash > Claude > GPT > Mistral
+    # Cascade — if the top judge fails, fall through to the next available model
+    raw = None
+    judges = []
     if GOOGLE_KEY:
-        raw = await call_gemini(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    elif ANTHROPIC_KEY:
-        raw = await call_anthropic(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    elif OPENAI_KEY:
-        raw = await call_openai(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    elif MISTRAL_KEY:
-        raw = await call_mistral(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    else:
+        judges.append(("gemini", call_gemini))
+    if ANTHROPIC_KEY:
+        judges.append(("claude", call_anthropic))
+    if OPENAI_KEY:
+        judges.append(("gpt", call_openai))
+    if MISTRAL_KEY:
+        judges.append(("mistral", call_mistral))
+
+    if not judges:
         return {"error": "No API key available for synthesis."}
+
+    for judge_name, judge_fn in judges:
+        candidate = await judge_fn(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH, system=None)
+        if not candidate.startswith("Error:"):
+            raw = candidate
+            break
+        print(f"[SYNTH] Judge {judge_name} failed: {candidate[:80]} — trying next")
+
+    if raw is None:
+        return {
+            "verdict": "UNCERTAIN",
+            "confidence": 0,
+            "signal": "All judge models failed — check API keys.",
+            "consensus": [],
+            "dissent": [],
+            "edge": "",
+            "flag": "LOW_CONFIDENCE"
+        }
 
     # Parse JSON — strip markdown fences if present
     try:
