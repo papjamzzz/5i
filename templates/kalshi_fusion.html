@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>5i × Kalshi — AI Edge Detector</title>
+<link rel="icon" href="/static/favicon.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:          #0B1210;
+  --bg2:         #0F1A16;
+  --bg3:         #132018;
+  --bg4:         #0d1714;
+  --border:      #2E8C52;
+  --border-dim:  #1E4A32;
+  --border-hi:   #3DB862;
+  --green:       #5EE88A;
+  --green-bright:#86F5B4;
+  --green-deep:  #1F5A38;
+  --mint:        #FFFFFF;
+  --mint-dim:    rgba(232,250,242,0.85);
+  --amber:       #F0A030;
+  --ember:       #E05520;
+  --claude:      #7C3AED;
+  --gemini:      #3B82F6;
+  --gpt:         #22C55E;
+  --mistral:     #F0A030;
+  --grok:        #E05520;
+  --panel-bg:    rgba(15,26,22,0.92);
+  --inset:       rgba(0,0,0,0.25);
+  --signal-strong:  #5EE88A;
+  --signal-moderate:#F0A030;
+  --signal-weak:    #4a7060;
+  --over:        #5EE88A;
+  --under:       #E05520;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--mint);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--mint);
+}
+
+.logo-link img {
+  height: 28px;
+  width: auto;
+}
+
+.header-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.header-title span {
+  color: var(--green);
+}
+
+.header-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--green);
+  background: rgba(94,232,138,0.08);
+  border: 1px solid rgba(94,232,138,0.2);
+  border-radius: 4px;
+  padding: 2px 7px;
+  letter-spacing: 0.05em;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  font-size: 0.78rem;
+  color: var(--mint-dim);
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.7;
+  transition: opacity 0.15s, color 0.15s;
+}
+.nav-link:hover { opacity: 1; color: var(--green); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 65px);
+}
+
+/* ── LEFT PANEL — INPUT ── */
+.input-panel {
+  background: var(--bg2);
+  border-right: 1px solid var(--border-dim);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+/* Market browser */
+.market-browser {
+  background: var(--bg3);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.market-browser-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg4);
+}
+
+.market-browser-header span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--mint-dim);
+}
+
+.btn-fetch {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.63rem;
+  background: none;
+  border: 1px solid var(--border-dim);
+  color: var(--green);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.btn-fetch:hover { border-color: var(--green); background: rgba(94,232,138,0.06); }
+
+.market-list {
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-dim) transparent;
+}
+
+.market-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(46,140,82,0.08);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.market-item:hover { background: rgba(94,232,138,0.04); }
+.market-item:last-child { border-bottom: none; }
+.market-item.selected { background: rgba(94,232,138,0.08); border-left: 2px solid var(--green); }
+
+.market-item-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green-bright);
+  min-width: 34px;
+  text-align: center;
+  padding: 2px 6px;
+  background: rgba(94,232,138,0.08);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.market-item-title {
+  font-size: 0.75rem;
+  color: var(--mint-dim);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.market-item-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--border);
+  white-space: nowrap;
+}
+
+.market-empty {
+  padding: 20px 14px;
+  font-size: 0.75rem;
+  color: var(--border);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Manual input */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--mint-dim);
+  opacity: 0.7;
+}
+
+.field textarea,
+.field input {
+  background: var(--bg3);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--mint);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+  resize: none;
+}
+.field textarea:focus,
+.field input:focus { border-color: var(--border); }
+
+.field textarea { min-height: 80px; }
+
+.price-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+/* Model toggles */
+.model-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.model-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-dim);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--mint-dim);
+  user-select: none;
+}
+.model-toggle .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--border-dim);
+  transition: background 0.15s;
+}
+.model-toggle.active {
+  border-color: currentColor;
+  color: var(--mint);
+}
+.model-toggle.active .dot { background: currentColor; }
+.model-toggle.disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Analyze button */
+.btn-analyze {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #1F5A38, #2E8C52);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-analyze:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2a6e44, #39a862);
+  box-shadow: 0 0 20px rgba(46,140,82,0.3);
+}
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── RIGHT PANEL — RESULTS ── */
+.results-panel {
+  padding: 28px 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  gap: 16px;
+  opacity: 0.4;
+}
+.empty-glyph {
+  font-size: 3rem;
+  filter: grayscale(1);
+}
+.empty-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--mint-dim);
+}
+
+/* Loading state */
+.loading-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 300px;
+}
+.loading-state.active { display: flex; }
+.loading-ring {
+  width: 40px; height: 40px;
+  border: 2px solid var(--border-dim);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--green);
+  opacity: 0.7;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* ── ALPHA GAP CARD ── */
+.alpha-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+
+.alpha-card.signal-strong  { border-color: var(--signal-strong); box-shadow: 0 0 20px rgba(94,232,138,0.08); }
+.alpha-card.signal-moderate { border-color: var(--signal-moderate); box-shadow: 0 0 20px rgba(240,160,48,0.08); }
+.alpha-card.signal-weak    { border-color: var(--border-dim); }
+
+.alpha-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 20px;
+  border-right: 1px solid var(--border-dim);
+  text-align: center;
+}
+.alpha-cell:last-child { border-right: none; }
+
+.alpha-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.alpha-number.market { color: var(--amber); }
+.alpha-number.ai     { color: var(--green-bright); }
+.alpha-number.gap    { color: var(--mint); }
+
+.alpha-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint-dim);
+  opacity: 0.5;
+}
+
+.alpha-direction {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.alpha-direction.OVER  { color: var(--over);  background: rgba(94,232,138,0.1);  border: 1px solid rgba(94,232,138,0.2); }
+.alpha-direction.UNDER { color: var(--under); background: rgba(224,85,32,0.1);   border: 1px solid rgba(224,85,32,0.2); }
+
+.signal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+.signal-badge.STRONG   { color: var(--signal-strong);   border-color: rgba(94,232,138,0.3);  background: rgba(94,232,138,0.06); }
+.signal-badge.MODERATE { color: var(--signal-moderate); border-color: rgba(240,160,48,0.3);  background: rgba(240,160,48,0.06); }
+.signal-badge.WEAK     { color: var(--signal-weak);     border-color: rgba(74,112,96,0.3);   background: rgba(74,112,96,0.06); }
+.signal-badge.UNKNOWN  { color: var(--border);          border-color: var(--border-dim);     background: transparent; }
+
+/* ── MODEL PROBS GRID ── */
+.model-probs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.model-prob-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.model-prob-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--model-color);
+  opacity: 0.6;
+}
+
+.model-prob-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.model-prob-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.63rem;
+  opacity: 0.6;
+}
+
+.model-prob-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--model-color);
+}
+
+.model-prob-bar-wrap {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.model-prob-bar {
+  height: 100%;
+  background: var(--model-color);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+  opacity: 0.6;
+}
+
+.model-prob-reason {
+  font-size: 0.7rem;
+  color: var(--mint-dim);
+  opacity: 0.6;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.model-prob-raw {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--mint-dim);
+  opacity: 0.45;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── VERDICT CARD ── */
+.verdict-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.verdict-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.verdict-pill {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 18px;
+  border-radius: 24px;
+  border: 1px solid;
+}
+.verdict-pill.YES       { color: var(--green-bright); border-color: var(--green);  background: rgba(94,232,138,0.08); }
+.verdict-pill.NO        { color: #ff7070;              border-color: #cc4444;       background: rgba(200,68,68,0.08); }
+.verdict-pill.UNCERTAIN { color: var(--amber);         border-color: var(--amber);  background: rgba(240,160,48,0.08); }
+
+.verdict-confidence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.verdict-conf-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--green-bright);
+}
+.verdict-conf-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--mint-dim);
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.verdict-signal {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  color: var(--mint);
+  line-height: 1.5;
+  padding: 12px 14px;
+  background: var(--inset);
+  border-left: 2px solid var(--green);
+  border-radius: 0 6px 6px 0;
+}
+
+.verdict-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.verdict-list-section h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint-dim);
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.verdict-list-section ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.verdict-list-section li {
+  font-size: 0.78rem;
+  color: var(--mint-dim);
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+.verdict-list-section li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--border);
+}
+
+.verdict-edge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--amber);
+  padding: 10px 14px;
+  background: rgba(240,160,48,0.06);
+  border: 1px solid rgba(240,160,48,0.15);
+  border-radius: 6px;
+}
+.verdict-edge::before {
+  content: 'EDGE ▸ ';
+  opacity: 0.6;
+}
+
+.verdict-flag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  align-self: flex-start;
+}
+
+/* ── ELAPSED ── */
+.elapsed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--border);
+  opacity: 0.6;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  .input-panel { border-right: none; border-bottom: 1px solid var(--border-dim); }
+  .results-panel { padding: 20px 16px; }
+  .alpha-card { grid-template-columns: 1fr; gap: 20px; }
+  .alpha-cell { border-right: none; border-bottom: 1px solid var(--border-dim); padding: 16px 0; }
+  .alpha-cell:last-child { border-bottom: none; }
+  .verdict-lists { grid-template-columns: 1fr; }
+  .header { padding: 14px 16px; }
+  .header-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <a href="/" class="logo-link">
+      <img src="/static/logo.png" alt="5i" onerror="this.style.display='none'"/>
+    </a>
+    <span class="header-title">5i <span>×</span> Kalshi</span>
+    <span class="header-badge">EDGE DETECTOR</span>
+  </div>
+  <nav class="header-nav">
+    <a href="/" class="nav-link">← back to 5i</a>
+    <a href="/konsole" class="nav-link">konsole</a>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: INPUT PANEL -->
+  <aside class="input-panel">
+
+    {% if has_kalshi_key %}
+    <!-- Market Browser -->
+    <div>
+      <div class="section-label">Live Markets</div>
+      <div class="market-browser">
+        <div class="market-browser-header">
+          <span id="market-count">No markets loaded</span>
+          <button class="btn-fetch" id="btn-fetch-markets">Load markets</button>
+        </div>
+        <div class="market-list" id="market-list">
+          <div class="market-empty">Click "Load markets" to fetch live Kalshi data</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Manual Input -->
+    <div>
+      <div class="section-label">Market Input</div>
+      <div class="field">
+        <label>Market Question</label>
+        <textarea id="inp-title" rows="3" placeholder="Will the Fed cut rates before June 2026?"></textarea>
+      </div>
+
+      <div class="price-row" style="margin-top:10px;">
+        <div class="field">
+          <label>YES Price (¢)</label>
+          <input type="number" id="inp-price" min="1" max="99" value="50" placeholder="50"/>
+        </div>
+        <div class="field">
+          <label>Days Left</label>
+          <input type="number" id="inp-days" min="0" value="30" placeholder="30"/>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <input type="text" id="inp-category" value="General" placeholder="Economics"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Toggles -->
+    <div>
+      <div class="section-label">Models</div>
+      <div class="model-toggles" id="model-toggles">
+        {% for key, m in models.items() %}
+        <div class="model-toggle {% if m.enabled %}active{% else %}disabled{% endif %}"
+             data-key="{{ key }}"
+             data-color="{{ m.color }}"
+             style="color: {{ m.color if m.enabled else 'var(--border-dim)' }}"
+             onclick="{% if m.enabled %}toggleModel(this){% endif %}">
+          <div class="dot" style="background: {{ m.color if m.enabled else 'var(--border-dim)' }}"></div>
+          {{ m.label }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Analyze Button -->
+    <button class="btn-analyze" id="btn-analyze" onclick="runAnalysis()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Analyze Market
+    </button>
+
+  </aside>
+
+  <!-- RIGHT: RESULTS PANEL -->
+  <main class="results-panel" id="results-panel">
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">◈</div>
+      <div class="empty-label">Select a market or enter a question to analyze</div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-state" id="loading-state">
+      <div class="loading-ring"></div>
+      <div class="loading-label" id="loading-label">querying all models in parallel...</div>
+    </div>
+
+    <!-- Results (hidden until loaded) -->
+    <div id="results-content" style="display:none; display:flex; flex-direction:column; gap:24px;">
+
+      <!-- Alpha Gap -->
+      <div>
+        <div class="section-label">Alpha Gap</div>
+        <div class="alpha-card" id="alpha-card">
+          <div class="alpha-cell">
+            <div class="alpha-number market" id="alpha-market">—</div>
+            <div class="alpha-label">Market Price</div>
+          </div>
+          <div class="alpha-cell">
+            <div class="alpha-number ai" id="alpha-ai">—</div>
+            <div class="alpha-label">AI Consensus</div>
+            <div id="alpha-direction" class="alpha-direction" style="display:none"></div>
+          </div>
+          <div class="alpha-cell">
+            <div class="alpha-number gap" id="alpha-gap">—</div>
+            <div class="alpha-label">Gap (¢)</div>
+            <div id="signal-badge" class="signal-badge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Probabilities -->
+      <div>
+        <div class="section-label">Model Estimates</div>
+        <div class="model-probs-grid" id="model-probs-grid"></div>
+      </div>
+
+      <!-- Synthesis Verdict -->
+      <div>
+        <div class="section-label">Synthesis Verdict</div>
+        <div class="verdict-card" id="verdict-card" style="display:none">
+          <div class="verdict-header">
+            <div id="verdict-pill" class="verdict-pill">—</div>
+            <div class="verdict-confidence">
+              <div id="verdict-conf" class="verdict-conf-number">—</div>
+              <div class="verdict-conf-label">confidence</div>
+            </div>
+            <div id="verdict-flag" class="verdict-flag"></div>
+          </div>
+          <div id="verdict-signal" class="verdict-signal"></div>
+          <div class="verdict-lists">
+            <div class="verdict-list-section">
+              <h4>Consensus</h4>
+              <ul id="verdict-consensus"></ul>
+            </div>
+            <div class="verdict-list-section">
+              <h4>Dissent</h4>
+              <ul id="verdict-dissent"></ul>
+            </div>
+          </div>
+          <div id="verdict-edge" class="verdict-edge" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Elapsed -->
+      <div class="elapsed-row">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="elapsed-label">—</span>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ── State ──
+const TOKEN = localStorage.getItem('5i_token') || '';
+let markets = [];
+let selectedTicker = null;
+
+// ── Model toggles ──
+function toggleModel(el) {
+  if (el.classList.contains('disabled')) return;
+  el.classList.toggle('active');
+}
+
+function getSelectedModels() {
+  return [...document.querySelectorAll('.model-toggle.active:not(.disabled)')]
+    .map(el => el.dataset.key);
+}
+
+// ── Market browser ──
+document.getElementById('btn-fetch-markets')?.addEventListener('click', fetchMarkets);
+
+async function fetchMarkets() {
+  const btn = document.getElementById('btn-fetch-markets');
+  const list = document.getElementById('market-list');
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  list.innerHTML = '<div class="market-empty">Fetching live markets...</div>';
+
+  try {
+    const r = await fetch('/kalshi-fusion/markets');
+    const data = await r.json();
+    markets = data.markets || [];
+
+    document.getElementById('market-count').textContent =
+      markets.length ? `${markets.length} open markets` : 'No markets found';
+
+    if (!markets.length) {
+      list.innerHTML = '<div class="market-empty">No markets returned. Check KALSHI_API_KEY.</div>';
+      return;
+    }
+
+    list.innerHTML = markets.map((m, i) => `
+      <div class="market-item" data-idx="${i}" onclick="selectMarket(${i})">
+        <div class="market-item-price">${m.price}¢</div>
+        <div>
+          <div class="market-item-title">${esc(m.title)}</div>
+          <div class="market-item-meta">${m.category} · ${m.days}d · vol ${fmtVol(m.volume)}</div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch(e) {
+    list.innerHTML = '<div class="market-empty">Error loading markets.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Refresh';
+  }
+}
+
+function selectMarket(idx) {
+  const m = markets[idx];
+  if (!m) return;
+  selectedTicker = m.ticker;
+
+  document.getElementById('inp-title').value = m.title;
+  document.getElementById('inp-price').value = m.price;
+  document.getElementById('inp-days').value  = m.days;
+  document.getElementById('inp-category').value = m.category || 'General';
+
+  document.querySelectorAll('.market-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+}
+
+// ── Analysis ──
+async function runAnalysis() {
+  const title    = document.getElementById('inp-title').value.trim();
+  const price    = parseInt(document.getElementById('inp-price').value) || 50;
+  const days     = parseInt(document.getElementById('inp-days').value)  || 0;
+  const category = document.getElementById('inp-category').value.trim() || 'General';
+  const selected = getSelectedModels();
+
+  if (!title) { alert('Enter a market question.'); return; }
+  if (!selected.length) { alert('Select at least one model.'); return; }
+
+  setLoading(true);
+
+  try {
+    const r = await fetch('/kalshi-fusion/analyze', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ title, price, days, category, models: selected, token: TOKEN })
+    });
+
+    const data = await r.json();
+    if (data.error) { alert(data.error); return; }
+    renderResults(data);
+  } catch(e) {
+    alert('Network error. Try again.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = on;
+  btn.textContent = on ? 'Analyzing...' : 'Analyze Market';
+
+  document.getElementById('empty-state').style.display  = 'none';
+  document.getElementById('loading-state').classList.toggle('active', on);
+  document.getElementById('results-content').style.display = on ? 'none' : 'flex';
+}
+
+// ── Render ──
+const MODEL_COLORS = {
+  gpt:     '#22C55E',
+  claude:  '#7C3AED',
+  gemini:  '#3B82F6',
+  mistral: '#F0A030',
+  grok:    '#E05520',
+};
+
+const MODEL_LABELS = {
+  gpt:     'GPT-4o',
+  claude:  'Claude 3.5',
+  gemini:  'Gemini 1.5',
+  mistral: 'Mistral Large',
+  grok:    'Grok 2',
+};
+
+function renderResults(data) {
+  const { results, verdict, model_probs, ai_consensus, market_price,
+          alpha_gap, signal_strength, signal_direction, elapsed } = data;
+
+  // Alpha gap
+  document.getElementById('alpha-market').textContent =
+    market_price != null ? `${market_price}¢` : '—';
+  document.getElementById('alpha-ai').textContent =
+    ai_consensus != null ? `${ai_consensus}¢` : '—';
+  document.getElementById('alpha-gap').textContent =
+    alpha_gap != null ? `${alpha_gap}¢` : '—';
+
+  const card = document.getElementById('alpha-card');
+  card.className = `alpha-card signal-${(signal_strength || 'weak').toLowerCase()}`;
+
+  const dirEl = document.getElementById('alpha-direction');
+  if (signal_direction) {
+    dirEl.style.display = '';
+    dirEl.className = `alpha-direction ${signal_direction}`;
+    dirEl.textContent = signal_direction === 'OVER' ? 'AI > MARKET' : 'AI < MARKET';
+  } else {
+    dirEl.style.display = 'none';
+  }
+
+  const badgeEl = document.getElementById('signal-badge');
+  const strengthLabel = { STRONG: '⬆ STRONG SIGNAL', MODERATE: '◆ MODERATE', WEAK: '· WEAK', UNKNOWN: '? UNKNOWN' };
+  badgeEl.className = `signal-badge ${signal_strength || 'UNKNOWN'}`;
+  badgeEl.textContent = strengthLabel[signal_strength] || signal_strength;
+
+  // Model probability cards
+  const grid = document.getElementById('model-probs-grid');
+  grid.innerHTML = '';
+  for (const [key, text] of Object.entries(results)) {
+    const prob  = model_probs?.[key];
+    const color = MODEL_COLORS[key] || '#888';
+    const label = MODEL_LABELS[key] || key;
+    const reason = extractReason(text);
+
+    const card = document.createElement('div');
+    card.className = 'model-prob-card';
+    card.style.setProperty('--model-color', color);
+    card.innerHTML = `
+      <div class="model-prob-top">
+        <span class="model-prob-name" style="color:${color}">${esc(label)}</span>
+        <span class="model-prob-val">${prob != null ? prob : '?'}</span>
+      </div>
+      ${prob != null ? `
+      <div class="model-prob-bar-wrap">
+        <div class="model-prob-bar" style="width:${prob}%; background:${color}"></div>
+      </div>` : ''}
+      ${reason ? `<div class="model-prob-reason">"${esc(reason)}"</div>` : `
+      <div class="model-prob-raw">${esc(text.slice(0, 180))}</div>`}
+    `;
+    grid.appendChild(card);
+  }
+
+  // Verdict
+  if (verdict && !verdict.error) {
+    const vc = document.getElementById('verdict-card');
+    vc.style.display = '';
+
+    const pillEl = document.getElementById('verdict-pill');
+    pillEl.textContent = verdict.verdict || '—';
+    pillEl.className = `verdict-pill ${verdict.verdict || ''}`;
+
+    document.getElementById('verdict-conf').textContent =
+      verdict.confidence != null ? `${verdict.confidence}%` : '—';
+
+    document.getElementById('verdict-flag').textContent = verdict.flag || '';
+
+    const sigEl = document.getElementById('verdict-signal');
+    sigEl.textContent = verdict.signal || '';
+
+    const conList = document.getElementById('verdict-consensus');
+    conList.innerHTML = (verdict.consensus || []).map(p => `<li>${esc(p)}</li>`).join('');
+
+    const disList = document.getElementById('verdict-dissent');
+    disList.innerHTML = (verdict.dissent || []).map(p => `<li>${esc(p)}</li>`).join('');
+
+    const edgeEl = document.getElementById('verdict-edge');
+    if (verdict.edge) {
+      edgeEl.style.display = '';
+      edgeEl.textContent   = verdict.edge;
+      edgeEl.style.setProperty('--before-content', '"EDGE ▸ "');
+    } else {
+      edgeEl.style.display = 'none';
+    }
+  }
+
+  // Elapsed
+  document.getElementById('elapsed-label').textContent =
+    elapsed ? `${elapsed}s · ${Object.keys(results).length} models · parallel` : '';
+
+  // Show results
+  document.getElementById('results-content').style.display = 'flex';
+}
+
+// ── Helpers ──
+function extractReason(text) {
+  const m = text.match(/REASON:\s*(.+)/i);
+  return m ? m[1].trim() : '';
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmtVol(v) {
+  if (!v) return '0';
+  if (v >= 1000000) return (v/1000000).toFixed(1) + 'M';
+  if (v >= 1000) return (v/1000).toFixed(0) + 'K';
+  return String(v);
+}
+
+// Enter key in textarea
+document.getElementById('inp-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.metaKey) runAnalysis();
+});
+</script>
+</body>
+</html>
