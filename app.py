@@ -804,19 +804,21 @@ def health():
 KALSHI_BASE     = "https://api.elections.kalshi.com/trade-api/v2"
 KALSHI_ALT_BASE = "https://api.kalshi.com/trade-api/v2"
 
-KALSHI_FUSION_PROMPT = """You are analyzing a real Kalshi prediction market. Be precise and calibrated.
+KALSHI_FUSION_PROMPT = """You are a prediction market analyst. Be precise, direct, and calibrated.
 
 Market question: "{title}"
-Current market implied probability: {price}% (YES costs {price}¢ per contract)
+Current market price: {price}¢ YES (implies {price}% probability of YES)
 Days until resolution: {days}
 Category: {category}
 
-Based on your knowledge and reasoning, give a probability estimate (0–100) that this market resolves YES.
-Consider: base rates, current evidence, time remaining, and any relevant context you know.
+Your job: assess whether this market is MISPRICED relative to the current {price}¢ price.
 
-Respond in EXACTLY this format (two lines, nothing else):
-PROBABILITY: [integer 0-100]
-REASON: [one sentence — your single strongest reason]"""
+Consider: base rates, current evidence, time remaining, relevant context, and what the crowd typically gets wrong.
+
+Respond in EXACTLY this format (three lines, nothing else):
+PROBABILITY: [your integer estimate 0-100 that this resolves YES]
+EDGE: [one sentence — why the market price is wrong, or why it's fair]
+RISK: [one sentence — the single biggest thing that could make you wrong]"""
 
 
 def _fetch_kalshi_markets(limit=25):
@@ -935,13 +937,21 @@ def kalshi_fusion_analyze():
     results, verdict = asyncio.run(query_all_with_verdict(prompt, selected))
     elapsed = round(time.time() - start, 1)
 
-    # Parse individual model probabilities
+    # Parse individual model probabilities + edge/risk
+    import re as _re
     model_probs = {}
+    model_details = {}
     for k, text in results.items():
         if not text.startswith("Error:"):
             p = _parse_model_probability(text)
             if p is not None:
                 model_probs[k] = p
+            edge_m = _re.search(r"EDGE:\s*(.+)", text, _re.IGNORECASE)
+            risk_m = _re.search(r"RISK:\s*(.+)", text, _re.IGNORECASE)
+            model_details[k] = {
+                "edge": edge_m.group(1).strip() if edge_m else "",
+                "risk": risk_m.group(1).strip() if risk_m else "",
+            }
 
     # AI consensus = median of parsed probabilities
     if model_probs:
@@ -963,23 +973,35 @@ def kalshi_fusion_analyze():
         else:
             signal_strength = "WEAK"
         signal_direction = "OVER" if ai_consensus > price else "UNDER"
+        # TRADE/SKIP decision: trade if gap >= 10 and models agree on direction
+        prob_values = list(model_probs.values())
+        models_above = sum(1 for p in prob_values if p > price)
+        models_below = sum(1 for p in prob_values if p < price)
+        direction_agreement = max(models_above, models_below) / len(prob_values) if prob_values else 0
+        trade_decision = "TRADE" if alpha_gap >= 10 and direction_agreement >= 0.6 else "SKIP"
+        trade_side = ("BUY YES" if signal_direction == "OVER" else "BUY NO") if trade_decision == "TRADE" else None
     else:
         signal_strength = "UNKNOWN"
         signal_direction = None
+        trade_decision = "SKIP"
+        trade_side = None
 
     if token:
         increment_usage(token)
 
     return jsonify({
-        "results":          results,
-        "verdict":          verdict,
-        "model_probs":      model_probs,
-        "ai_consensus":     ai_consensus,
-        "market_price":     price,
-        "alpha_gap":        alpha_gap,
-        "signal_strength":  signal_strength,
-        "signal_direction": signal_direction,
-        "elapsed":          elapsed,
+        "results":           results,
+        "verdict":           verdict,
+        "model_probs":       model_probs,
+        "model_details":     model_details,
+        "ai_consensus":      ai_consensus,
+        "market_price":      price,
+        "alpha_gap":         alpha_gap,
+        "signal_strength":   signal_strength,
+        "signal_direction":  signal_direction,
+        "trade_decision":    trade_decision,
+        "trade_side":        trade_side,
+        "elapsed":           elapsed,
     })
 
 

@@ -682,6 +682,109 @@ body {
   opacity: 0.6;
 }
 
+/* ── TRADE / SKIP HERO CARD ── */
+.trade-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-dim);
+  border-radius: 12px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.trade-card.TRADE {
+  border-color: var(--green);
+  box-shadow: 0 0 32px rgba(94,232,138,0.12);
+}
+.trade-card.SKIP {
+  border-color: var(--border-dim);
+}
+
+.trade-decision-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.trade-decision {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.trade-decision.TRADE { color: var(--green-bright); }
+.trade-decision.SKIP  { color: var(--border); }
+
+.trade-side {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+.trade-side.YES { color: var(--green-bright); border-color: rgba(94,232,138,0.4); background: rgba(94,232,138,0.08); }
+.trade-side.NO  { color: #ff7070;             border-color: rgba(200,68,68,0.4);  background: rgba(200,68,68,0.08); }
+
+.trade-numbers {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.trade-num-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.trade-num-cell.gap-cell {
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-dim);
+}
+
+.trade-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--amber);
+}
+.trade-num.ai  { color: var(--green-bright); }
+.trade-num.gap { color: var(--mint); font-size: 1.4rem; }
+
+.trade-num-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint-dim);
+  opacity: 0.45;
+}
+
+.trade-arrow {
+  font-size: 1.2rem;
+  color: var(--border-dim);
+  align-self: flex-end;
+  padding-bottom: 18px;
+}
+
+.trade-signal-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.88rem;
+  color: var(--mint-dim);
+  line-height: 1.6;
+  padding: 12px 14px;
+  background: var(--inset);
+  border-left: 2px solid var(--border);
+  border-radius: 0 6px 6px 0;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
@@ -800,32 +903,35 @@ body {
     </div>
 
     <!-- Results (hidden until loaded) -->
-    <div id="results-content" style="display:none; display:flex; flex-direction:column; gap:24px;">
+    <div id="results-content" style="display:none; flex-direction:column; gap:24px;">
 
-      <!-- Alpha Gap -->
-      <div>
-        <div class="section-label">Alpha Gap</div>
-        <div class="alpha-card" id="alpha-card">
-          <div class="alpha-cell">
-            <div class="alpha-number market" id="alpha-market">—</div>
-            <div class="alpha-label">Market Price</div>
+      <!-- TRADE / SKIP — hero card -->
+      <div id="trade-card" class="trade-card">
+        <div class="trade-decision-row">
+          <div id="trade-decision" class="trade-decision">—</div>
+          <div id="trade-side" class="trade-side"></div>
+        </div>
+        <div class="trade-numbers">
+          <div class="trade-num-cell">
+            <div class="trade-num" id="alpha-market">—</div>
+            <div class="trade-num-label">Market</div>
           </div>
-          <div class="alpha-cell">
-            <div class="alpha-number ai" id="alpha-ai">—</div>
-            <div class="alpha-label">AI Consensus</div>
-            <div id="alpha-direction" class="alpha-direction" style="display:none"></div>
+          <div class="trade-arrow" id="trade-arrow">→</div>
+          <div class="trade-num-cell">
+            <div class="trade-num ai" id="alpha-ai">—</div>
+            <div class="trade-num-label">AI says</div>
           </div>
-          <div class="alpha-cell">
-            <div class="alpha-number gap" id="alpha-gap">—</div>
-            <div class="alpha-label">Gap (¢)</div>
-            <div id="signal-badge" class="signal-badge"></div>
+          <div class="trade-num-cell gap-cell">
+            <div class="trade-num gap" id="alpha-gap">—</div>
+            <div class="trade-num-label">Gap</div>
           </div>
         </div>
+        <div id="trade-signal-text" class="trade-signal-text"></div>
       </div>
 
-      <!-- Model Probabilities -->
+      <!-- Model Estimates -->
       <div>
-        <div class="section-label">Model Estimates</div>
+        <div class="section-label">5 Models — Probability Estimates</div>
         <div class="model-probs-grid" id="model-probs-grid"></div>
       </div>
 
@@ -998,10 +1104,28 @@ const MODEL_LABELS = {
 };
 
 function renderResults(data) {
-  const { results, verdict, model_probs, ai_consensus, market_price,
-          alpha_gap, signal_strength, signal_direction, elapsed } = data;
+  const { results, verdict, model_probs, model_details, ai_consensus, market_price,
+          alpha_gap, signal_strength, signal_direction,
+          trade_decision, trade_side, elapsed } = data;
 
-  // Alpha gap
+  // ── TRADE/SKIP hero card ──
+  const tc = document.getElementById('trade-card');
+  tc.className = `trade-card ${trade_decision || 'SKIP'}`;
+
+  const tdEl = document.getElementById('trade-decision');
+  tdEl.textContent = trade_decision || 'SKIP';
+  tdEl.className = `trade-decision ${trade_decision || 'SKIP'}`;
+
+  const tsEl = document.getElementById('trade-side');
+  if (trade_side) {
+    const side = trade_side.includes('YES') ? 'YES' : 'NO';
+    tsEl.textContent = trade_side;
+    tsEl.className = `trade-side ${side}`;
+    tsEl.style.display = '';
+  } else {
+    tsEl.style.display = 'none';
+  }
+
   document.getElementById('alpha-market').textContent =
     market_price != null ? `${market_price}¢` : '—';
   document.getElementById('alpha-ai').textContent =
@@ -1009,51 +1133,48 @@ function renderResults(data) {
   document.getElementById('alpha-gap').textContent =
     alpha_gap != null ? `${alpha_gap}¢` : '—';
 
-  const card = document.getElementById('alpha-card');
-  card.className = `alpha-card signal-${(signal_strength || 'weak').toLowerCase()}`;
+  const arrowEl = document.getElementById('trade-arrow');
+  if (signal_direction === 'OVER') { arrowEl.textContent = '↑'; arrowEl.style.color = 'var(--green)'; }
+  else if (signal_direction === 'UNDER') { arrowEl.textContent = '↓'; arrowEl.style.color = 'var(--ember)'; }
+  else { arrowEl.textContent = '→'; arrowEl.style.color = 'var(--border-dim)'; }
 
-  const dirEl = document.getElementById('alpha-direction');
-  if (signal_direction) {
-    dirEl.style.display = '';
-    dirEl.className = `alpha-direction ${signal_direction}`;
-    dirEl.textContent = signal_direction === 'OVER' ? 'AI > MARKET' : 'AI < MARKET';
+  const sigText = document.getElementById('trade-signal-text');
+  if (verdict && verdict.signal) {
+    sigText.textContent = verdict.signal;
+    sigText.style.display = '';
   } else {
-    dirEl.style.display = 'none';
+    sigText.style.display = 'none';
   }
 
-  const badgeEl = document.getElementById('signal-badge');
-  const strengthLabel = { STRONG: '⬆ STRONG SIGNAL', MODERATE: '◆ MODERATE', WEAK: '· WEAK', UNKNOWN: '? UNKNOWN' };
-  badgeEl.className = `signal-badge ${signal_strength || 'UNKNOWN'}`;
-  badgeEl.textContent = strengthLabel[signal_strength] || signal_strength;
-
-  // Model probability cards
+  // ── Model probability cards ──
   const grid = document.getElementById('model-probs-grid');
   grid.innerHTML = '';
   for (const [key, text] of Object.entries(results)) {
-    const prob  = model_probs?.[key];
-    const color = MODEL_COLORS[key] || '#888';
-    const label = MODEL_LABELS[key] || key;
-    const reason = extractReason(text);
+    const prob    = model_probs?.[key];
+    const details = model_details?.[key] || {};
+    const color   = MODEL_COLORS[key] || '#888';
+    const label   = MODEL_LABELS[key] || key;
 
-    const card = document.createElement('div');
-    card.className = 'model-prob-card';
-    card.style.setProperty('--model-color', color);
-    card.innerHTML = `
+    const c = document.createElement('div');
+    c.className = 'model-prob-card';
+    c.style.setProperty('--model-color', color);
+    c.innerHTML = `
       <div class="model-prob-top">
         <span class="model-prob-name" style="color:${color}">${esc(label)}</span>
         <span class="model-prob-val">${prob != null ? prob : '?'}</span>
       </div>
       ${prob != null ? `
       <div class="model-prob-bar-wrap">
-        <div class="model-prob-bar" style="width:${prob}%; background:${color}"></div>
+        <div class="model-prob-bar" style="width:${prob}%"></div>
       </div>` : ''}
-      ${reason ? `<div class="model-prob-reason">"${esc(reason)}"</div>` : `
-      <div class="model-prob-raw">${esc(text.slice(0, 180))}</div>`}
+      ${details.edge ? `<div class="model-prob-reason">"${esc(details.edge)}"</div>` : ''}
+      ${details.risk ? `<div class="model-prob-reason" style="opacity:0.45;font-size:0.65rem;">Risk: ${esc(details.risk)}</div>` : ''}
+      ${!details.edge && !details.risk ? `<div class="model-prob-raw">${esc(text.slice(0,160))}</div>` : ''}
     `;
-    grid.appendChild(card);
+    grid.appendChild(c);
   }
 
-  // Verdict
+  // ── Synthesis verdict ──
   if (verdict && !verdict.error) {
     const vc = document.getElementById('verdict-card');
     vc.style.display = '';
@@ -1064,33 +1185,23 @@ function renderResults(data) {
 
     document.getElementById('verdict-conf').textContent =
       verdict.confidence != null ? `${verdict.confidence}%` : '—';
-
     document.getElementById('verdict-flag').textContent = verdict.flag || '';
+    document.getElementById('verdict-signal').textContent = verdict.signal || '';
 
-    const sigEl = document.getElementById('verdict-signal');
-    sigEl.textContent = verdict.signal || '';
-
-    const conList = document.getElementById('verdict-consensus');
-    conList.innerHTML = (verdict.consensus || []).map(p => `<li>${esc(p)}</li>`).join('');
-
-    const disList = document.getElementById('verdict-dissent');
-    disList.innerHTML = (verdict.dissent || []).map(p => `<li>${esc(p)}</li>`).join('');
+    document.getElementById('verdict-consensus').innerHTML =
+      (verdict.consensus || []).map(p => `<li>${esc(p)}</li>`).join('');
+    document.getElementById('verdict-dissent').innerHTML =
+      (verdict.dissent || []).map(p => `<li>${esc(p)}</li>`).join('');
 
     const edgeEl = document.getElementById('verdict-edge');
-    if (verdict.edge) {
-      edgeEl.style.display = '';
-      edgeEl.textContent   = verdict.edge;
-      edgeEl.style.setProperty('--before-content', '"EDGE ▸ "');
-    } else {
-      edgeEl.style.display = 'none';
-    }
+    if (verdict.edge) { edgeEl.style.display = ''; edgeEl.textContent = verdict.edge; }
+    else { edgeEl.style.display = 'none'; }
   }
 
-  // Elapsed
+  // ── Elapsed ──
   document.getElementById('elapsed-label').textContent =
     elapsed ? `${elapsed}s · ${Object.keys(results).length} models · parallel` : '';
 
-  // Show results
   document.getElementById('results-content').style.display = 'flex';
 }
 
