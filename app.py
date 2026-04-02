@@ -44,6 +44,7 @@ STRIPE_SECRET_KEY     = os.getenv("STRIPE_SECRET_KEY", "")
 RESEND_API_KEY        = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
 DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
+KALSHI_API_KEY        = os.getenv("KALSHI_API_KEY", "")
 
 MAX_INPUT_CHARS = 2000
 
@@ -795,6 +796,190 @@ def health():
             "grok":      bool(GROK_KEY),
             "mistral":   bool(MISTRAL_KEY),
         }
+    })
+
+
+# ── Kalshi Fusion ─────────────────────────────────────────────────────────────
+
+KALSHI_BASE     = "https://api.elections.kalshi.com/trade-api/v2"
+KALSHI_ALT_BASE = "https://api.kalshi.com/trade-api/v2"
+
+KALSHI_FUSION_PROMPT = """You are analyzing a real Kalshi prediction market. Be precise and calibrated.
+
+Market question: "{title}"
+Current market implied probability: {price}% (YES costs {price}¢ per contract)
+Days until resolution: {days}
+Category: {category}
+
+Based on your knowledge and reasoning, give a probability estimate (0–100) that this market resolves YES.
+Consider: base rates, current evidence, time remaining, and any relevant context you know.
+
+Respond in EXACTLY this format (two lines, nothing else):
+PROBABILITY: [integer 0-100]
+REASON: [one sentence — your single strongest reason]"""
+
+
+def _fetch_kalshi_markets(limit=25):
+    """Fetch open markets from Kalshi. Returns list of market dicts or []."""
+    headers = {"accept": "application/json"}
+    if KALSHI_API_KEY:
+        headers["Authorization"] = f"Bearer {KALSHI_API_KEY}"
+
+    params = {"limit": limit, "status": "open"}
+
+    for base in (KALSHI_BASE, KALSHI_ALT_BASE):
+        try:
+            r = req_lib.get(f"{base}/markets", headers=headers, params=params, timeout=8)
+            if r.ok:
+                data = r.json()
+                markets_raw = data.get("markets", [])
+                out = []
+                for m in markets_raw:
+                    yes_bid = m.get("yes_bid", 0) or 0
+                    yes_ask = m.get("yes_ask", 0) or 0
+                    mid = round((yes_bid + yes_ask) / 2) if (yes_bid or yes_ask) else 50
+                    title = m.get("title") or m.get("subtitle") or ""
+                    if not title:
+                        continue
+                    close_time = m.get("close_time") or m.get("expected_expiration_time") or ""
+                    try:
+                        close_dt = datetime.fromisoformat(close_time.replace("Z", ""))
+                        days = max(0, (close_dt - datetime.utcnow()).days)
+                    except Exception:
+                        days = 0
+                    out.append({
+                        "ticker":   m.get("ticker", ""),
+                        "title":    title,
+                        "price":    mid,
+                        "yes_bid":  yes_bid,
+                        "yes_ask":  yes_ask,
+                        "volume":   m.get("volume", 0) or 0,
+                        "category": m.get("category", "General"),
+                        "days":     days,
+                        "close_time": close_time,
+                    })
+                return out
+        except Exception:
+            continue
+    return []
+
+
+def _parse_model_probability(text):
+    """Extract PROBABILITY: N from model response. Returns int or None."""
+    import re as _re
+    m = _re.search(r"PROBABILITY:\s*(\d+)", text, _re.IGNORECASE)
+    if m:
+        val = int(m.group(1))
+        return max(0, min(100, val))
+    # fallback: any bare integer 0-100 on its own line
+    for line in text.splitlines():
+        m2 = _re.match(r"^\s*(\d{1,3})\s*$", line.strip())
+        if m2:
+            val = int(m2.group(1))
+            if 0 <= val <= 100:
+                return val
+    return None
+
+
+@app.route("/kalshi-fusion")
+def kalshi_fusion():
+    models_info = {
+        k: {"label": v["label"], "provider": v["provider"],
+            "color": v["color"], "enabled": v["enabled"]()}
+        for k, v in MODELS.items()
+    }
+    return render_template("kalshi_fusion.html",
+                           models=models_info,
+                           has_kalshi_key=bool(KALSHI_API_KEY))
+
+
+@app.route("/kalshi-fusion/markets")
+def kalshi_fusion_markets():
+    markets = _fetch_kalshi_markets(25)
+    return jsonify({"markets": markets, "count": len(markets)})
+
+
+@app.route("/kalshi-fusion/analyze", methods=["POST"])
+def kalshi_fusion_analyze():
+    data     = request.json
+    title    = (data.get("title") or "").strip()[:400]
+    price    = int(data.get("price", 50))
+    days     = int(data.get("days", 7))
+    category = (data.get("category") or "General").strip()[:50]
+    selected = [k for k in data.get("models", list(MODELS.keys()))
+                if k in MODELS and MODELS[k]["enabled"]()]
+
+    ip = (request.headers.get("X-Forwarded-For", "") or request.remote_addr or "").split(",")[0].strip()
+    token = (data.get("token") or "").strip()
+
+    allowed, rl_reason = _rl_check(ip, token)
+    if not allowed:
+        return jsonify({"error": f"Rate limit: {rl_reason}"}), 429
+
+    if token:
+        ok, reason, _ = verify_token(token)
+        if not ok:
+            return jsonify({"error": f"Access denied: {reason}"}), 403
+
+    if not title:
+        return jsonify({"error": "Market question required"}), 400
+    if not selected:
+        return jsonify({"error": "No models available"}), 400
+
+    price = max(1, min(99, price))
+    prompt = KALSHI_FUSION_PROMPT.format(
+        title=title, price=price, days=days, category=category
+    )
+
+    start = time.time()
+    results, verdict = asyncio.run(query_all_with_verdict(prompt, selected))
+    elapsed = round(time.time() - start, 1)
+
+    # Parse individual model probabilities
+    model_probs = {}
+    for k, text in results.items():
+        if not text.startswith("Error:"):
+            p = _parse_model_probability(text)
+            if p is not None:
+                model_probs[k] = p
+
+    # AI consensus = median of parsed probabilities
+    if model_probs:
+        probs_sorted = sorted(model_probs.values())
+        n = len(probs_sorted)
+        if n % 2 == 0:
+            ai_consensus = round((probs_sorted[n//2 - 1] + probs_sorted[n//2]) / 2)
+        else:
+            ai_consensus = probs_sorted[n//2]
+    else:
+        ai_consensus = None
+
+    alpha_gap = abs(ai_consensus - price) if ai_consensus is not None else None
+    if alpha_gap is not None:
+        if alpha_gap >= 20:
+            signal_strength = "STRONG"
+        elif alpha_gap >= 10:
+            signal_strength = "MODERATE"
+        else:
+            signal_strength = "WEAK"
+        signal_direction = "OVER" if ai_consensus > price else "UNDER"
+    else:
+        signal_strength = "UNKNOWN"
+        signal_direction = None
+
+    if token:
+        increment_usage(token)
+
+    return jsonify({
+        "results":          results,
+        "verdict":          verdict,
+        "model_probs":      model_probs,
+        "ai_consensus":     ai_consensus,
+        "market_price":     price,
+        "alpha_gap":        alpha_gap,
+        "signal_strength":  signal_strength,
+        "signal_direction": signal_direction,
+        "elapsed":          elapsed,
     })
 
 
