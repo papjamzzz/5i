@@ -3327,128 +3327,108 @@ async function synthesize() {
   const modelResults = await Promise.all(modelPromises);
   modelResults.forEach(r => { if (r) stepOutputs.push(r); });
 
-  /* ══ CONSENSUS SYNTHESIS — the actual payoff ══════════ */
-  /* Take all model outputs + original prompt → one clean answer */
-  let consensusText = '';
+  /* ══ VERDICT ENGINE — structured confidence verdict ══════════ */
   if (stepOutputs.length >= 1 && !synthController?.signal.aborted) {
 
-    /* Pick best available synthesizer: Claude first, then GPT, then whoever */
-    const synthKey = ['gemini','mistral','gpt','claude','grok'].find(k => MODELS[k].apiKey);
-
-    if (synthKey) {
-      const sm = MODELS[synthKey];
-
-      /* Build the synthesis payload */
-      const chainText = stepOutputs.map((o, i) => {
-        const mm = MODELS[o.key];
-        return `[${mm.name}]\n${o.text}`;
-      }).join('\n\n---\n\n');
-
-      const synthUserPrompt =
-        `You are a neutral synthesis engine. Your function is to aggregate outputs from multiple independent AI models into a single coherent analysis — without preference, ranking, or bias toward any source.\n\n` +
-        `You have been given ${stepOutputs.length} independent AI responses to the same prompt.\n\n` +
-        `Your task:\n` +
-        `1. Preserve all materially distinct insights across all responses\n` +
-        `2. Do NOT prefer, rank, or bias toward any model\n` +
-        `3. Identify areas of consensus and divergence with precision\n` +
-        `4. Resolve redundancy by merging overlapping points — do not repeat them\n` +
-        `5. Clearly distinguish between shared conclusions, divergent perspectives, and unique insights\n\n` +
-        `Output Requirements:\n` +
-        `— Do NOT mention model names\n` +
-        `— Do NOT evaluate which response is "better"\n` +
-        `— Do NOT discard minority viewpoints unless clearly erroneous\n` +
-        `— Do NOT infer agreement unless it is explicitly present across responses\n` +
-        `— Do NOT merge statements that differ in meaning even if they sound similar\n` +
-        `— Maintain technical precision suitable for software developers and researchers\n` +
-        `— Explicitly flag uncertainty or ambiguity where it exists\n\n` +
-        `Structure your output as:\n` +
-        `**Unified Synthesis** — a clean, coherent answer to the original question\n` +
-        `**Consensus Points** — what all or most responses agreed on (bullet list)\n` +
-        `**Divergences** — meaningful disagreements or contrasting positions (bullet list)\n` +
-        `**Unique Contributions** — notable insights that appeared in only one response\n` +
-        `**Open Questions** — unresolved uncertainty or gaps (omit if none)\n\n` +
-        `Style: concise, information-dense, no filler language, preserve technical terminology.\n\n` +
-        `Original question: "${prompt}"\n\n` +
-        `Model responses:\n${chainText}\n\nBegin synthesis.`;
-
-      /* Inject consensus block at the TOP of the output area */
-      const consensusBlock = document.createElement('div');
-      consensusBlock.style.cssText = `
-        margin-bottom:20px;
-        padding:18px 20px;
-        background: linear-gradient(135deg, rgba(61,255,122,0.07) 0%, rgba(0,0,0,0.25) 100%);
-        border:1px solid rgba(61,255,122,0.35);
-        border-radius:10px;
-        animation:fadeIn 0.2s ease;
-        position:relative;
-      `;
-      consensusBlock.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 10px #3DFF7A;flex-shrink:0;"></div>
-          <span style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">Consensus</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px;">neutral synthesis · ${stepOutputs.length} models</span>
-          <button onclick="showSynthesisMethod()" style="margin-left:auto;background:rgba(61,255,122,0.08);border:1px solid rgba(61,255,122,0.25);color:rgba(61,255,122,0.6);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;padding:2px 7px;border-radius:3px;cursor:pointer;" title="How synthesis works">METHOD ?</button>
+    /* Inject verdict block at the TOP */
+    const verdictBlock = document.createElement('div');
+    verdictBlock.id = 'verdict-block';
+    verdictBlock.style.cssText = `margin-bottom:20px;animation:fadeIn 0.2s ease;`;
+    verdictBlock.innerHTML = `
+      <div style="padding:20px 22px;background:linear-gradient(135deg,rgba(61,255,122,0.06) 0%,rgba(0,0,0,0.3) 100%);border:1px solid rgba(61,255,122,0.3);border-radius:10px;position:relative;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#3DFF7A;box-shadow:0 0 10px #3DFF7A;flex-shrink:0;animation:pulse 2s infinite;"></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3DFF7A;">5i Verdict</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:1px;">${stepOutputs.length} models · verdict engine</span>
         </div>
-        <div id="consensus-out" style="font-family:'Inter',sans-serif;font-size:18px;line-height:1.75;color:#FFFFFF;"></div>
+        <div id="verdict-loading" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:1px;">
+          ⟳ computing verdict…
+        </div>
+        <div id="verdict-content" style="display:none;"></div>
+      </div>`;
+    out.insertBefore(verdictBlock, out.firstChild);
+
+    /* Divider */
+    const divider = document.createElement('div');
+    divider.style.cssText = `margin:18px 0 14px;display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);`;
+    divider.innerHTML = `<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>MODEL RESPONSES — HOW WE GOT HERE<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>`;
+    out.insertBefore(divider, verdictBlock.nextSibling);
+
+    /* Call backend verdict endpoint */
+    try {
+      const resultsMap = {};
+      stepOutputs.forEach(o => { resultsMap[o.key] = o.text; });
+
+      const vRes = await fetch('/verdict', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ prompt, results: resultsMap }),
+        signal: synthController?.signal,
+      });
+      const vData = await vRes.json();
+      const v = vData.verdict || vData; /* handle {verdict:...,elapsed:...} wrapper */
+
+      document.getElementById('verdict-loading').style.display = 'none';
+      const vc = document.getElementById('verdict-content');
+      vc.style.display = 'block';
+
+      /* Verdict color + label */
+      const vVerdict = (typeof v === 'object' && v.verdict) ? v : v;
+      const verdict   = vVerdict.verdict   || 'UNCERTAIN';
+      const conf      = vVerdict.confidence ?? 0;
+      const signal    = vVerdict.signal     || '';
+      const edge      = vVerdict.edge       || '';
+      const consensus = vVerdict.consensus  || [];
+      const dissent   = vVerdict.dissent    || [];
+      const flag      = vVerdict.flag       || 'MIXED';
+
+      const vColor = verdict === 'YES' ? '#3DFF7A' : verdict === 'NO' ? '#F07C5A' : '#FFD166';
+      const fColor = flag === 'STRONG_CONSENSUS' ? '#3DFF7A'
+                   : flag === 'HIGH_DISAGREEMENT' ? '#F07C5A'
+                   : flag === 'LOW_CONFIDENCE'    ? '#FFD166'
+                   : 'rgba(255,255,255,0.4)';
+
+      const consensusHtml = consensus.length
+        ? consensus.map(p => `<li style="margin-bottom:5px;color:rgba(255,255,255,0.8);">${p}</li>`).join('')
+        : '<li style="color:rgba(255,255,255,0.3);">—</li>';
+
+      const dissentHtml = dissent.length
+        ? dissent.map(p => `<li style="margin-bottom:5px;color:rgba(240,124,90,0.85);">${p}</li>`).join('')
+        : '';
+
+      vc.innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:800;color:${vColor};letter-spacing:-1px;text-shadow:0 0 20px ${vColor}40;">${verdict}</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:1px;">CONFIDENCE</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${vColor};">${conf}%</span>
+            </div>
+            <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${conf}%;background:${vColor};border-radius:3px;box-shadow:0 0 8px ${vColor}60;transition:width 0.8s ease;"></div>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${fColor};border:1px solid ${fColor}40;border-radius:4px;padding:3px 8px;white-space:nowrap;">${flag.replace(/_/g,' ')}</div>
+        </div>
+
+        ${signal ? `<div style="font-size:15px;font-weight:600;color:#FFFFFF;line-height:1.5;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07);">${signal}</div>` : ''}
+
+        <ul style="list-style:none;padding:0;margin:0 0 12px;font-size:13px;line-height:1.6;">
+          ${consensusHtml}
+        </ul>
+
+        ${dissentHtml ? `
+        <div style="margin-bottom:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(240,124,90,0.6);margin-bottom:6px;">Dissent</div>
+          <ul style="list-style:none;padding:0;margin:0;font-size:12px;line-height:1.6;">${dissentHtml}</ul>
+        </div>` : ''}
+
+        ${edge ? `<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,0.03);border-left:2px solid ${vColor}60;border-radius:0 6px 6px 0;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;"><span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);display:block;margin-bottom:4px;">Edge</span>${edge}</div>` : ''}
       `;
-      /* Prepend consensus above individual outputs */
-      out.insertBefore(consensusBlock, out.firstChild);
 
-      const consensusOutEl = document.getElementById('consensus-out');
-
-      /* Divider between consensus and chain outputs */
-      const divider = document.createElement('div');
-      divider.style.cssText = `
-        margin:18px 0 14px;
-        display:flex;align-items:center;gap:12px;
-        font-family:'JetBrains Mono',monospace;font-size:10px;
-        letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);
-      `;
-      divider.innerHTML = `<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>MODEL CHAIN — HOW WE GOT HERE<div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>`;
-      out.insertBefore(divider, consensusBlock.nextSibling);
-
-      /* Stream the synthesis */
-      try {
-        const synthResult = await callModelStreaming(synthKey, {
-          sysPrompt: 'You are a neutral synthesis engine. Aggregate without bias. Follow the output structure exactly as specified in the user message.',
-          userPrompt: synthUserPrompt,
-          maxTokens: MAX_TOKENS * 2,
-          signal: synthController?.signal,
-          onToken: (chunk) => {
-            consensusText += chunk;
-            /* Show only the Unified Synthesis section while streaming */
-            const splitIdx = consensusText.search(/\n\*\*(Consensus Points|Divergences|Unique Contributions|Open Questions)\*\*/i);
-            const display = splitIdx > 0 ? consensusText.slice(0, splitIdx) : consensusText;
-            consensusOutEl.innerHTML = renderMd(display.replace(/^\*\*Unified Synthesis\*\*\s*[—–-]?\s*/i, '').trim());
-            out.scrollTop = 0;
-          }
-        });
-        const synthCost = estimateStepCost(synthKey, synthUserPrompt, MAX_TOKENS * 2);
-        totalEstCost += synthCost;
-        totalOutTokens += estimateTokens(consensusText);
-
-        /* ── Post-process: split main answer from details ── */
-        const splitIdx = consensusText.search(/\n\*\*(Consensus Points|Divergences|Unique Contributions|Open Questions)\*\*/i);
-        if (splitIdx > 0) {
-          const mainPart = consensusText.slice(0, splitIdx).replace(/^\*\*Unified Synthesis\*\*\s*[—–-]?\s*/i, '').trim();
-          const detailPart = consensusText.slice(splitIdx).trim();
-          consensusOutEl.innerHTML = `
-            <div id="synth-main-answer">${renderMd(mainPart)}</div>
-            <button id="synth-more-btn" onclick="toggleSynthDetails(this)" style="
-              margin-top:16px;background:rgba(61,255,122,0.06);
-              border:1px solid rgba(61,255,122,0.2);color:rgba(61,255,122,0.7);
-              font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;
-              padding:6px 14px;border-radius:4px;cursor:pointer;width:100%;text-align:left;
-              transition:all 0.15s;
-            ">▸ Tell me more — consensus, divergences &amp; unique insights</button>
-            <div id="synth-details" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
-              ${renderMd(detailPart)}
-            </div>`;
-        }
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          consensusOutEl.innerHTML = `<span style="color:#F07C5A;">⚠ Synthesis failed: ${err.message}</span>`;
-        }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        document.getElementById('verdict-loading').innerHTML = `<span style="color:#F07C5A;">⚠ Verdict failed: ${err.message}</span>`;
       }
     }
   }

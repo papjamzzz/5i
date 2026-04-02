@@ -386,57 +386,53 @@ CALLERS = {
 
 # ── Synthesis / Judge pass ────────────────────────────────────────────────────
 
-SYNTHESIS_PROMPT = """You are a neutral synthesis engine. Your function is to aggregate outputs from multiple independent AI models into a single coherent analysis — without preference, ranking, or bias toward any source.
-
-You will be given {n} independent AI responses to the same prompt.
-
-Your task:
-1. Preserve all materially distinct insights across all responses
-2. Do NOT prefer, rank, or bias toward any model
-3. Identify areas of consensus and divergence with precision
-4. Resolve redundancy by merging overlapping points — do not repeat them
-5. Clearly distinguish between:
-   — Shared conclusions (agreement across models)
-   — Divergent perspectives (meaningful disagreement between models)
-   — Unique insights (present in only one response)
-
-Output Requirements:
-— Do NOT mention model names
-— Do NOT evaluate which response is "better"
-— Do NOT discard minority viewpoints unless clearly erroneous
-— Do NOT infer agreement unless it is explicitly present across responses
-— Do NOT merge statements that differ in meaning even if they sound similar
-— Maintain technical precision suitable for software developers and researchers
-— Explicitly flag uncertainty or ambiguity where it exists
-
-Structure your output as:
-
-**Unified Synthesis** — a clean, coherent answer to the original question
-**Consensus Points** — what all or most responses agreed on (bullet list)
-**Divergences** — meaningful disagreements or contrasting positions (bullet list)
-**Unique Contributions** — notable insights that appeared in only one response
-**Open Questions** — unresolved uncertainty or gaps across all responses (omit if none)
-
-Style: concise, information-dense, no filler language, preserve technical terminology.
+SYNTHESIS_PROMPT = """You are a verdict engine — not a summarizer. Your job is to read {n} independent AI responses to the same question and produce a single authoritative verdict with a confidence score.
 
 Original question: {question}
 
 Model responses:
 {responses}
 
-Begin synthesis."""
+Your output MUST be valid JSON and nothing else. No markdown, no preamble, no explanation outside the JSON.
+
+Return exactly this structure:
+
+{{
+  "verdict": "YES" | "NO" | "UNCERTAIN",
+  "confidence": <integer 0-100>,
+  "signal": "<one punchy sentence — the single most important takeaway, written as a direct statement>",
+  "consensus": ["<point 1>", "<point 2>", "<point 3 max>"],
+  "dissent": ["<meaningful disagreement 1>", "<meaningful disagreement 2 if exists>"],
+  "edge": "<one sentence — what a smart person should do or watch for given this verdict>",
+  "flag": "HIGH_DISAGREEMENT" | "LOW_CONFIDENCE" | "STRONG_CONSENSUS" | "MIXED" | "CLEAR"
+}}
+
+Scoring rules:
+- confidence 80-100: strong consensus, models mostly agree on direction
+- confidence 50-79: mixed signals, lean one way but notable dissent
+- confidence 0-49: models meaningfully disagree — verdict is UNCERTAIN
+- flag HIGH_DISAGREEMENT if models contradict each other on the core question
+- flag STRONG_CONSENSUS if 4+ models align on the same conclusion
+- flag LOW_CONFIDENCE if the question cannot be answered with the available information
+- dissent array may be empty [] if there is no meaningful disagreement
+- Keep every string concise — signal and edge max 20 words each
+
+Begin."""
 
 
 async def synthesize(session, question, results):
-    """Feed all model responses into the best available judge model."""
+    """Feed all model responses into the judge model — returns structured verdict dict."""
+    import json as _json
+    import re as _re
+
     responses_text = "\n\n".join(
-        f"[{MODELS[k]['label']} / {MODELS[k]['provider']}]:\n{v}"
+        f"[{MODELS[k]['label']}]:\n{v}"
         for k, v in results.items()
         if not v.startswith("Error:")
     )
 
     if not responses_text:
-        return "Error: No valid model responses to synthesize."
+        return {"error": "No valid model responses to synthesize."}
 
     full_prompt = SYNTHESIS_PROMPT.format(
         n=len(results),
@@ -444,17 +440,33 @@ async def synthesize(session, question, results):
         responses=responses_text
     )
 
-    # Synthesis judge priority: fastest first (Gemini Flash > Mistral > GPT > Claude)
+    # Judge priority: Gemini Flash > Claude > GPT > Mistral
     if GOOGLE_KEY:
-        return await call_gemini(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    elif MISTRAL_KEY:
-        return await call_mistral(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
-    elif OPENAI_KEY:
-        return await call_openai(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+        raw = await call_gemini(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
     elif ANTHROPIC_KEY:
-        return await call_anthropic(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+        raw = await call_anthropic(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+    elif OPENAI_KEY:
+        raw = await call_openai(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
+    elif MISTRAL_KEY:
+        raw = await call_mistral(session, full_prompt, max_tokens=MAX_TOKENS_SYNTH)
     else:
-        return "Error: Need at least one API key to render a verdict."
+        return {"error": "No API key available for synthesis."}
+
+    # Parse JSON — strip markdown fences if present
+    try:
+        cleaned = _re.sub(r"```(?:json)?\s*|\s*```", "", raw).strip()
+        return _json.loads(cleaned)
+    except Exception:
+        # Fallback: return raw text wrapped so UI doesn't break
+        return {
+            "verdict": "UNCERTAIN",
+            "confidence": 0,
+            "signal": raw[:200] if raw else "Synthesis failed.",
+            "consensus": [],
+            "dissent": [],
+            "edge": "",
+            "flag": "LOW_CONFIDENCE"
+        }
 
 
 # ── Async orchestration ───────────────────────────────────────────────────────
