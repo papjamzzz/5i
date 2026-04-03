@@ -1340,6 +1340,7 @@ function selectMarket(idx) {
   const titleEl = document.getElementById('inp-title');
   titleEl.value = m.title;
   titleEl.dataset.ticker = m.ticker;
+  titleEl.dataset.eventTicker = m.event_ticker || m.ticker;
   document.getElementById('inp-price').value = m.price;
   document.getElementById('inp-days').value  = m.days;
   document.getElementById('inp-category').value = m.category || 'General';
@@ -1431,8 +1432,9 @@ function renderResults(data) {
 
   // ── Buy button + Kalshi link — only show on TRADE with a ticker ──
   const buySection = document.getElementById('buy-section');
-  const titleEl2   = document.getElementById('inp-title');
+  const titleEl2    = document.getElementById('inp-title');
   const ticker      = titleEl2.dataset.ticker || '';
+  const eventTicker = titleEl2.dataset.eventTicker || '';
   const title       = titleEl2.value.trim();
 
   if (trade_decision === 'TRADE' && trade_side && ticker) {
@@ -1443,9 +1445,10 @@ function renderResults(data) {
     const btn = document.getElementById('btn-buy');
     btn.className = `btn-buy ${orderSide === 'no' ? 'no-side' : ''}`;
 
-    // Kalshi market URL
+    // Kalshi market URL — use event_ticker for the page, fall back to ticker
     const kalshiLink = document.getElementById('btn-kalshi');
-    kalshiLink.href = `https://kalshi.com/markets/${ticker.toLowerCase()}`;
+    const slug = (eventTicker || ticker).toLowerCase();
+    kalshiLink.href = `https://kalshi.com/markets/${slug}`;
 
     buySection.style.display = 'flex';
     fetchBalance();

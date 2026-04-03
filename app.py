@@ -358,6 +358,9 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
+            if "content" not in data:
+                err = data.get("error", {}).get("message", str(data))
+                return f"Error: {err}"
             return data["content"][0]["text"]
     except Exception as e:
         return f"Error: {str(e)}"
@@ -386,7 +389,10 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SY
             # Handle safety-blocked or empty candidates
             if candidate.get("finishReason") in ("SAFETY", "RECITATION", "OTHER"):
                 return f"Error: blocked ({candidate.get('finishReason')})"
-            return candidate["content"]["parts"][0]["text"]
+            parts = candidate.get("content", {}).get("parts", [])
+            if not parts:
+                return f"Error: empty Gemini response"
+            return parts[0]["text"]
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -404,7 +410,10 @@ async def call_grok(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYST
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
-            return data["choices"][0]["message"]["content"]
+            choices = data.get("choices") or []
+            if not choices:
+                return f"Error: {data.get('error', {}).get('message', str(data))}"
+            return choices[0]["message"]["content"]
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -422,7 +431,10 @@ async def call_mistral(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_S
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
-            return data["choices"][0]["message"]["content"]
+            choices = data.get("choices") or []
+            if not choices:
+                return f"Error: {data.get('message', str(data))}"
+            return choices[0]["message"]["content"]
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -875,7 +887,7 @@ def health():
 # ── Kalshi Fusion ─────────────────────────────────────────────────────────────
 
 KALSHI_BASE     = "https://api.elections.kalshi.com/trade-api/v2"
-KALSHI_ALT_BASE = "https://api.kalshi.com/trade-api/v2"
+KALSHI_ALT_BASE = "https://trading-api.kalshi.com/trade-api/v2"
 
 KALSHI_FUSION_PROMPT = """You are a prediction market analyst. Be precise, direct, and calibrated.
 
@@ -923,15 +935,16 @@ def _fetch_kalshi_markets(limit=25):
                     except Exception:
                         days = 0
                     out.append({
-                        "ticker":   m.get("ticker", ""),
-                        "title":    title,
-                        "price":    mid,
-                        "yes_bid":  yes_bid,
-                        "yes_ask":  yes_ask,
-                        "volume":   m.get("volume", 0) or 0,
-                        "category": m.get("category", "General"),
-                        "days":     days,
-                        "close_time": close_time,
+                        "ticker":       m.get("ticker", ""),
+                        "event_ticker": m.get("event_ticker", ""),
+                        "title":        title,
+                        "price":        mid,
+                        "yes_bid":      yes_bid,
+                        "yes_ask":      yes_ask,
+                        "volume":       m.get("volume", 0) or 0,
+                        "category":     m.get("category", "General"),
+                        "days":         days,
+                        "close_time":   close_time,
                     })
                 return out
         except Exception:
