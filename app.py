@@ -936,6 +936,83 @@ def _parse_model_probability(text):
     return None
 
 
+@app.route("/kalshi-fusion/order", methods=["POST"])
+def kalshi_fusion_order():
+    """Place a Kalshi order directly from the fusion signal."""
+    if not KALSHI_API_KEY:
+        return jsonify({"error": "No KALSHI_API_KEY configured"}), 503
+
+    data    = request.json
+    ticker  = (data.get("ticker") or "").strip().upper()
+    side    = (data.get("side") or "").lower()   # "yes" or "no"
+    count   = int(data.get("count", 5))
+    price_c = int(data.get("price_cents", 50))   # limit price in cents
+
+    if not ticker:
+        return jsonify({"error": "ticker required"}), 400
+    if side not in ("yes", "no"):
+        return jsonify({"error": "side must be yes or no"}), 400
+    count = max(1, min(50, count))
+
+    headers = {
+        "Authorization": f"Bearer {KALSHI_API_KEY}",
+        "Content-Type":  "application/json",
+        "accept":        "application/json",
+    }
+
+    order_body = {
+        "ticker":          ticker,
+        "client_order_id": str(uuid.uuid4()),
+        "action":          "buy",
+        "type":            "limit",
+        "side":            side,
+        "count":           count,
+        "price":           price_c,
+    }
+
+    placed = False
+    last_err = ""
+    for base in (KALSHI_BASE, KALSHI_ALT_BASE):
+        try:
+            r = req_lib.post(f"{base}/orders", headers=headers,
+                             json=order_body, timeout=10)
+            if r.ok:
+                resp = r.json()
+                order = resp.get("order", resp)
+                return jsonify({
+                    "ok":       True,
+                    "order_id": order.get("order_id", order.get("id", "")),
+                    "status":   order.get("status", "submitted"),
+                    "ticker":   ticker,
+                    "side":     side,
+                    "count":    count,
+                    "price":    price_c,
+                })
+            last_err = f"{r.status_code}: {r.text[:300]}"
+        except Exception as e:
+            last_err = str(e)
+
+    return jsonify({"error": f"Order failed: {last_err}"}), 502
+
+
+@app.route("/kalshi-fusion/balance")
+def kalshi_fusion_balance():
+    """Fetch Kalshi account balance."""
+    if not KALSHI_API_KEY:
+        return jsonify({"balance": None})
+    headers = {"Authorization": f"Bearer {KALSHI_API_KEY}", "accept": "application/json"}
+    for base in (KALSHI_BASE, KALSHI_ALT_BASE):
+        try:
+            r = req_lib.get(f"{base}/portfolio/balance", headers=headers, timeout=6)
+            if r.ok:
+                d = r.json()
+                balance = d.get("balance", d.get("available_balance", 0))
+                return jsonify({"balance": balance})  # in cents
+        except Exception:
+            continue
+    return jsonify({"balance": None})
+
+
 @app.route("/kalshi-fusion")
 def kalshi_fusion():
     models_info = {

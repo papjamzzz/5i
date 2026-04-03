@@ -785,6 +785,88 @@ body {
   border-radius: 0 6px 6px 0;
 }
 
+/* ── BUY BUTTON ── */
+.btn-buy {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1a5c38, #2a8c52);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-buy:hover:not(:disabled) {
+  background: linear-gradient(135deg, #226644, #35aa62);
+  box-shadow: 0 0 16px rgba(94,232,138,0.3);
+}
+.btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-buy.no-side {
+  background: linear-gradient(135deg, #5c1a1a, #8c2a2a);
+  border-color: #cc4444;
+}
+.btn-buy.no-side:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6e2020, #aa3535);
+  box-shadow: 0 0 16px rgba(200,68,68,0.3);
+}
+
+.contract-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+.contract-control button {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.contract-control span#contract-count {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+.contract-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--mint-dim);
+  opacity: 0.5;
+}
+
+.order-status {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.order-status.success {
+  background: rgba(94,232,138,0.08);
+  border: 1px solid rgba(94,232,138,0.2);
+  color: var(--green-bright);
+}
+.order-status.error {
+  background: rgba(200,68,68,0.08);
+  border: 1px solid rgba(200,68,68,0.2);
+  color: #ff7070;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
@@ -910,6 +992,18 @@ body {
         <div class="trade-decision-row">
           <div id="trade-decision" class="trade-decision">—</div>
           <div id="trade-side" class="trade-side"></div>
+          <div id="buy-section" style="display:none; margin-left:auto; display:none; align-items:center; gap:10px;">
+            <div class="contract-control">
+              <button onclick="adjContracts(-1)">−</button>
+              <span id="contract-count">5</span>
+              <button onclick="adjContracts(1)">+</button>
+              <span class="contract-label">contracts</span>
+            </div>
+            <button id="btn-buy" class="btn-buy" onclick="placeBuyOrder()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              Place Order
+            </button>
+          </div>
         </div>
         <div class="trade-numbers">
           <div class="trade-num-cell">
@@ -925,8 +1019,13 @@ body {
             <div class="trade-num gap" id="alpha-gap">—</div>
             <div class="trade-num-label">Gap</div>
           </div>
+          <div id="balance-cell" class="trade-num-cell gap-cell" style="display:none">
+            <div class="trade-num" id="balance-val" style="font-size:1rem;color:var(--mint-dim)">—</div>
+            <div class="trade-num-label">Balance</div>
+          </div>
         </div>
         <div id="trade-signal-text" class="trade-signal-text"></div>
+        <div id="order-status" class="order-status" style="display:none"></div>
       </div>
 
       <!-- Model Estimates -->
@@ -978,6 +1077,80 @@ body {
 const TOKEN = localStorage.getItem('5i_token') || '';
 let markets = [];
 let selectedTicker = null;
+let currentSignal = null;   // { ticker, side, price_cents }
+let contractCount = 5;
+
+// ── Contract adjuster ──
+function adjContracts(delta) {
+  contractCount = Math.max(1, Math.min(50, contractCount + delta));
+  document.getElementById('contract-count').textContent = contractCount;
+}
+
+// ── Fetch balance ──
+async function fetchBalance() {
+  try {
+    const r = await fetch('/kalshi-fusion/balance');
+    const d = await r.json();
+    if (d.balance != null) {
+      const dollars = (d.balance / 100).toFixed(2);
+      document.getElementById('balance-val').textContent = `$${dollars}`;
+      document.getElementById('balance-cell').style.display = '';
+    }
+  } catch(e) {}
+}
+
+// ── Place order ──
+async function placeBuyOrder() {
+  if (!currentSignal) return;
+
+  const { ticker, side, price_cents } = currentSignal;
+  const cost = ((price_cents * contractCount) / 100).toFixed(2);
+
+  const confirmed = confirm(
+    `Place order?\n\n` +
+    `Ticker: ${ticker}\n` +
+    `Side: ${side.toUpperCase()}\n` +
+    `Contracts: ${contractCount}\n` +
+    `Price: ${price_cents}¢ each\n` +
+    `Est. cost: $${cost}\n\n` +
+    `This places a real order on Kalshi.`
+  );
+  if (!confirmed) return;
+
+  const btn = document.getElementById('btn-buy');
+  btn.disabled = true;
+  btn.textContent = 'Placing...';
+
+  const statusEl = document.getElementById('order-status');
+  statusEl.style.display = 'none';
+
+  try {
+    const r = await fetch('/kalshi-fusion/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, side, count: contractCount, price_cents })
+    });
+    const d = await r.json();
+
+    if (d.ok) {
+      statusEl.className = 'order-status success';
+      statusEl.textContent = `✓ Order placed — ID: ${d.order_id} · ${d.count}x ${d.side.toUpperCase()} @ ${d.price}¢ · Status: ${d.status}`;
+      statusEl.style.display = '';
+      fetchBalance();
+    } else {
+      statusEl.className = 'order-status error';
+      statusEl.textContent = `✗ ${d.error}`;
+      statusEl.style.display = '';
+    }
+  } catch(e) {
+    statusEl.className = 'order-status error';
+    statusEl.textContent = `✗ Network error`;
+    statusEl.style.display = '';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Place Order`;
+  }
+}
 
 // ── Model toggles ──
 function toggleModel(el) {
@@ -1036,7 +1209,9 @@ function selectMarket(idx) {
   if (!m) return;
   selectedTicker = m.ticker;
 
-  document.getElementById('inp-title').value = m.title;
+  const titleEl = document.getElementById('inp-title');
+  titleEl.value = m.title;
+  titleEl.dataset.ticker = m.ticker;
   document.getElementById('inp-price').value = m.price;
   document.getElementById('inp-days').value  = m.days;
   document.getElementById('inp-category').value = m.category || 'General';
@@ -1125,6 +1300,24 @@ function renderResults(data) {
   } else {
     tsEl.style.display = 'none';
   }
+
+  // ── Buy button — only show on TRADE with a ticker ──
+  const buySection = document.getElementById('buy-section');
+  const ticker = document.getElementById('inp-title').dataset.ticker || '';
+  if (trade_decision === 'TRADE' && trade_side && ticker) {
+    const orderSide = trade_side.includes('YES') ? 'yes' : 'no';
+    // price: use ask for YES, or (100 - bid) for NO
+    const priceCents = market_price != null ? market_price : 50;
+    currentSignal = { ticker, side: orderSide, price_cents: priceCents };
+    const btn = document.getElementById('btn-buy');
+    btn.className = `btn-buy ${orderSide === 'no' ? 'no-side' : ''}`;
+    buySection.style.display = 'flex';
+    fetchBalance();
+  } else {
+    buySection.style.display = 'none';
+    currentSignal = null;
+  }
+  document.getElementById('order-status').style.display = 'none';
 
   document.getElementById('alpha-market').textContent =
     market_price != null ? `${market_price}¢` : '—';
