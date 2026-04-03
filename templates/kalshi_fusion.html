@@ -867,6 +867,118 @@ body {
   color: #ff7070;
 }
 
+/* ── OPEN ON KALSHI BUTTON ── */
+.btn-kalshi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border-dim);
+  border-radius: 8px;
+  color: var(--mint-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.btn-kalshi:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: rgba(240,160,48,0.06);
+}
+
+/* ── SIGNAL HISTORY ── */
+.history-panel {
+  margin-top: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg4);
+}
+.history-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--border);
+  opacity: 0.7;
+}
+.history-list {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-dim) transparent;
+}
+.history-empty {
+  padding: 20px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--border);
+  opacity: 0.6;
+}
+.history-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 60px 60px 70px 80px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(46,140,82,0.07);
+  transition: background 0.12s;
+}
+.history-row:hover { background: rgba(94,232,138,0.03); }
+.history-row:last-child { border-bottom: none; }
+.h-decision {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.h-decision.TRADE { color: var(--green-bright); }
+.h-decision.SKIP  { color: var(--border); }
+.h-title {
+  font-size: 0.72rem;
+  color: var(--mint-dim);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.h-gap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--mint);
+  text-align: center;
+}
+.h-side {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  text-align: center;
+}
+.h-side.YES { color: var(--green); }
+.h-side.NO  { color: #ff7070; }
+.h-conf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--amber);
+  text-align: center;
+}
+.h-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--border);
+  opacity: 0.5;
+  text-align: right;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
@@ -992,7 +1104,11 @@ body {
         <div class="trade-decision-row">
           <div id="trade-decision" class="trade-decision">—</div>
           <div id="trade-side" class="trade-side"></div>
-          <div id="buy-section" style="display:none; margin-left:auto; display:none; align-items:center; gap:10px;">
+          <div id="buy-section" style="margin-left:auto; display:none; align-items:center; gap:10px;">
+            <a id="btn-kalshi" class="btn-kalshi" href="#" target="_blank" rel="noopener">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open on Kalshi
+            </a>
             <div class="contract-control">
               <button onclick="adjContracts(-1)">−</button>
               <span id="contract-count">5</span>
@@ -1068,6 +1184,18 @@ body {
       </div>
 
     </div>
+
+    <!-- Signal History — always visible -->
+    <div id="history-panel" class="history-panel">
+      <div class="history-header">
+        <div class="section-label" style="margin:0">Signal History</div>
+        <span id="history-count" class="history-count"></span>
+      </div>
+      <div id="history-list" class="history-list">
+        <div class="history-empty">No signals yet — run an analysis to start your log.</div>
+      </div>
+    </div>
+
   </main>
 
 </div>
@@ -1301,16 +1429,24 @@ function renderResults(data) {
     tsEl.style.display = 'none';
   }
 
-  // ── Buy button — only show on TRADE with a ticker ──
+  // ── Buy button + Kalshi link — only show on TRADE with a ticker ──
   const buySection = document.getElementById('buy-section');
-  const ticker = document.getElementById('inp-title').dataset.ticker || '';
+  const titleEl2   = document.getElementById('inp-title');
+  const ticker      = titleEl2.dataset.ticker || '';
+  const title       = titleEl2.value.trim();
+
   if (trade_decision === 'TRADE' && trade_side && ticker) {
-    const orderSide = trade_side.includes('YES') ? 'yes' : 'no';
-    // price: use ask for YES, or (100 - bid) for NO
+    const orderSide  = trade_side.includes('YES') ? 'yes' : 'no';
     const priceCents = market_price != null ? market_price : 50;
-    currentSignal = { ticker, side: orderSide, price_cents: priceCents };
+    currentSignal    = { ticker, side: orderSide, price_cents: priceCents };
+
     const btn = document.getElementById('btn-buy');
     btn.className = `btn-buy ${orderSide === 'no' ? 'no-side' : ''}`;
+
+    // Kalshi market URL
+    const kalshiLink = document.getElementById('btn-kalshi');
+    kalshiLink.href = `https://kalshi.com/markets/${ticker.toLowerCase()}`;
+
     buySection.style.display = 'flex';
     fetchBalance();
   } else {
@@ -1318,6 +1454,9 @@ function renderResults(data) {
     currentSignal = null;
   }
   document.getElementById('order-status').style.display = 'none';
+
+  // ── Auto-log every analysis ──
+  logSignal(data, ticker, title);
 
   document.getElementById('alpha-market').textContent =
     market_price != null ? `${market_price}¢` : '—';
@@ -1397,6 +1536,68 @@ function renderResults(data) {
 
   document.getElementById('results-content').style.display = 'flex';
 }
+
+// ── Signal history ──
+async function loadHistory() {
+  try {
+    const r = await fetch('/kalshi-fusion/history');
+    const d = await r.json();
+    renderHistory(d.signals || []);
+  } catch(e) {}
+}
+
+function renderHistory(signals) {
+  const list = document.getElementById('history-list');
+  const count = document.getElementById('history-count');
+  count.textContent = signals.length ? `${signals.length} signals` : '';
+
+  if (!signals.length) {
+    list.innerHTML = '<div class="history-empty">No signals yet — run an analysis to start your log.</div>';
+    return;
+  }
+
+  list.innerHTML = signals.map(s => {
+    const side = s.trade_side ? s.trade_side.replace('BUY ', '') : '—';
+    const sideClass = side === 'YES' ? 'YES' : side === 'NO' ? 'NO' : '';
+    const time = s.created_at ? s.created_at.slice(5, 16).replace('T', ' ') : '';
+    const gap = s.alpha_gap != null ? `${s.alpha_gap}¢` : '—';
+    const conf = s.confidence != null ? `${s.confidence}%` : '—';
+    return `
+      <div class="history-row">
+        <span class="h-decision ${s.trade_decision}">${s.trade_decision || '—'}</span>
+        <span class="h-title" title="${esc(s.title || '')}">${esc((s.title || '').slice(0, 60))}</span>
+        <span class="h-gap">${gap}</span>
+        <span class="h-side ${sideClass}">${side}</span>
+        <span class="h-conf">${conf}</span>
+        <span class="h-time">${time}</span>
+      </div>`;
+  }).join('');
+}
+
+async function logSignal(data, ticker, title) {
+  try {
+    await fetch('/kalshi-fusion/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ticker:          ticker || '',
+        title:           title || '',
+        market_price:    data.market_price,
+        ai_consensus:    data.ai_consensus,
+        alpha_gap:       data.alpha_gap,
+        signal_strength: data.signal_strength,
+        trade_decision:  data.trade_decision,
+        trade_side:      data.trade_side,
+        verdict:         data.verdict?.verdict || '',
+        confidence:      data.verdict?.confidence,
+        synth_signal:    data.verdict?.signal || '',
+      })
+    });
+    loadHistory();
+  } catch(e) {}
+}
+
+loadHistory();
 
 // ── Helpers ──
 function extractReason(text) {

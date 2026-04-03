@@ -137,6 +137,26 @@ def init_db():
                 created_at          TEXT DEFAULT (datetime('now'))
             )
         """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS fusion_signals (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker           TEXT,
+                title            TEXT,
+                market_price     INTEGER,
+                ai_consensus     INTEGER,
+                alpha_gap        INTEGER,
+                signal_strength  TEXT,
+                trade_decision   TEXT,
+                trade_side       TEXT,
+                verdict          TEXT,
+                confidence       INTEGER,
+                synth_signal     TEXT,
+                contracts        INTEGER DEFAULT 0,
+                order_id         TEXT,
+                outcome          TEXT DEFAULT 'pending',
+                created_at       TEXT DEFAULT (datetime('now'))
+            )
+        """)
         db.commit()
 
 try:
@@ -993,6 +1013,53 @@ def kalshi_fusion_order():
             last_err = str(e)
 
     return jsonify({"error": f"Order failed: {last_err}"}), 502
+
+
+@app.route("/kalshi-fusion/log", methods=["POST"])
+def kalshi_fusion_log():
+    """Save a fusion signal to the trade log."""
+    d = request.json or {}
+    try:
+        with get_db() as db:
+            db.execute("""
+                INSERT INTO fusion_signals
+                  (ticker, title, market_price, ai_consensus, alpha_gap,
+                   signal_strength, trade_decision, trade_side,
+                   verdict, confidence, synth_signal, contracts, order_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                d.get("ticker", ""),
+                d.get("title", "")[:300],
+                d.get("market_price"),
+                d.get("ai_consensus"),
+                d.get("alpha_gap"),
+                d.get("signal_strength", ""),
+                d.get("trade_decision", ""),
+                d.get("trade_side", ""),
+                d.get("verdict", ""),
+                d.get("confidence"),
+                d.get("synth_signal", "")[:300],
+                d.get("contracts", 0),
+                d.get("order_id", ""),
+            ))
+            db.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/kalshi-fusion/history")
+def kalshi_fusion_history():
+    """Return recent fusion signals."""
+    try:
+        with get_db() as db:
+            rows = db.execute("""
+                SELECT * FROM fusion_signals
+                ORDER BY created_at DESC LIMIT 50
+            """).fetchall()
+        return jsonify({"signals": [dict(r) for r in rows]})
+    except Exception as e:
+        return jsonify({"signals": [], "error": str(e)})
 
 
 @app.route("/kalshi-fusion/balance")
