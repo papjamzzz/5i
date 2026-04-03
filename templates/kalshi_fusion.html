@@ -1445,10 +1445,13 @@ function renderResults(data) {
     const btn = document.getElementById('btn-buy');
     btn.className = `btn-buy ${orderSide === 'no' ? 'no-side' : ''}`;
 
-    // Kalshi market URL — use event_ticker for the page, fall back to ticker
+    // Kalshi market URL — event_ticker/ticker format
     const kalshiLink = document.getElementById('btn-kalshi');
-    const slug = (eventTicker || ticker).toLowerCase();
-    kalshiLink.href = `https://kalshi.com/markets/${slug}`;
+    if (eventTicker && ticker) {
+      kalshiLink.href = `https://kalshi.com/markets/${eventTicker.toLowerCase()}/${ticker.toLowerCase()}`;
+    } else {
+      kalshiLink.href = `https://kalshi.com/markets`;
+    }
 
     buySection.style.display = 'flex';
     fetchBalance();

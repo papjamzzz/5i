@@ -1003,29 +1003,29 @@ def kalshi_fusion_order():
         "price":           price_c,
     }
 
-    placed = False
-    last_err = ""
-    for base in (KALSHI_BASE, KALSHI_ALT_BASE):
+    try:
+        r = req_lib.post(f"{KALSHI_BASE}/orders", headers=headers,
+                         json=order_body, timeout=10)
+        if r.ok:
+            resp  = r.json()
+            order = resp.get("order", resp)
+            return jsonify({
+                "ok":       True,
+                "order_id": order.get("order_id", order.get("id", "")),
+                "status":   order.get("status", "submitted"),
+                "ticker":   ticker,
+                "side":     side,
+                "count":    count,
+                "price":    price_c,
+            })
         try:
-            r = req_lib.post(f"{base}/orders", headers=headers,
-                             json=order_body, timeout=10)
-            if r.ok:
-                resp = r.json()
-                order = resp.get("order", resp)
-                return jsonify({
-                    "ok":       True,
-                    "order_id": order.get("order_id", order.get("id", "")),
-                    "status":   order.get("status", "submitted"),
-                    "ticker":   ticker,
-                    "side":     side,
-                    "count":    count,
-                    "price":    price_c,
-                })
-            last_err = f"{r.status_code}: {r.text[:300]}"
-        except Exception as e:
-            last_err = str(e)
-
-    return jsonify({"error": f"Order failed: {last_err}"}), 502
+            err_body = r.json()
+            err_msg  = err_body.get("error", err_body.get("detail", r.text[:300]))
+        except Exception:
+            err_msg = r.text[:300]
+        return jsonify({"error": f"{r.status_code}: {err_msg}"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
 
 
 @app.route("/kalshi-fusion/log", methods=["POST"])
