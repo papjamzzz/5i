@@ -4320,6 +4320,7 @@ function getActiveToken() {
 }
 
 function checkFreeLimit() {
+  if (localStorage.getItem('5i_owner') === 'true') return true; // owner bypass
   const tok = getActiveToken();
   if (tok) return true; // paid user — pass through
   const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
