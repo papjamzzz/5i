@@ -53,7 +53,7 @@ _rl_lock     = threading.Lock()
 _ip_log      = defaultdict(list)   # key → [timestamp, ...]
 
 FREE_WINDOW  = 86400   # 24 h
-FREE_LIMIT   = 5       # free (no-token) requests per IP per day
+FREE_LIMIT   = 99999   # owner: effectively unlimited
 BURST_WINDOW = 60      # 1 min
 BURST_LIMIT  = 8       # max requests per IP per minute, any tier
 
@@ -720,7 +720,7 @@ def proxy_gemini():
     key = d.get('apiKey') or GOOGLE_KEY
     if not key:
         return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key={key}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key={key}'
     return _stream_proxy(
         url,
         {'Content-Type': 'application/json'},
