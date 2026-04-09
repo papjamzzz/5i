@@ -368,7 +368,7 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE
 
 async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"maxOutputTokens": max_tokens}
@@ -693,7 +693,7 @@ def proxy_claude():
     return _stream_proxy(
         'https://api.anthropic.com/v1/messages',
         {'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
-        {'model': 'claude-haiku-4-5-20251001', 'max_tokens': d.get('maxTokens', 1500),
+        {'model': 'claude-3-5-sonnet-20240620', 'max_tokens': d.get('maxTokens', 1500),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -720,7 +720,7 @@ def proxy_gemini():
     key = d.get('apiKey') or GOOGLE_KEY
     if not key:
         return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key={key}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?alt=sse&key={key}'
     return _stream_proxy(
         url,
         {'Content-Type': 'application/json'},
