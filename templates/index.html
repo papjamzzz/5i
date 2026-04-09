@@ -443,6 +443,17 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .amp-btn.playing .amp-led { animation: amp-pulse 1.8s ease-in-out infinite; }
 .amp-svg { width: 44px; height: 34px; }
+
+/* ── STEREO SIGNATURE — bottom left ── */
+.amp-signature {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 50;
+  opacity: 0.18;
+  transition: opacity 0.3s;
+}
+.amp-signature:hover { opacity: 0.6; }
 .btn-console-toggle {
   display: flex; align-items: center;
   padding: 0 11px; height: 28px;
@@ -1102,9 +1113,9 @@ header:hover .btn-fullscreen { opacity: 1; }
 
 .output-body {
   min-height: 120px; background: rgba(14,24,20,0.55);
-  border: 1px solid var(--border-dim); border-radius: 6px; padding: 12px;
-  font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
-  color: var(--mint);
+  border: 1px solid var(--border-dim); border-radius: 6px; padding: 16px;
+  font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.8;
+  color: rgba(232,250,242,0.92);
 }
 .output-empty { color: rgba(232,250,242,0.28); font-style: italic; }
 
@@ -1777,26 +1788,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 
   <header>
     <div class="logo-mark"></div>
-    <!-- Amp trigger -->
-    <button class="amp-btn" id="ampBtn" onclick="toggleVST()" title="Open FX Console">
-      <svg class="amp-svg" viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="42" height="32" rx="3" fill="#0B1210" stroke="#2E8C52" stroke-width="1.2"/>
-        <rect x="1" y="1" width="42" height="9" rx="3" fill="#0F1A16" stroke="#2E8C52" stroke-width="1.2"/>
-        <rect x="1" y="7" width="42" height="3" fill="#0F1A16"/>
-        <circle cx="8"  cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
-        <circle cx="16" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
-        <circle cx="24" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
-        <circle cx="32" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
-        <circle class="amp-led" cx="39" cy="5.5" r="2" fill="#1F5A38"/>
-        <circle cx="9"  cy="16" r="1" fill="#1E4A32"/><circle cx="9"  cy="21" r="1" fill="#1E4A32"/><circle cx="9"  cy="26" r="1" fill="#1E4A32"/>
-        <circle cx="14" cy="16" r="1" fill="#1E4A32"/><circle cx="14" cy="21" r="1" fill="#1E4A32"/><circle cx="14" cy="26" r="1" fill="#1E4A32"/>
-        <circle cx="19" cy="16" r="1" fill="#1E4A32"/><circle cx="19" cy="21" r="1" fill="#1E4A32"/><circle cx="19" cy="26" r="1" fill="#1E4A32"/>
-        <circle cx="24" cy="16" r="1" fill="#1E4A32"/><circle cx="24" cy="21" r="1" fill="#1E4A32"/><circle cx="24" cy="26" r="1" fill="#1E4A32"/>
-        <circle cx="29" cy="16" r="1" fill="#1E4A32"/><circle cx="29" cy="21" r="1" fill="#1E4A32"/><circle cx="29" cy="26" r="1" fill="#1E4A32"/>
-        <circle cx="34" cy="16" r="1" fill="#1E4A32"/><circle cx="34" cy="21" r="1" fill="#1E4A32"/><circle cx="34" cy="26" r="1" fill="#1E4A32"/>
-        <text x="36" y="29" font-family="monospace" font-size="5" fill="#2E8C52" font-weight="bold">5i</text>
-      </svg>
-    </button>
+    <!-- Amp trigger moved to bottom-left signature -->
     <audio id="ampAudio" loop preload="auto" src="/static/theme.mp3"></audio>
 
     <!-- VST Pedal Popup -->
@@ -2778,6 +2770,10 @@ function switchTab(btn, tabKey) {
   btn.classList.add('active');
   const tc = document.getElementById('tab-' + tabKey);
   if (tc) tc.classList.add('active');
+  // Auto-run delta analysis when tab clicked if outputs exist
+  if (tabKey === 'delta' && typeof stepOutputs !== 'undefined' && stepOutputs && stepOutputs.length >= 2) {
+    runDeltaAnalysis(stepOutputs);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -4411,6 +4407,29 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
+
+<!-- ── STEREO SIGNATURE ── -->
+<div class="amp-signature">
+  <button class="amp-btn" id="ampBtn" onclick="toggleVST()" title="Open FX Console">
+    <svg class="amp-svg" viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="42" height="32" rx="3" fill="#0B1210" stroke="#2E8C52" stroke-width="1.2"/>
+      <rect x="1" y="1" width="42" height="9" rx="3" fill="#0F1A16" stroke="#2E8C52" stroke-width="1.2"/>
+      <rect x="1" y="7" width="42" height="3" fill="#0F1A16"/>
+      <circle cx="8"  cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+      <circle cx="16" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+      <circle cx="24" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+      <circle cx="32" cy="5.5" r="2.2" fill="#1E4A32" stroke="#3DB862" stroke-width="0.8"/>
+      <circle class="amp-led" cx="39" cy="5.5" r="2" fill="#1F5A38"/>
+      <circle cx="9"  cy="16" r="1" fill="#1E4A32"/><circle cx="9"  cy="21" r="1" fill="#1E4A32"/><circle cx="9"  cy="26" r="1" fill="#1E4A32"/>
+      <circle cx="14" cy="16" r="1" fill="#1E4A32"/><circle cx="14" cy="21" r="1" fill="#1E4A32"/><circle cx="14" cy="26" r="1" fill="#1E4A32"/>
+      <circle cx="19" cy="16" r="1" fill="#1E4A32"/><circle cx="19" cy="21" r="1" fill="#1E4A32"/><circle cx="19" cy="26" r="1" fill="#1E4A32"/>
+      <circle cx="24" cy="16" r="1" fill="#1E4A32"/><circle cx="24" cy="21" r="1" fill="#1E4A32"/><circle cx="24" cy="26" r="1" fill="#1E4A32"/>
+      <circle cx="29" cy="16" r="1" fill="#1E4A32"/><circle cx="29" cy="21" r="1" fill="#1E4A32"/><circle cx="29" cy="26" r="1" fill="#1E4A32"/>
+      <circle cx="34" cy="16" r="1" fill="#1E4A32"/><circle cx="34" cy="21" r="1" fill="#1E4A32"/><circle cx="34" cy="26" r="1" fill="#1E4A32"/>
+      <text x="36" y="29" font-family="monospace" font-size="5" fill="#2E8C52" font-weight="bold">5i</text>
+    </svg>
+  </button>
+</div>
 
 </body>
 </html>
