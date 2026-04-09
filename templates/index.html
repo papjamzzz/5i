@@ -1873,7 +1873,12 @@ header:hover .btn-fullscreen { opacity: 1; }
       </div>
     </div>
 
-    <button class="btn-console-toggle" id="btnConsoleToggle" onclick="toggleConsole()" title="Toggle Console Panel">[▌ CONSOLE]</button>
+    <!-- center brand stamp -->
+    <div style="position:absolute;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;letter-spacing:-1.5px;color:var(--mint);text-shadow:0 0 40px rgba(94,232,138,0.5);line-height:1;">5i</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Five Intelligences</span>
+    </div>
+
     <button class="mobile-drawer-btn" onclick="toggleMobileDrawer()" title="Settings & Controls">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M2 4h12M2 8h12M2 12h12"/>
