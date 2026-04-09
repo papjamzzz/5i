@@ -2020,7 +2020,7 @@ header:hover .btn-fullscreen { opacity: 1; }
           <span class="token-gate-status" id="tokenStatus">—</span>
         </div>
         <div class="plan-status free" id="planStatusBar">
-          FREE TRIAL · <span id="planStatusText">0/5 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>
+          FREE TRIAL · <span id="planStatusText">0/1 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>
         </div>
       </div>
 
@@ -4337,7 +4337,7 @@ function updatePlanBar(data) {
     // Free trial
     const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
     bar.className = 'plan-status free';
-    bar.innerHTML = `FREE TRIAL · <span id="planStatusText">${used}/5 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>`;
+    bar.innerHTML = `FREE TRIAL · <span id="planStatusText">${used}/1 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>`;
     return;
   }
 
@@ -4355,13 +4355,23 @@ function getActiveToken() {
   return (localStorage.getItem(TOKEN_LS_KEY) || '').trim();
 }
 
+function showPaywall() {
+  const overlay = document.getElementById('paywallOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+function closePaywall() {
+  const overlay = document.getElementById('paywallOverlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
 function checkFreeLimit() {
   if (localStorage.getItem('5i_owner') === 'true') return true; // owner bypass
   const tok = getActiveToken();
   if (tok) return true; // paid user — pass through
   const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
-  if (used >= 5) {
-    showToast('Free trial limit reached (5 syntheses). Subscribe at creativekonsoles.com to continue.');
+  if (used >= 1) {
+    showPaywall();
     return false;
   }
   localStorage.setItem(FREE_COUNT_KEY, String(used + 1));
@@ -4404,6 +4414,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (overlay) {
     overlay.addEventListener('click', e => { if (e.target === overlay) closeBYOK(); });
   }
+  const paywall = document.getElementById('paywallOverlay');
+  if (paywall) {
+    paywall.addEventListener('click', e => { if (e.target === paywall) closePaywall(); });
+  }
 });
 </script>
 
@@ -4421,6 +4435,42 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="ghost-line">
     <span class="g-label">SESSION</span>
     <span class="g-val-amber" id="hudSession">$0.00000</span>
+  </div>
+</div>
+
+<!-- ── PAYWALL MODAL ──────────────────────────────── -->
+<div class="byok-overlay hidden" id="paywallOverlay">
+  <div class="byok-modal" style="max-width:480px; border-color: var(--green); box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 60px rgba(94,232,138,0.12);">
+    <div class="byok-modal-header" style="background: rgba(94,232,138,0.06); border-color: var(--border);">
+      <div class="byok-modal-title" style="color: var(--green);">Your free synthesis is up.</div>
+      <div class="byok-modal-sub">SUBSCRIBE TO KEEP RUNNING</div>
+    </div>
+    <div class="byok-modal-body" style="gap:14px;">
+      <p>You just ran 5 AI models in parallel in seconds. That's what 5i does — every time.</p>
+      <p>Pick a plan to continue:</p>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+        <a href="https://creativekonsoles.com/#pricing" target="_blank"
+           style="display:block; padding:14px 18px; background: rgba(94,232,138,0.10); border:1px solid var(--green); border-radius:6px; text-decoration:none; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px;">
+          Base Synthesis — <span style="color:var(--green);">$18/mo</span>
+          <span style="display:block; font-size:12px; color:rgba(255,255,255,0.45); font-weight:400; margin-top:3px;">100 syntheses/month</span>
+        </a>
+        <a href="https://creativekonsoles.com/#pricing" target="_blank"
+           style="display:block; padding:14px 18px; background: rgba(94,232,138,0.05); border:1px solid rgba(94,232,138,0.35); border-radius:6px; text-decoration:none; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px;">
+          Foundational Synthesis — <span style="color:var(--green);">$88/mo</span>
+          <span style="display:block; font-size:12px; color:rgba(255,255,255,0.45); font-weight:400; margin-top:3px;">1,000 syntheses/month</span>
+        </a>
+      </div>
+      <p style="font-size:13px; color:rgba(255,255,255,0.40); margin-top:4px;">
+        Already subscribed? Enter your token in the panel above.
+      </p>
+    </div>
+    <div style="padding:12px 20px 16px; display:flex; gap:10px; border-top:1px solid var(--border-dim);">
+      <button onclick="closePaywall()" class="byok-cancel" style="flex:1;">Not now</button>
+      <a href="https://creativekonsoles.com/#pricing" target="_blank"
+         style="flex:2; display:block; text-align:center; padding:10px 0; background:var(--green); color:#000; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; border-radius:5px; text-decoration:none; letter-spacing:0.3px;">
+        Subscribe ↗
+      </a>
+    </div>
   </div>
 </div>
 
