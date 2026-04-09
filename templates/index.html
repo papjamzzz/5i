@@ -1142,30 +1142,35 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .rank-list { display: flex; flex-direction: column; gap: 3px; }
 .rank-item {
-  display: flex; align-items: center; gap: 7px;
-  padding: 4px 7px; border-radius: 4px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 4px;
   background: rgba(15,26,22,0.5); border: 1px solid var(--border-dim);
   transition: border-color 0.2s;
   animation: fadeIn 0.25s ease;
 }
+.rank-item.top-1 { border-color: rgba(218,142,32,0.5); background: rgba(218,142,32,0.06); }
+.rank-item.top-2 { border-color: rgba(180,180,195,0.4); background: rgba(180,180,195,0.04); }
+.rank-item.top-3 { border-color: rgba(140,100,60,0.4); background: rgba(140,100,60,0.04); }
 .rank-medal {
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 22px; height: 22px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 8px; font-weight: 700; flex-shrink: 0;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
   font-family: 'JetBrains Mono', monospace;
 }
-.medal-1 { background: radial-gradient(circle at 35% 30%, #FDE68A, #DA8E20); color: #5a3800; box-shadow: 0 0 8px rgba(218,142,32,0.5); }
-.medal-2 { background: radial-gradient(circle at 35% 30%, #E2F5EA, #C3FDD8 60%, #69F09B); color: #0a3020; }
-.medal-3 { background: radial-gradient(circle at 35% 30%, #A7C4B0, #58DE83 70%, #1F5A38); color: #0a2016; }
-.medal-4, .medal-5 { background: rgba(31,90,56,0.12); color: rgba(195,253,216,0.2); }
+.medal-1 { background: radial-gradient(circle at 35% 30%, #FDE68A, #DA8E20); color: #5a3800; box-shadow: 0 0 10px rgba(218,142,32,0.7); }
+.medal-2 { background: radial-gradient(circle at 35% 30%, #f0f0f5, #b0b0c8, #8888aa); color: #1a1a2e; box-shadow: 0 0 8px rgba(180,180,200,0.4); }
+.medal-3 { background: radial-gradient(circle at 35% 30%, #d4956a, #a0622a, #7a4010); color: #fff0e0; box-shadow: 0 0 8px rgba(160,98,42,0.4); }
+.medal-4 { background: rgba(60,80,70,0.4); color: rgba(195,253,216,0.5); border: 1px solid rgba(255,255,255,0.1); }
+.medal-5 { background: rgba(40,55,50,0.3); color: rgba(195,253,216,0.3); border: 1px solid rgba(255,255,255,0.06); }
 .rank-model-name {
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex: 1;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: #ffffff;
 }
 .rank-value {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #ffffff;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #ffffff;
   background: rgba(255,255,255,0.10); border-radius: 2px; padding: 2px 8px;
-  border: 1px solid rgba(255,255,255,0.20);
+  border: 1px solid rgba(255,255,255,0.20); white-space: nowrap; flex-shrink: 0;
 }
 
 /* ── MODEL STATUS MONITOR ────────────────────────────── */
@@ -2508,7 +2513,7 @@ function buildRankings() {
     list.className = 'rank-list';
     sorted.forEach((m, i) => {
       const item = document.createElement('div');
-      item.className = 'rank-item';
+      item.className = 'rank-item' + (i < 3 ? ' top-' + (i+1) : '');
       const medal = document.createElement('div');
       medal.className = 'rank-medal medal-' + (i + 1);
       medal.textContent = ['1','2','3','4','5'][i];
