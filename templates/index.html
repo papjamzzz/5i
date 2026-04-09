@@ -801,14 +801,14 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .analysis-btn-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
-  color: rgba(255,255,255,0.90); line-height: 1.45; text-align: center;
-  text-shadow: 0 0 8px rgba(255,255,255,0.25);
+  font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700;
+  color: #ffffff; line-height: 1.45; text-align: center;
+  text-shadow: 0 0 8px rgba(255,255,255,0.35);
 }
 .analysis-btn-state {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.55);
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.80);
   text-shadow: 0 0 6px rgba(255,255,255,0.2);
 }
 #tool-agreement.active {
@@ -836,10 +836,10 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .analysis-ind-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 22px; font-weight: 800; line-height: 1;
-  color: rgba(255,255,255,0.80); font-variant-numeric: tabular-nums;
+  font-size: 24px; font-weight: 800; line-height: 1;
+  color: #ffffff; font-variant-numeric: tabular-nums;
   transition: color 0.4s, text-shadow 0.4s;
-  text-shadow: 0 0 12px rgba(255,255,255,0.2);
+  text-shadow: 0 0 12px rgba(255,255,255,0.3);
 }
 .analysis-ind-val.green { color: #3DFF7A; text-shadow: 0 0 18px rgba(61,255,122,0.55); }
 .analysis-ind-val.amber { color: #FFD400; text-shadow: 0 0 18px rgba(255,212,0,0.55); }
@@ -847,7 +847,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .analysis-ind-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255,255,255,0.95);
   text-shadow: 0 0 6px rgba(255,255,255,0.2);
 }
 
@@ -1138,7 +1138,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 .rank-cat-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--green); opacity: 0.88; margin-bottom: 5px;
+  color: var(--green); opacity: 1; margin-bottom: 5px;
 }
 .rank-list { display: flex; flex-direction: column; gap: 3px; }
 .rank-item {
@@ -1159,13 +1159,13 @@ header:hover .btn-fullscreen { opacity: 1; }
 .medal-3 { background: radial-gradient(circle at 35% 30%, #A7C4B0, #58DE83 70%, #1F5A38); color: #0a2016; }
 .medal-4, .medal-5 { background: rgba(31,90,56,0.12); color: rgba(195,253,216,0.2); }
 .rank-model-name {
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; flex: 1;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; flex: 1;
   color: #ffffff;
 }
 .rank-value {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ffffff;
-  background: rgba(255,255,255,0.07); border-radius: 2px; padding: 1px 6px;
-  border: 1px solid rgba(255,255,255,0.12);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #ffffff;
+  background: rgba(255,255,255,0.10); border-radius: 2px; padding: 2px 8px;
+  border: 1px solid rgba(255,255,255,0.20);
 }
 
 /* ── MODEL STATUS MONITOR ────────────────────────────── */
@@ -1217,11 +1217,11 @@ header:hover .btn-fullscreen { opacity: 1; }
 /* ── DISAGREEMENT WARNING BAR ────────────────────────── */
 .disagree-bar {
   display: flex; align-items: stretch;
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 7px; overflow: hidden;
   background: rgba(0,0,0,0.35);
   transition: border-color 0.4s, box-shadow 0.4s;
-  min-height: 38px;
+  min-height: 57px;
 }
 .disagree-bar.warning {
   border-color: rgba(240,160,48,0.55);
@@ -1247,12 +1247,12 @@ header:hover .btn-fullscreen { opacity: 1; }
 .disagree-cell:last-child { border-right: none; }
 .disagree-cell-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(255,255,255,0.62); white-space: nowrap;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.85); white-space: nowrap;
 }
 .disagree-cell-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.75);
+  font-size: 16px; font-weight: 700; color: #ffffff;
   white-space: nowrap;
 }
 .disagree-cell-val.green  { color: #3DFF7A; }
@@ -1269,8 +1269,8 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .disagree-warn-text {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.60); white-space: nowrap;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.90); white-space: nowrap;
   transition: color 0.3s;
 }
 .disagree-bar.warning .disagree-warn-text { color: #FFD400; }
