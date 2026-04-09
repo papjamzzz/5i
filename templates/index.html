@@ -2039,17 +2039,17 @@ header:hover .btn-fullscreen { opacity: 1; }
 
           <!-- LEFT: toggle buttons -->
           <div class="analysis-btns">
-            <button class="analysis-btn" id="tool-agreement" onclick="toggleTool('agreement')"
+            <button class="analysis-btn active" id="tool-agreement" onclick="toggleTool('agreement')"
                 data-info="Agree Detect|Toggle on before running. After synthesis, scans all model outputs and highlights every concept the models converged on. Results appear in the Agreement tab.">
               <div class="tool-led"></div>
               <div class="analysis-btn-label">AGREE<br>DETECT</div>
-              <div class="analysis-btn-state" id="tbadge-agreement">OFF</div>
+              <div class="analysis-btn-state" id="tbadge-agreement">ON</div>
             </button>
-            <button class="analysis-btn" id="tool-delta" onclick="toggleTool('delta')"
+            <button class="analysis-btn active" id="tool-delta" onclick="toggleTool('delta')"
                 data-info="Delta Analysis|Toggle on before running. After synthesis, shows exactly what each model added or changed vs the previous step. Results appear in the Delta tab.">
               <div class="tool-led" style="background:rgba(255,212,0,0.25)"></div>
               <div class="analysis-btn-label">DELTA<br>ANALYSIS</div>
-              <div class="analysis-btn-state" id="tbadge-delta">OFF</div>
+              <div class="analysis-btn-state" id="tbadge-delta">ON</div>
             </button>
           </div>
 
@@ -2785,7 +2785,7 @@ function switchTab(btn, tabKey) {
 /* ═══════════════════════════════════════════════════════
    ANALYSIS TOOLS — toggle state + real functions
 ═══════════════════════════════════════════════════════ */
-const toolStates = { agreement: false, delta: false };
+const toolStates = { agreement: true, delta: true };
 
 function toggleTool(id) {
   toolStates[id] = !toolStates[id];
