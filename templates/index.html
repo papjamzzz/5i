@@ -1819,8 +1819,8 @@ header:hover .btn-fullscreen { opacity: 1; }
 
   <header>
     <!-- 5i brand — top left, links to GitHub -->
-    <!-- left spacer to balance right side -->
-    <div style="width:160px;flex-shrink:0;"></div>
+    <!-- left spacer -->
+    <div style="width:100px;flex-shrink:0;"></div>
 
     <!-- Amp trigger moved to bottom-left signature -->
     <audio id="ampAudio" loop preload="auto" src="/static/theme.mp3"></audio>
@@ -1871,14 +1871,19 @@ header:hover .btn-fullscreen { opacity: 1; }
       </div>
     </div>
 
-    <!-- 5i brand — dead center -->
-    <a href="https://github.com/papjamzzz/5i" target="_blank" rel="noopener" style="position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;text-decoration:none;pointer-events:auto;">
-      <img src="/static/logo.png" alt="5i" style="width:114px;height:114px;object-fit:cover;object-position:center 47%;border-radius:14px;flex-shrink:0;" onerror="this.style.display='none'"/>
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:700;letter-spacing:-2px;color:var(--mint);text-shadow:0 0 30px rgba(94,232,138,0.4);line-height:1;">5i</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);">Five Intelligences</span>
-      </div>
-    </a>
+    <!-- ENTER 5i — dead center military stamp -->
+    <div style="position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;">
+      <span style="
+        font-family:'Space Grotesk',sans-serif;
+        font-size:28px;
+        font-weight:900;
+        letter-spacing:0.25em;
+        text-transform:uppercase;
+        color:var(--mint);
+        text-shadow:0 0 20px rgba(94,232,138,0.5),0 0 40px rgba(94,232,138,0.2);
+        white-space:nowrap;
+      ">ENTER 5i</span>
+    </div>
 
     <button class="mobile-drawer-btn" onclick="toggleMobileDrawer()" title="Settings & Controls">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1897,10 +1902,13 @@ header:hover .btn-fullscreen { opacity: 1; }
           <path d="M1 1h4M1 1v4M15 1h-4M15 1v4M1 15h4M1 15v-4M15 15h-4M15 15v-4"/>
         </svg>
       </button>
-      <!-- CK logo — top right, links to creativekonsoles.com -->
-      <a href="https://creativekonsoles.com" target="_blank" rel="noopener" class="header-brand-ck">
-        <img src="https://creativekonsoles.com/assets/ck-icon-1024.png" alt="Creative Konsoles" class="header-brand-ck-logo" onerror="this.style.display='none'"/>
-        <span class="header-brand-ck-text">Creative<br>Konsoles</span>
+      <!-- 5i logo — links to GitHub -->
+      <a href="https://github.com/papjamzzz/5i" target="_blank" rel="noopener" title="5i on GitHub" style="display:flex;align-items:center;flex-shrink:0;opacity:0.75;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+        <img src="/static/logo.png" alt="5i" style="width:36px;height:36px;object-fit:cover;object-position:center 47%;border-radius:8px;" onerror="this.style.display='none'"/>
+      </a>
+      <!-- CK logo — links to creativekonsoles.com -->
+      <a href="https://creativekonsoles.com" target="_blank" rel="noopener" title="Creative Konsoles" style="display:flex;align-items:center;flex-shrink:0;opacity:0.75;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+        <img src="https://creativekonsoles.com/assets/ck-icon-1024.png" alt="Creative Konsoles" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" onerror="this.style.display='none'"/>
       </a>
     </div>
   </header>
