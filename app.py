@@ -368,7 +368,7 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE
 
 async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GOOGLE_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"maxOutputTokens": max_tokens}
@@ -427,7 +427,7 @@ async def call_mistral(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_S
         async with session.post(
             "https://api.mistral.ai/v1/chat/completions",
             headers={"Authorization": f"Bearer {MISTRAL_KEY}", "Content-Type": "application/json"},
-            json={"model": "mistral-large-latest", "messages": messages, "max_tokens": max_tokens},
+            json={"model": "mistral-small-latest", "messages": messages, "max_tokens": max_tokens},
             timeout=MODEL_TIMEOUT
         ) as r:
             data = await r.json()
@@ -720,7 +720,7 @@ def proxy_gemini():
     key = d.get('apiKey') or GOOGLE_KEY
     if not key:
         return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?alt=sse&key={key}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key={key}'
     return _stream_proxy(
         url,
         {'Content-Type': 'application/json'},
