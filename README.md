@@ -58,17 +58,10 @@ No external UI frameworks. No databases. No tracking. Runs local.
 
 ## Part of Creative Konsoles
 
-5i is the flagship product of [Creative Konsoles](https://github.com/papjamzzz/creative-konsoles) — tools built using thought.
+5i is the flagship product of [Creative Konsoles](https://creativekonsoles.com) — tools built using thought.
 
 > "Not which AI is right. What the truth is when you ask all of them."
 
-
----
-
-## Part of Creative Konsoles
-
-Built by [Creative Konsoles](https://creativekonsoles.com) — tools built using thought.
-
 **[creativekonsoles.com](https://creativekonsoles.com)** &nbsp;·&nbsp; support@creativekonsoles.com
 
-<!-- repo maintenance: 2026-04-04 -->
+<!-- repo maintenance: 2026-04-10 -->
