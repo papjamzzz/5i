@@ -312,10 +312,12 @@ def send_cancellation_email(to_email, refund_cents):
 
 # ── Individual model callers ──────────────────────────────────────────────────
 
-MODEL_TIMEOUT  = aiohttp.ClientTimeout(total=25)   # fail fast
-SYNTH_TIMEOUT  = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroom
-MAX_TOKENS     = 500   # model calls — enough for most answers, faster generation
-MAX_TOKENS_SYNTH = 900 # synthesis output — needs room to cover all 5 responses
+MODEL_TIMEOUT   = aiohttp.ClientTimeout(total=25)   # fail fast for all models
+GEMINI_TIMEOUT  = aiohttp.ClientTimeout(total=60)   # Gemini 2.5 Flash has a thinking phase (~15s) before output
+SYNTH_TIMEOUT   = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroom
+MAX_TOKENS      = 500   # model calls — enough for most answers, faster generation
+MAX_TOKENS_GEMINI = 800 # Gemini 2.5 Flash can be verbose; give it room to finish
+MAX_TOKENS_SYNTH  = 900 # synthesis output — needs room to cover all 5 responses
 
 # Injected into every model call to keep responses tight and comparable
 RESPONSE_SYSTEM = "Be concise. Answer in 3 sentences or fewer. Do not pad, repeat, or add filler."
@@ -367,7 +369,7 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE
         return f"Error: {str(e)}"
 
 
-async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
+async def call_gemini(session, prompt, max_tokens=MAX_TOKENS_GEMINI, system=RESPONSE_SYSTEM):
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
@@ -380,20 +382,25 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SY
             url,
             headers={"Content-Type": "application/json"},
             json=body,
-            timeout=MODEL_TIMEOUT
+            timeout=GEMINI_TIMEOUT  # 60s — thinking phase runs before output
         ) as r:
             data = await r.json()
             if "candidates" not in data:
                 block = data.get("promptFeedback", {}).get("blockReason", "no candidates returned")
                 return f"Error: {block}"
             candidate = data["candidates"][0]
+            finish = candidate.get("finishReason", "")
             # Handle safety-blocked or empty candidates
-            if candidate.get("finishReason") in ("SAFETY", "RECITATION", "OTHER"):
-                return f"Error: blocked ({candidate.get('finishReason')})"
+            if finish in ("SAFETY", "RECITATION", "OTHER"):
+                return f"Error: blocked ({finish})"
             parts = candidate.get("content", {}).get("parts", [])
             if not parts:
                 return f"Error: empty Gemini response"
-            return parts[0]["text"]
+            text = parts[0]["text"]
+            # Warn if response was cut off at the token limit
+            if finish == "MAX_TOKENS":
+                print(f"[GEMINI] Response hit MAX_TOKENS ({max_tokens}) — may be truncated", flush=True)
+            return text
     except Exception as e:
         return f"Error: {str(e)}"
 
