@@ -371,8 +371,7 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SY
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": max_tokens},
-            "thinkingConfig": {"thinkingBudget": 0}
+            "generationConfig": {"maxOutputTokens": max_tokens}
         }
         if system:
             body["system_instruction"] = {"parts": [{"text": system}]}
@@ -731,9 +730,7 @@ def proxy_gemini():
     body = {
         'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
         'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
-        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7},
-        'thinkingConfig': {'thinkingBudget': 0}
-
+        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7}
     }
     last_err = 'No Gemini model available'
     for model in GEMINI_MODELS_FALLBACK:
