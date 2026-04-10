@@ -2244,13 +2244,13 @@ header:hover .btn-fullscreen { opacity: 1; }
    LMSYS Chatbot Arena (agreeability proxy)
 ═══════════════════════════════════════════════════════ */
 const MODELS = {
-  claude: {
-    name:'Claude', short:'CLD', color:'#7C3AED', colorHi:'#A78BFA',
-    costPerMOutput:{ budget:1.25, standard:15, premium:75 },
-    premiumScore:0.94, budgetScore:0.48,
-    ttft:520, speedScore:0.62,
-    reliabilityPct:99.7, reliabilityScore:0.90,
-    agreeabilityScore:0.72,
+  deepseek: {
+    name:'DeepSeek', short:'DSK', color:'#06B6D4', colorHi:'#67E8F9',
+    costPerMOutput:{ budget:0.14, standard:2.19, premium:2.19 },
+    premiumScore:0.85, budgetScore:0.96,
+    ttft:800, speedScore:0.45,
+    reliabilityPct:98.5, reliabilityScore:0.70,
+    agreeabilityScore:0.65,
     orbit:2, active:true,
     apiKey: 'server',
   },
@@ -2294,20 +2294,10 @@ const MODELS = {
     orbit:5, active:true,
     apiKey: 'server',
   },
-  deepseek: {
-    name:'DeepSeek', short:'DSK', color:'#06B6D4', colorHi:'#67E8F9',
-    costPerMOutput:{ budget:0.14, standard:2.19, premium:2.19 },
-    premiumScore:0.85, budgetScore:0.96,
-    ttft:800, speedScore:0.45,
-    reliabilityPct:98.5, reliabilityScore:0.70,
-    agreeabilityScore:0.65,
-    orbit:6, active:true,
-    apiKey: 'server',
-  },
 };
 
 /* Model order: sequential synthesis chain */
-const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok','deepseek'];
+const MODEL_ORDER = ['gpt','deepseek','gemini','mistral','grok'];
 
 /* ── FADER STATE ─────────────────────────────────────── */
 const faders = { cost:0.5, latency:0.5, agree:0.5, rely:0.5 };
@@ -3772,11 +3762,10 @@ function initOrbitalBackground() {
 
   const PLANETS = [
     { key:'gpt',      radius:180, speed:0.00038, angle:0.5,  size:10, glitchFrames:0, glitchR:180 },
-    { key:'claude',   radius:240, speed:0.00028, angle:1.9,  size:9,  glitchFrames:0, glitchR:240 },
+    { key:'deepseek', radius:240, speed:0.00028, angle:1.9,  size:9,  glitchFrames:0, glitchR:240 },
     { key:'gemini',   radius:300, speed:0.00020, angle:3.3,  size:8,  glitchFrames:0, glitchR:300 },
     { key:'mistral',  radius:360, speed:0.00015, angle:4.7,  size:9,  glitchFrames:0, glitchR:360 },
     { key:'grok',     radius:420, speed:0.00010, angle:0.2,  size:10, glitchFrames:0, glitchR:420 },
-    { key:'deepseek', radius:480, speed:0.00007, angle:2.1,  size:9,  glitchFrames:0, glitchR:480 },
   ];
   const RING_COLORS = ['#7C3AED','#3B82F6','#58DE83','#DA8E20','#CD4E14'];
 
@@ -3912,7 +3901,7 @@ function drawHeroLogo(canvas) {
   ctx.strokeStyle = 'rgba(31,90,56,0.6)'; ctx.lineWidth = 1; ctx.stroke();
 
   /* orbits */
-  const orbits = [0.12, 0.19, 0.26, 0.33, 0.40, 0.47];
+  const orbits = [0.12, 0.19, 0.26, 0.33, 0.40];
   orbits.forEach(r => {
     ctx.beginPath(); ctx.arc(cx, cy, W * r, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(31,90,56,0.35)'; ctx.lineWidth = 0.5; ctx.stroke();
@@ -3921,11 +3910,10 @@ function drawHeroLogo(canvas) {
   /* planets */
   const planets = [
     { key:'gpt',      r:0.12, angle: 0.5  },
-    { key:'claude',   r:0.19, angle: 1.9  },
+    { key:'deepseek', r:0.19, angle: 1.9  },
     { key:'gemini',   r:0.26, angle: 3.3  },
     { key:'mistral',  r:0.33, angle: 4.7  },
     { key:'grok',     r:0.40, angle: 0.2  },
-    { key:'deepseek', r:0.47, angle: 2.1  },
   ];
 
   planets.forEach(p => {
@@ -3980,7 +3968,7 @@ function initHeroLogo() {
 
   const speedMult  = [0.009, 0.006, 0.004, 0.003, 0.002];
   const baseAngles = [0.5, 1.9, 3.3, 4.7, 0.2];
-  const planetKeys = ['gpt','claude','gemini','mistral','grok','deepseek'];
+  const planetKeys = ['gpt','deepseek','gemini','mistral','grok'];
   const rads       = [0.12, 0.19, 0.26, 0.33, 0.40];
   const ringColors = ['#7C3AED','#3B82F6','#58DE83','#DA8E20','#CD4E14'];
 

@@ -89,11 +89,11 @@ MODELS = {
         "color": "#10a37f",
         "enabled": lambda: bool(OPENAI_KEY),
     },
-    "claude": {
-        "label": "Claude Sonnet 4.5",
-        "provider": "Anthropic",
-        "color": "#c96442",
-        "enabled": lambda: bool(ANTHROPIC_KEY),
+    "deepseek": {
+        "label": "DeepSeek R1",
+        "provider": "DeepSeek",
+        "color": "#06b6d4",
+        "enabled": lambda: bool(DEEPSEEK_KEY),
     },
     "gemini": {
         "label": "Gemini 2.5 Flash",
@@ -112,12 +112,6 @@ MODELS = {
         "provider": "Mistral",
         "color": "#f0a030",
         "enabled": lambda: bool(MISTRAL_KEY),
-    },
-    "deepseek": {
-        "label": "DeepSeek R1",
-        "provider": "DeepSeek",
-        "color": "#06b6d4",
-        "enabled": lambda: bool(DEEPSEEK_KEY),
     },
 }
 
@@ -477,11 +471,10 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
 
 CALLERS = {
     "gpt":      call_openai,
-    "claude":   call_anthropic,
+    "deepseek": call_deepseek,
     "gemini":   call_gemini,
     "grok":     call_grok,
     "mistral":  call_mistral,
-    "deepseek": call_deepseek,
 }
 
 
@@ -544,8 +537,8 @@ async def synthesize(session, question, results):
     judges = []
     if GOOGLE_KEY:
         judges.append(("gemini", call_gemini))
-    if ANTHROPIC_KEY:
-        judges.append(("claude", call_anthropic))
+    if DEEPSEEK_KEY:
+        judges.append(("deepseek", call_deepseek))
     if OPENAI_KEY:
         judges.append(("gpt", call_openai))
     if MISTRAL_KEY:
