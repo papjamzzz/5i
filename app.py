@@ -18,6 +18,7 @@ import uuid
 import hmac
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta
 import threading
 from collections import defaultdict
@@ -486,9 +487,6 @@ Begin."""
 
 async def synthesize(session, question, results):
     """Feed all model responses into the judge model — returns structured verdict dict."""
-    import json as _json
-    import re as _re
-
     responses_text = "\n\n".join(
         f"[{MODELS[k]['label']}]:\n{v}"
         for k, v in results.items()
@@ -540,8 +538,8 @@ async def synthesize(session, question, results):
 
     # Parse JSON — strip markdown fences if present
     try:
-        cleaned = _re.sub(r"```(?:json)?\s*|\s*```", "", raw).strip()
-        return _json.loads(cleaned)
+        cleaned = re.sub(r"```(?:json)?\s*|\s*```", "", raw).strip()
+        return json.loads(cleaned)
     except Exception:
         # Fallback: return raw text wrapped so UI doesn't break
         return {
