@@ -3590,7 +3590,7 @@ async function callModelStreaming(modelKey, { sysPrompt, userPrompt, maxTokens, 
   const proxyMap = {
     claude:  { url: '/proxy/claude',  extract: d => d.delta?.text || '' },
     gpt:     { url: '/proxy/gpt',     extract: d => d.choices?.[0]?.delta?.content || '' },
-    gemini:  { url: '/proxy/gemini',  extract: d => d.candidates?.[0]?.content?.parts?.[0]?.text || '' },
+    gemini:  { url: '/proxy/gemini',  extract: d => (d.candidates?.[0]?.content?.parts || []).find(p => !p.thought)?.text || '' },
     mistral: { url: '/proxy/mistral', extract: d => d.choices?.[0]?.delta?.content || '' },
     grok:    { url: '/proxy/grok',    extract: d => d.choices?.[0]?.delta?.content || '' },
   };

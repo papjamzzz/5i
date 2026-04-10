@@ -742,7 +742,7 @@ def proxy_gemini():
         url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={key}'
         try:
             r = req_lib.post(url, headers={'Content-Type': 'application/json'},
-                             json=body, stream=True, timeout=30)
+                             json=body, stream=True, timeout=90)
             if r.ok:
                 def generate(resp):
                     try:
