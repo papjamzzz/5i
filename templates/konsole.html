@@ -1951,10 +1951,20 @@ const MODELS = {
     orbit:5, active:true,
     apiKey: 'server',
   },
+  deepseek: {
+    name:'DeepSeek', short:'DSK', color:'#06B6D4', colorHi:'#67E8F9',
+    costPerMOutput:{ budget:0.14, standard:2.19, premium:2.19 },
+    premiumScore:0.85, budgetScore:0.96,
+    ttft:800, speedScore:0.45,
+    reliabilityPct:98.5, reliabilityScore:0.70,
+    agreeabilityScore:0.65,
+    orbit:6, active:true,
+    apiKey: 'server',
+  },
 };
 
 /* Model order: sequential synthesis chain */
-const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok'];
+const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok','deepseek'];
 
 /* ── COMPUTE WEIGHTS (equal weights for active models) ── */
 function computeWeights() {
@@ -2994,9 +3004,10 @@ async function callModelStreaming(modelKey, { sysPrompt, userPrompt, maxTokens, 
   const proxyMap = {
     claude:  { url: '/proxy/claude',  extract: d => d.delta?.text || '' },
     gpt:     { url: '/proxy/gpt',     extract: d => d.choices?.[0]?.delta?.content || '' },
-    gemini:  { url: '/proxy/gemini',  extract: d => (d.candidates?.[0]?.content?.parts || []).find(p => !p.thought)?.text || '' },
-    mistral: { url: '/proxy/mistral', extract: d => d.choices?.[0]?.delta?.content || '' },
-    grok:    { url: '/proxy/grok',    extract: d => d.choices?.[0]?.delta?.content || '' },
+    gemini:   { url: '/proxy/gemini',   extract: d => (d.candidates?.[0]?.content?.parts || []).find(p => !p.thought)?.text || '' },
+    mistral:  { url: '/proxy/mistral',  extract: d => d.choices?.[0]?.delta?.content || '' },
+    grok:     { url: '/proxy/grok',     extract: d => d.choices?.[0]?.delta?.content || '' },
+    deepseek: { url: '/proxy/deepseek', extract: d => d.choices?.[0]?.delta?.content || '' },
   };
   const p = proxyMap[modelKey];
   if (!p) throw new Error('Unknown model: ' + modelKey);

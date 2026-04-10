@@ -39,6 +39,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GOOGLE_KEY    = os.getenv("GOOGLE_API_KEY", "")
 GROK_KEY      = os.getenv("GROK_API_KEY", "")
 MISTRAL_KEY   = os.getenv("MISTRAL_API_KEY", "")
+DEEPSEEK_KEY  = os.getenv("DEEPSEEK_API_KEY", "")
 
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_SECRET_KEY     = os.getenv("STRIPE_SECRET_KEY", "")
@@ -111,6 +112,12 @@ MODELS = {
         "provider": "Mistral",
         "color": "#f0a030",
         "enabled": lambda: bool(MISTRAL_KEY),
+    },
+    "deepseek": {
+        "label": "DeepSeek R1",
+        "provider": "DeepSeek",
+        "color": "#06b6d4",
+        "enabled": lambda: bool(DEEPSEEK_KEY),
     },
 }
 
@@ -447,12 +454,34 @@ async def call_mistral(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_S
         return f"Error: {str(e)}"
 
 
+async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
+    try:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        async with session.post(
+            "https://api.deepseek.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
+            json={"model": "deepseek-reasoner", "messages": messages, "max_tokens": max_tokens},
+            timeout=MODEL_TIMEOUT
+        ) as r:
+            data = await r.json()
+            choices = data.get("choices") or []
+            if not choices:
+                return f"Error: {data.get('error', {}).get('message', str(data))}"
+            return choices[0]["message"]["content"]
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
 CALLERS = {
     "gpt":      call_openai,
     "claude":   call_anthropic,
     "gemini":   call_gemini,
     "grok":     call_grok,
     "mistral":  call_mistral,
+    "deepseek": call_deepseek,
 }
 
 
@@ -788,6 +817,21 @@ def proxy_grok():
         'https://api.x.ai/v1/chat/completions',
         {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
         {'model': 'grok-3-mini-beta', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
+         'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
+                      {'role': 'user', 'content': d.get('userPrompt', '')}]}
+    )
+
+
+@app.route('/proxy/deepseek', methods=['POST'])
+def proxy_deepseek():
+    d = request.json
+    key = d.get('apiKey') or DEEPSEEK_KEY
+    if not key:
+        return jsonify({"error": "No DeepSeek API key — add one via BYOK or set DEEPSEEK_API_KEY on the server"}), 503
+    return _stream_proxy(
+        'https://api.deepseek.com/v1/chat/completions',
+        {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
+        {'model': 'deepseek-reasoner', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
