@@ -251,6 +251,10 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes pulse-dot {
+  0%,80%,100% { transform: scale(0.6); opacity: 0.3; }
+  40%         { transform: scale(1.2); opacity: 1; }
+}
 @keyframes shake {
   0%,100% { transform: translateX(0); }
   20%      { transform: translateX(-3px); }
@@ -3205,7 +3209,7 @@ async function synthesize() {
   const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
 
   /* Token budget — Brief (default): 200 tokens + concise instruction. Research: 600 + full instruction. */
-  const MAX_TOKENS = researchMode ? 600 : 200;
+  const MAX_TOKENS = researchMode ? 600 : 150;
 
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
   btn.style.opacity = '0.75';
@@ -3230,7 +3234,11 @@ async function synthesize() {
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:${m.colorHi};">${m.name} · ORB-${m.orbit}</span>
       </div>
       <div id="si-out-${k}" style="font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:rgba(255,255,255,0.92);">
-        <span style="opacity:0.3;font-style:italic;">Waiting for ${m.name}…</span>
+        <span class="model-pulse" style="display:inline-flex;gap:3px;align-items:center;">
+          <span style="width:5px;height:5px;border-radius:50%;background:${m.color};opacity:0.9;animation:pulse-dot 1.2s ease-in-out infinite;animation-delay:0s"></span>
+          <span style="width:5px;height:5px;border-radius:50%;background:${m.color};opacity:0.9;animation:pulse-dot 1.2s ease-in-out infinite;animation-delay:0.2s"></span>
+          <span style="width:5px;height:5px;border-radius:50%;background:${m.color};opacity:0.9;animation:pulse-dot 1.2s ease-in-out infinite;animation-delay:0.4s"></span>
+        </span>
       </div>`;
     out.appendChild(block);
   });
@@ -3239,7 +3247,7 @@ async function synthesize() {
   /* ── PARALLEL FIRE — all models get the original prompt simultaneously ── */
   const parallelSysPrompt = userSysPrompt || (researchMode
     ? `Answer the following question directly and thoroughly. Be substantive and complete.`
-    : `Answer in one concise paragraph — 3 to 4 sentences maximum. Be direct and information-dense. No lists, no headers, no padding.`);
+    : `Respond in exactly 3 sentences. Be accurate and direct. No lists, no headers, no filler, no repetition.`);
 
   const modelPromises = activeModels.map(async k => {
     const m     = MODELS[k];
@@ -3257,7 +3265,7 @@ async function synthesize() {
         maxTokens:  MAX_TOKENS,
         signal:     synthController.signal,
         onToken: chunk => {
-          if (outEl.querySelector('span[style*="opacity:0.3"]')) outEl.innerHTML = '';
+          if (outEl.querySelector('.model-pulse')) outEl.innerHTML = '';
           outEl.textContent += chunk;
           out.scrollTop = out.scrollHeight;
         }
