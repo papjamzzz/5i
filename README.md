@@ -6,7 +6,7 @@
 
 **One prompt. Five AI models. One synthesized verdict.**
 
-5i sends your question to GPT-4o, Claude, Gemini, Grok, and DeepSeek simultaneously — in parallel, not sequence — then passes all five responses to a synthesis engine that identifies consensus, flags disagreements, and delivers a single authoritative verdict.
+5i sends your question to GPT-4o, Claude, Gemini, Grok, and Mistral simultaneously — in parallel, not sequence — then passes all five responses to a synthesis engine that identifies consensus, flags disagreements, and delivers a single authoritative verdict.
 
 It's not a chatbot. It's a thinking machine.
 
@@ -18,7 +18,7 @@ It's not a chatbot. It's a thinking machine.
 - **Synthesis pass** — after responses arrive, a judge model reads all five and produces one unified answer: what they agreed on, what they disagreed on, and the final verdict.
 - **Toggle any model** — disable individual models per query. Run 2 or 5, your call.
 - **Graceful degradation** — missing API keys auto-disable that model. App runs with whatever you have.
-- **500-char input cap** — keeps costs predictable.
+- **2000-char input cap** — keeps costs predictable.
 
 ---
 
@@ -27,10 +27,10 @@ It's not a chatbot. It's a thinking machine.
 | Key | Model | Provider | Env Var |
 |-----|-------|----------|---------|
 | gpt | GPT-4o | OpenAI | `OPENAI_API_KEY` |
-| claude | Claude 3.5 Sonnet | Anthropic | `ANTHROPIC_API_KEY` |
-| gemini | Gemini 1.5 Flash | Google | `GOOGLE_API_KEY` |
-| grok | Grok 2 | xAI | `GROK_API_KEY` |
-| deepseek | DeepSeek R1 | DeepSeek | `DEEPSEEK_API_KEY` |
+| claude | Claude Sonnet 4.5 | Anthropic | `ANTHROPIC_API_KEY` |
+| gemini | Gemini 2.5 Flash | Google | `GOOGLE_API_KEY` |
+| grok | Grok 3 Mini | xAI | `GROK_API_KEY` |
+| mistral | Mistral Small | Mistral | `MISTRAL_API_KEY` |
 
 ---
 
@@ -52,7 +52,7 @@ Opens at `http://127.0.0.1:5562`
 
 Python · Flask · aiohttp · asyncio · Vanilla JS · JetBrains Mono
 
-No external UI frameworks. No databases. No tracking. Runs local.
+No external UI frameworks. SQLite for subscriptions. No tracking. Runs local.
 
 ---
 
