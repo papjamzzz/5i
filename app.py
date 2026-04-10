@@ -313,9 +313,10 @@ def send_cancellation_email(to_email, refund_cents):
 
 # ── Individual model callers ──────────────────────────────────────────────────
 
-MODEL_TIMEOUT   = aiohttp.ClientTimeout(total=25)   # fail fast for all models
-GEMINI_TIMEOUT  = aiohttp.ClientTimeout(total=60)   # Gemini 2.5 Flash has a thinking phase (~15s) before output
-SYNTH_TIMEOUT   = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroom
+MODEL_TIMEOUT     = aiohttp.ClientTimeout(total=25)   # fail fast for standard models
+THINKING_TIMEOUT  = aiohttp.ClientTimeout(total=60)   # reasoning models: thinking phase runs before output
+GEMINI_TIMEOUT    = THINKING_TIMEOUT                  # alias — Gemini 2.5 Flash uses same budget
+SYNTH_TIMEOUT     = aiohttp.ClientTimeout(total=35)   # synthesis gets more headroom
 MAX_TOKENS      = 500   # model calls — enough for most answers, faster generation
 MAX_TOKENS_GEMINI = 800 # Gemini 2.5 Flash can be verbose; give it room to finish
 MAX_TOKENS_SYNTH  = 900 # synthesis output — needs room to cover all 5 responses
@@ -458,7 +459,7 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
             "https://api.deepseek.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
             json={"model": "deepseek-reasoner", "messages": messages, "max_tokens": max_tokens},
-            timeout=MODEL_TIMEOUT
+            timeout=THINKING_TIMEOUT  # 60s — R1 reasoning phase runs before output
         ) as r:
             data = await r.json()
             choices = data.get("choices") or []
@@ -516,22 +517,22 @@ Begin."""
 
 async def synthesize(session, question, results):
     """Feed all model responses into the judge model — returns structured verdict dict."""
+    valid = {k: v for k, v in results.items() if not v.startswith("Error:")}
     responses_text = "\n\n".join(
         f"[{MODELS[k]['label']}]:\n{v}"
-        for k, v in results.items()
-        if not v.startswith("Error:")
+        for k, v in valid.items()
     )
 
     if not responses_text:
         return {"error": "No valid model responses to synthesize."}
 
     full_prompt = SYNTHESIS_PROMPT.format(
-        n=len(results),
+        n=len(valid),   # count only models that actually responded
         question=question,
         responses=responses_text
     )
 
-    # Judge priority: Gemini Flash > Claude > GPT > Mistral
+    # Judge priority: Gemini Flash > DeepSeek > GPT > Mistral
     # Cascade — if the top judge fails, fall through to the next available model
     raw = None
     judges = []
