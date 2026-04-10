@@ -161,8 +161,8 @@ def init_db():
 
 try:
     init_db()
-except Exception:
-    pass  # /data may not exist locally — ok, DB init retried on first use
+except Exception as e:
+    print(f"[DB] init skipped: {e} — DB will be retried on first use", flush=True)
 
 
 def _check_and_reset(row):
