@@ -276,40 +276,6 @@ header > *, header .logo-mark, header .header-right { pointer-events: auto; }
 header:hover .btn-fullscreen { opacity: 1; }
 .logo-mark { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .logo-icon  { width: 38px; height: 38px; border-radius: 7px; }
-.logo-5i {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 26px;
-  color: var(--mint);
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
-.header-brand-5i {
-  display: flex; align-items: center; gap: 12px; flex-shrink: 0; text-decoration: none;
-}
-.header-brand-5i-logo {
-  width: 114px; height: 114px; object-fit: cover; object-position: center 47%;
-  border-radius: 14px; flex-shrink: 0;
-}
-.header-brand-5i-text {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1;
-  color: var(--mint);
-  text-shadow: 0 0 30px rgba(94,232,138,0.4);
-}
-.header-brand-ck {
-  display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0;
-}
-.header-brand-ck-logo {
-  width: 38px; height: 38px; object-fit: contain; border-radius: 8px; flex-shrink: 0;
-}
-.header-brand-ck-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-  color: rgba(255,255,255,0.45); line-height: 1.3;
-  transition: color 0.2s;
-}
-.header-brand-ck:hover .header-brand-ck-text { color: rgba(255,255,255,0.8); }
 
 /* ── COST METER ──────────────────────────────────────── */
 .cost-meter {
@@ -480,46 +446,6 @@ header:hover .btn-fullscreen { opacity: 1; }
   transition: opacity 0.3s;
 }
 .amp-signature:hover { opacity: 0.6; }
-.btn-console-toggle {
-  display: flex; align-items: center;
-  padding: 0 11px; height: 28px;
-  background: transparent;
-  border: 1px solid var(--border-dim);
-  border-radius: 4px; cursor: pointer;
-  color: var(--mint-dim);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 0.12em;
-  transition: all 0.15s; flex-shrink: 0;
-}
-.btn-console-toggle:hover,
-.btn-console-toggle.active {
-  border-color: var(--green);
-  color: var(--green);
-  background: rgba(61,255,122,0.06);
-}
-.btn-console-toggle.active { box-shadow: 0 0 10px rgba(61,255,122,0.15); }
-.btn-konsole {
-  display: flex; align-items: center; gap: 6px;
-  padding: 0 12px; height: 28px;
-  background: rgba(61,255,122,0.08);
-  border: 1px solid var(--border);
-  border-radius: 5px; cursor: pointer;
-  color: var(--green);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; letter-spacing: 0.1em; font-weight: 500;
-  transition: all 0.15s; flex-shrink: 0;
-}
-.btn-konsole:hover {
-  background: rgba(61,255,122,0.15);
-  border-color: var(--green-bright);
-  color: var(--green-bright);
-  box-shadow: 0 0 14px rgba(61,255,122,0.25);
-}
-[data-theme="light"] .btn-konsole {
-  background: rgba(26,107,53,0.07);
-  border-color: var(--border);
-  color: var(--green);
-}
 
 .btn-fullscreen {
   display: flex; align-items: center; justify-content: center;
@@ -1871,27 +1797,9 @@ header:hover .btn-fullscreen { opacity: 1; }
       </div>
     </div>
 
-    <!-- 5i — dead center -->
-    <div style="position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;">
-      <span style="
-        font-family:'JetBrains Mono',monospace;
-        font-size:10px;
-        font-weight:400;
-        letter-spacing:0.22em;
-        text-transform:uppercase;
-        color:rgba(232,250,242,0.45);
-        white-space:nowrap;
-      ">Five Minds. One Synthesis.</span>
-      <span style="
-        font-family:'Space Grotesk',sans-serif;
-        font-size:52px;
-        font-weight:900;
-        letter-spacing:-1px;
-        color:var(--mint);
-        text-shadow:0 0 30px rgba(94,232,138,0.5),0 0 60px rgba(94,232,138,0.2);
-        white-space:nowrap;
-        line-height:1;
-      ">5i</span>
+    <!-- 5i logo — dead center -->
+    <div style="position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;display:flex;align-items:center;justify-content:center;">
+      <img src="/static/logo.png" alt="5i" style="height:52px;width:52px;object-fit:cover;object-position:center 47%;border-radius:12px;" onerror="this.style.display='none'"/>
     </div>
 
     <button class="mobile-drawer-btn" onclick="toggleMobileDrawer()" title="Settings & Controls">
@@ -2965,17 +2873,6 @@ function toggleResearch() {
   document.getElementById('researchToggle').classList.toggle('on', researchMode);
 }
 
-/* ── CONSOLE PANEL TOGGLE ────────────────────────────── */
-let consoleOpen = true;
-function toggleConsole() {
-  consoleOpen = !consoleOpen;
-  document.querySelector('.main-grid').classList.toggle('console-closed', !consoleOpen);
-  document.getElementById('btnConsoleToggle').classList.toggle('active', consoleOpen);
-}
-// Boot with console visible, button lit
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('btnConsoleToggle').classList.add('active');
-});
 
 /* ── VST FX ENGINE ───────────────────────────────────── */
 let _actx, _src, _gain, _dist, _filt1, _filt2, _lfo1, _lfo1g, _lfo2, _lfo2g, _bp_dry, _bp_wet;

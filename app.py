@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 import threading
 from collections import defaultdict
 
-load_dotenv()
+load_dotenv(override=True)
 
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN", ""),
@@ -341,7 +341,7 @@ async def call_openai(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SY
 async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
         body = {
-            "model": "claude-3-5-sonnet-20240620",
+            "model": "claude-sonnet-4-5-20250929",
             "max_tokens": max_tokens,
             "messages": [{"role": "user", "content": prompt}]
         }
@@ -368,7 +368,7 @@ async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE
 
 async def call_gemini(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"maxOutputTokens": max_tokens}
@@ -693,7 +693,7 @@ def proxy_claude():
     return _stream_proxy(
         'https://api.anthropic.com/v1/messages',
         {'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
-        {'model': 'claude-3-5-sonnet-20240620', 'max_tokens': d.get('maxTokens', 1500),
+        {'model': 'claude-sonnet-4-5-20250929', 'max_tokens': d.get('maxTokens', 1500),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
@@ -714,20 +714,48 @@ def proxy_gpt():
     )
 
 
+GEMINI_MODELS_FALLBACK = [
+    'gemini-2.5-flash',
+    'gemini-flash-latest',
+    'gemini-2.5-flash-lite',
+    'gemini-pro-latest',
+]
+
 @app.route('/proxy/gemini', methods=['POST'])
 def proxy_gemini():
     d = request.json
     key = d.get('apiKey') or GOOGLE_KEY
     if not key:
         return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key={key}'
-    return _stream_proxy(
-        url,
-        {'Content-Type': 'application/json'},
-        {'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
-         'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
-         'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7}}
-    )
+    body = {
+        'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
+        'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
+        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7}
+    }
+    last_err = 'No Gemini model available'
+    for model in GEMINI_MODELS_FALLBACK:
+        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={key}'
+        try:
+            r = req_lib.post(url, headers={'Content-Type': 'application/json'},
+                             json=body, stream=True, timeout=30)
+            if r.ok:
+                def generate(resp):
+                    try:
+                        for chunk in resp.iter_content(chunk_size=None):
+                            if chunk:
+                                yield chunk
+                    except Exception as e:
+                        yield f"data: {{\"_err\": \"{str(e)}\"}}\n\n".encode()
+                    finally:
+                        resp.close()
+                return Response(stream_with_context(generate(r)),
+                                content_type='text/event-stream',
+                                headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
+            last_err = f"Upstream {r.status_code} ({model}): {r.text[:200]}"
+            r.close()
+        except Exception as e:
+            last_err = f"{model}: {str(e)}"
+    return jsonify({"error": last_err}), 503
 
 
 @app.route('/proxy/mistral', methods=['POST'])
