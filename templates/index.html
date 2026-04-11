@@ -508,38 +508,86 @@ header:hover .btn-fullscreen { opacity: 1; }
   text-shadow: 0 0 10px rgba(134,245,180,0.6);
 }
 
-/* ── HERO LOGO ───────────────────────────────────────── */
+/* ── SIGNAL BANNER ───────────────────────────────────── */
 .hero-logo-section {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 12px 0 8px;
+  display: flex; flex-direction: column; align-items: stretch;
+  padding: 10px 0 6px;
   position: relative;
 }
-.hero-logo-wrap {
-  position: relative;
-  width: 210px; height: 210px;
-  animation: float 6s ease-in-out infinite;
-  display: flex; align-items: center; justify-content: center;
+.signal-banner {
+  display: flex; align-items: center; gap: 0;
+  background: linear-gradient(135deg, rgba(13,31,21,0.95) 0%, rgba(9,20,14,0.95) 100%);
+  border: 1px solid rgba(88,222,131,0.22);
+  border-radius: 10px;
+  padding: 14px 18px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 0 28px rgba(88,222,131,0.07), inset 0 1px 0 rgba(88,222,131,0.12);
 }
-.hero-logo-wrap::before {
+.signal-banner::before {
   content: '';
-  position: absolute;
-  inset: -28px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(88,222,131,0.22) 0%, transparent 65%);
-  animation: pulse-ring 3s ease-in-out infinite;
+  position: absolute; top: 0; left: -100%; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(88,222,131,0.5), transparent);
+  animation: sb-scan 4s linear infinite;
 }
-.hero-logo-wrap::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 1px solid rgba(88,222,131,0.18);
-  box-shadow: 0 0 20px rgba(88,222,131,0.12), inset 0 0 20px rgba(88,222,131,0.06);
-  animation: pulse-ring 3.5s ease-in-out infinite 1.5s;
+@keyframes sb-scan {
+  0%   { left: -100%; }
+  100% { left: 100%; }
 }
-.hero-logo-canvas {
-  width: 200px; height: 200px;
-  cursor: crosshair;
+.sb-wordmark {
+  display: flex; align-items: baseline;
+  line-height: 1; flex-shrink: 0;
+  text-shadow: 0 0 18px rgba(88,222,131,0.7), 0 0 40px rgba(88,222,131,0.35);
+}
+.sb-5 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 54px; font-weight: 800; color: #58DE83;
+  letter-spacing: -3px; line-height: 1;
+}
+.sb-i {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 54px; font-weight: 300; color: rgba(195,253,216,0.75);
+  letter-spacing: -1px; line-height: 1;
+}
+.sb-divider {
+  width: 1px; height: 52px; flex-shrink: 0;
+  background: linear-gradient(180deg, transparent, rgba(88,222,131,0.3), transparent);
+  margin: 0 14px;
+}
+.sb-wave {
+  flex: 1; height: 52px; min-width: 0;
+}
+.sb-status {
+  flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 3px;
+}
+.sb-stat-main {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700; color: #58DE83;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(88,222,131,0.5);
+}
+.sb-stat-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px; letter-spacing: 1.5px; color: rgba(195,253,216,0.45);
+  text-transform: uppercase;
+}
+.sb-pulse-row {
+  display: flex; align-items: center; gap: 5px; margin-top: 2px;
+}
+.sb-pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #58DE83;
+  box-shadow: 0 0 8px rgba(88,222,131,0.8);
+  animation: sb-pulse 1.8s ease-in-out infinite;
+}
+@keyframes sb-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.sb-pulse-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; color: rgba(88,222,131,0.55);
+  text-transform: uppercase;
 }
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
@@ -1840,10 +1888,18 @@ header:hover .btn-fullscreen { opacity: 1; }
     <!-- ══ LEFT PANEL — LOGO + FADERS ════════════════ -->
     <div class="panel" id="leftPanel">
 
-      <!-- Hero Logo -->
+      <!-- Signal Banner -->
       <div class="hero-logo-section">
-        <div class="hero-logo-wrap">
-          <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
+        <div class="signal-banner" id="signalBanner">
+          <div class="sb-wordmark"><span class="sb-5">5</span><span class="sb-i">i</span></div>
+          <div class="sb-divider"></div>
+          <canvas class="sb-wave" id="waveCanvas" width="400" height="104"></canvas>
+          <div class="sb-divider"></div>
+          <div class="sb-status">
+            <div class="sb-stat-main">5 MODELS</div>
+            <div class="sb-stat-sub">Parallel Synthesis</div>
+            <div class="sb-pulse-row"><span class="sb-pulse-dot"></span><span class="sb-pulse-label">Live</span></div>
+          </div>
         </div>
         <div class="hero-subtitle">The AI Synthesis Consortium</div>
       </div>
@@ -3881,222 +3937,70 @@ function initOrbitalBackground() {
 /* ═══════════════════════════════════════════════════════
    HERO LOGO CANVAS — the big glowing orbital logo
 ═══════════════════════════════════════════════════════ */
-function drawHeroLogo(canvas) {
-  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-  if (!ctx) return;
-  const W = canvas.width, H = canvas.height;
-  const cx = W / 2, cy = H / 2;
-
-  ctx.clearRect(0, 0, W, H);
-
-  /* background circle */
-  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.5);
-  bgGrad.addColorStop(0, '#132018');
-  bgGrad.addColorStop(1, '#0B1210');
-  ctx.beginPath(); ctx.arc(cx, cy, W * 0.48, 0, Math.PI * 2);
-  ctx.fillStyle = bgGrad; ctx.fill();
-
-  /* outer ring */
-  ctx.beginPath(); ctx.arc(cx, cy, W * 0.47, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(31,90,56,0.6)'; ctx.lineWidth = 1; ctx.stroke();
-
-  /* orbits */
-  const orbits = [0.12, 0.19, 0.26, 0.33, 0.40];
-  orbits.forEach(r => {
-    ctx.beginPath(); ctx.arc(cx, cy, W * r, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(31,90,56,0.35)'; ctx.lineWidth = 0.5; ctx.stroke();
-  });
-
-  /* planets */
-  const planets = [
-    { key:'gpt',      r:0.12, angle: 0.5  },
-    { key:'deepseek', r:0.19, angle: 1.9  },
-    { key:'gemini',   r:0.26, angle: 3.3  },
-    { key:'mistral',  r:0.33, angle: 4.7  },
-    { key:'grok',     r:0.40, angle: 0.2  },
-  ];
-
-  planets.forEach(p => {
-    const m = MODELS[p.key];
-    const px = cx + Math.cos(p.angle) * W * p.r;
-    const py = cy + Math.sin(p.angle) * W * p.r;
-    const ps = W * 0.036;
-    /* glow */
-    const grd = ctx.createRadialGradient(px, py, 0, px, py, ps * 3);
-    grd.addColorStop(0, m.color + 'bb');
-    grd.addColorStop(1, m.color + '00');
-    ctx.beginPath(); ctx.arc(px, py, ps * 3, 0, Math.PI * 2);
-    ctx.fillStyle = grd; ctx.fill();
-    /* planet */
-    ctx.beginPath(); ctx.arc(px, py, ps, 0, Math.PI * 2);
-    ctx.fillStyle = m.color; ctx.fill();
-    /* connector */
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py);
-    ctx.strokeStyle = m.color + '22'; ctx.lineWidth = 0.5; ctx.stroke();
-  });
-
-  /* sine wave */
-  ctx.beginPath();
-  ctx.moveTo(cx - W * 0.28, cy);
-  for (let x = -W * 0.28; x <= W * 0.28; x += 2) {
-    const y = Math.sin((x / (W * 0.07))) * (W * 0.035);
-    ctx.lineTo(cx + x, cy + y);
-  }
-  ctx.strokeStyle = 'rgba(88,222,131,0.4)'; ctx.lineWidth = 1; ctx.stroke();
-
-  /* core glow */
-  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.06);
-  core.addColorStop(0, 'rgba(195,253,216,0.95)');
-  core.addColorStop(0.4, 'rgba(88,222,131,0.6)');
-  core.addColorStop(1, 'rgba(88,222,131,0)');
-  ctx.beginPath(); ctx.arc(cx, cy, W * 0.06, 0, Math.PI * 2);
-  ctx.fillStyle = core; ctx.fill();
-}
-
 function initHeroLogo() {
-  const canvas = document.getElementById('heroCanvas');
+  const canvas = document.getElementById('waveCanvas');
   if (!canvas) return;
-  let angle = 0;
-  let heroPaused = false;
+  const ctx = canvas.getContext('2d');
+  const modelColors = ['#7C3AED','#06B6D4','#4285F4','#DA8E20','#CD4E14'];
+  let t = 0;
+  let _last = 0;
 
-  /* Hover to freeze */
-  canvas.addEventListener('mouseenter', () => { heroPaused = true; });
-  canvas.addEventListener('mouseleave', () => { heroPaused = false; });
-
-  /* Glitch state */
-  const heroGlitches = {};
-
-  const speedMult  = [0.009, 0.006, 0.004, 0.003, 0.002];
-  const baseAngles = [0.5, 1.9, 3.3, 4.7, 0.2];
-  const planetKeys = ['gpt','deepseek','gemini','mistral','grok'];
-  const rads       = [0.12, 0.19, 0.26, 0.33, 0.40];
-  const ringColors = ['#7C3AED','#3B82F6','#58DE83','#DA8E20','#CD4E14'];
-
-  let _heroLastFrame = 0;
   function animate(ts) {
     requestAnimationFrame(animate);
-    if (ts - _heroLastFrame < 33.3) return; /* 30 fps cap */
-    _heroLastFrame = ts;
-    const ctx = canvas.getContext('2d');
+    if (ts - _last < 20) return; /* ~50fps */
+    _last = ts;
+    t += 0.018;
+
     const W = canvas.width, H = canvas.height;
-    const cx = W/2, cy = H/2;
+    const cy = H / 2;
     ctx.clearRect(0, 0, W, H);
 
-    if (!heroPaused) angle++;
+    /* centre axis */
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(W, cy);
+    ctx.strokeStyle = 'rgba(88,222,131,0.07)';
+    ctx.lineWidth = 1; ctx.stroke();
 
-    /* maybe glitch */
-    if (!heroPaused && Math.random() < 0.004) {
-      const i = Math.floor(Math.random() * planetKeys.length);
-      const j = Math.floor(Math.random() * planetKeys.length);
-      if (i !== j) {
-        const dur = Math.floor(Math.random() * 12) + 4;
-        heroGlitches[planetKeys[i]] = { r: rads[j], frames: dur };
-        heroGlitches[planetKeys[j]] = { r: rads[j], frames: dur };
-      }
-    }
+    /* 5 per-model waves — one for each model, stacked with slight offset */
+    const waves = [
+      { color: modelColors[0], amp: 0.30, freq: 1.1, phase: 0.0,  alpha: 0.55, lw: 1.0 },
+      { color: modelColors[1], amp: 0.22, freq: 1.7, phase: 1.2,  alpha: 0.45, lw: 0.8 },
+      { color: modelColors[2], amp: 0.18, freq: 2.3, phase: 2.5,  alpha: 0.40, lw: 0.8 },
+      { color: modelColors[3], amp: 0.14, freq: 0.8, phase: 0.7,  alpha: 0.35, lw: 0.7 },
+      { color: modelColors[4], amp: 0.12, freq: 3.1, phase: 1.9,  alpha: 0.30, lw: 0.7 },
+    ];
 
-    /* TRANSPARENT background — let the panel show through, just a very subtle disc */
-    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W*0.48);
-    bgGrad.addColorStop(0, 'rgba(19,32,24,0.35)');
-    bgGrad.addColorStop(0.65, 'rgba(11,18,16,0.15)');
-    bgGrad.addColorStop(1, 'rgba(11,18,16,0)');
-    ctx.beginPath(); ctx.arc(cx, cy, W*0.48, 0, Math.PI*2);
-    ctx.fillStyle = bgGrad; ctx.fill();
-
-    /* outer boundary ring — subtle glow */
-    ctx.save();
-    ctx.shadowBlur = 12; ctx.shadowColor = 'rgba(88,222,131,0.4)';
-    ctx.beginPath(); ctx.arc(cx, cy, W*0.455, 0, Math.PI*2);
-    ctx.strokeStyle = 'rgba(88,222,131,0.2)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.restore();
-
-    /* glowing orbital rings */
-    rads.forEach((r, i) => {
+    waves.forEach(w => {
       ctx.save();
-      ctx.shadowBlur = 10; ctx.shadowColor = ringColors[i] + '70';
-      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
-      ctx.strokeStyle = ringColors[i] + '60';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      /* soft outer glow ring */
-      ctx.shadowBlur = 3;
-      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(195,253,216,0.08)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.shadowBlur = 8; ctx.shadowColor = w.color;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 2) {
+        const norm = x / W;
+        const y = cy + Math.sin(norm * Math.PI * 2 * w.freq + t + w.phase) * (H * w.amp);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = w.color + Math.round(w.alpha * 255).toString(16).padStart(2,'0');
+      ctx.lineWidth = w.lw; ctx.stroke();
       ctx.restore();
     });
 
-    /* sine wave */
+    /* primary synthesis wave on top — bright green, glowing */
     ctx.save();
-    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(88,222,131,0.6)';
-    ctx.beginPath(); ctx.moveTo(cx - W*0.3, cy);
-    for (let x=-W*0.3; x<=W*0.3; x+=2) {
-      ctx.lineTo(cx+x, cy + Math.sin(x/(W*0.065) + angle*0.018) * (W*0.038));
+    ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(88,222,131,0.9)';
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 2) {
+      const norm = x / W;
+      /* sum of all 5 waves — "synthesis" */
+      const y = cy + waves.reduce((sum, w) =>
+        sum + Math.sin(norm * Math.PI * 2 * w.freq + t + w.phase) * (H * w.amp * 0.38), 0);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    ctx.strokeStyle='rgba(88,222,131,0.55)'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.strokeStyle = 'rgba(88,222,131,0.82)';
+    ctx.lineWidth = 1.6; ctx.stroke();
     ctx.restore();
-
-    /* planets */
-    planetKeys.forEach((k, i) => {
-      const m = MODELS[k];
-      const glitch = heroGlitches[k];
-      const effectiveR = (glitch && glitch.frames > 0) ? glitch.r : rads[i];
-      if (glitch) { glitch.frames--; if (glitch.frames <= 0) delete heroGlitches[k]; }
-
-      const a = baseAngles[i] + angle * speedMult[i];
-      const px = cx + Math.cos(a) * W * effectiveR;
-      const py = cy + Math.sin(a) * W * effectiveR;
-      const ps = W * 0.038;
-      const isGlitching = !!glitch;
-
-      ctx.save();
-      ctx.shadowBlur = isGlitching ? 28 : 16;
-      ctx.shadowColor = m.color;
-
-      /* planet halo */
-      const grd = ctx.createRadialGradient(px,py,0,px,py,ps*3.5);
-      grd.addColorStop(0, m.color+'cc'); grd.addColorStop(0.5, m.color+'44'); grd.addColorStop(1, m.color+'00');
-      ctx.beginPath(); ctx.arc(px,py,ps*3.5,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
-
-      /* glitch ghost */
-      if (isGlitching && Math.random() < 0.5) {
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath(); ctx.arc(px + (Math.random()-0.5)*8, py, ps*0.9, 0, Math.PI*2);
-        ctx.fillStyle = m.color; ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-
-      /* planet body */
-      ctx.beginPath(); ctx.arc(px,py,ps,0,Math.PI*2); ctx.fillStyle=m.color; ctx.fill();
-      /* specular */
-      ctx.beginPath(); ctx.arc(px-ps*0.28, py-ps*0.28, ps*0.22, 0, Math.PI*2);
-      ctx.fillStyle='rgba(255,255,255,0.68)'; ctx.fill();
-
-      /* connector line */
-      ctx.shadowBlur = 0;
-      ctx.globalAlpha = 0.25;
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py);
-      ctx.strokeStyle=m.color; ctx.lineWidth=0.7; ctx.stroke();
-      ctx.restore();
-    });
-
-    /* core pulse */
-    ctx.save();
-    const pulse = 0.055 + Math.sin(angle * 0.04) * 0.008;
-    ctx.shadowBlur = 24; ctx.shadowColor = 'rgba(88,222,131,0.9)';
-    const core = ctx.createRadialGradient(cx,cy,0,cx,cy,W*pulse);
-    core.addColorStop(0,'rgba(220,255,236,1)');
-    core.addColorStop(0.3,'rgba(105,240,155,0.9)');
-    core.addColorStop(0.7,'rgba(88,222,131,0.4)');
-    core.addColorStop(1,'rgba(88,222,131,0)');
-    ctx.beginPath(); ctx.arc(cx,cy,W*pulse*1.5,0,Math.PI*2); ctx.fillStyle=core; ctx.fill();
-    ctx.restore();
-
   }
-  requestAnimationFrame(animate);
 
-  /* Small logo icon for header — now an <img>, drawHeroLogo is a no-op on non-canvas */
+  requestAnimationFrame(animate);
 }
 
 /* ═══════════════════════════════════════════════════════
