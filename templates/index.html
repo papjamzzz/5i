@@ -475,7 +475,7 @@ header:hover .btn-fullscreen { opacity: 1; }
   grid-template-columns: 270px 1fr 270px;
   gap: 0;
   min-height: 100vh;
-  padding-top: 62px;
+  padding-top: 110px;
 }
 .main-grid.console-closed {
   grid-template-columns: 0px 1fr 270px;
@@ -585,20 +585,21 @@ header:hover .btn-fullscreen { opacity: 1; }
   text-transform: uppercase;
 }
 
-/* ── HEADER SIGNAL BANNER — slim, centered in header ── */
+/* ── HEADER SIGNAL BANNER — centered, fixed at top ── */
 .header-signal-banner {
   position: absolute; left: 50%; transform: translateX(-50%);
   pointer-events: auto;
-  width: 480px; max-width: calc(100vw - 260px);
-  padding: 9px 16px;
+  width: 720px; max-width: calc(100vw - 200px);
+  padding: 13px 20px;
 }
 .header-signal-banner .sb-5,
-.header-signal-banner .sb-i  { font-size: 36px; }
-.header-signal-banner .sb-divider { height: 34px; margin: 0 10px; }
-.header-signal-banner .sb-wave   { height: 34px; }
-.header-signal-banner .sb-stat-main { font-size: 11px; }
-.header-signal-banner .sb-stat-sub  { font-size: 7.5px; }
-.header-signal-banner .sb-pulse-dot { width: 5px; height: 5px; }
+.header-signal-banner .sb-i  { font-size: 54px; }
+.header-signal-banner .sb-divider { height: 52px; margin: 0 14px; }
+.header-signal-banner .sb-wave   { height: 52px; }
+.header-signal-banner .sb-stat-main { font-size: 16px; }
+.header-signal-banner .sb-stat-sub  { font-size: 10px; }
+.header-signal-banner .sb-pulse-dot { width: 7px; height: 7px; }
+.header-signal-banner .sb-pulse-label { font-size: 9px; }
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 19px; font-weight: 700; color: var(--mint);
@@ -1863,7 +1864,7 @@ header:hover .btn-fullscreen { opacity: 1; }
     <div class="signal-banner header-signal-banner" id="signalBanner">
       <div class="sb-wordmark"><span class="sb-5">5</span><span class="sb-i">i</span></div>
       <div class="sb-divider"></div>
-      <canvas class="sb-wave" id="waveCanvas" width="400" height="68"></canvas>
+      <canvas class="sb-wave" id="waveCanvas" width="600" height="104"></canvas>
       <div class="sb-divider"></div>
       <div class="sb-status">
         <div class="sb-stat-main">5 MODELS</div>
