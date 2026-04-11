@@ -509,11 +509,6 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 
 /* ── SIGNAL BANNER ───────────────────────────────────── */
-.hero-logo-section {
-  display: flex; flex-direction: column; align-items: stretch;
-  padding: 10px 0 6px;
-  position: relative;
-}
 .signal-banner {
   display: flex; align-items: center; gap: 0;
   background: linear-gradient(135deg, rgba(13,31,21,0.95) 0%, rgba(9,20,14,0.95) 100%);
@@ -589,6 +584,21 @@ header:hover .btn-fullscreen { opacity: 1; }
   font-size: 8px; letter-spacing: 2px; color: rgba(88,222,131,0.55);
   text-transform: uppercase;
 }
+
+/* ── HEADER SIGNAL BANNER — slim, centered in header ── */
+.header-signal-banner {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  pointer-events: auto;
+  width: 480px; max-width: calc(100vw - 260px);
+  padding: 9px 16px;
+}
+.header-signal-banner .sb-5,
+.header-signal-banner .sb-i  { font-size: 36px; }
+.header-signal-banner .sb-divider { height: 34px; margin: 0 10px; }
+.header-signal-banner .sb-wave   { height: 34px; }
+.header-signal-banner .sb-stat-main { font-size: 11px; }
+.header-signal-banner .sb-stat-sub  { font-size: 7.5px; }
+.header-signal-banner .sb-pulse-dot { width: 5px; height: 5px; }
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 19px; font-weight: 700; color: var(--mint);
@@ -1849,9 +1859,17 @@ header:hover .btn-fullscreen { opacity: 1; }
       </div>
     </div>
 
-    <!-- 5i logo — dead center -->
-    <div style="position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;display:flex;align-items:center;justify-content:center;">
-      <img src="/static/logo.png" alt="5i" style="height:52px;width:52px;object-fit:cover;object-position:center 47%;border-radius:12px;" onerror="this.style.display='none'"/>
+    <!-- Signal banner — dead center -->
+    <div class="signal-banner header-signal-banner" id="signalBanner">
+      <div class="sb-wordmark"><span class="sb-5">5</span><span class="sb-i">i</span></div>
+      <div class="sb-divider"></div>
+      <canvas class="sb-wave" id="waveCanvas" width="400" height="68"></canvas>
+      <div class="sb-divider"></div>
+      <div class="sb-status">
+        <div class="sb-stat-main">5 MODELS</div>
+        <div class="sb-stat-sub">Parallel Synthesis</div>
+        <div class="sb-pulse-row"><span class="sb-pulse-dot"></span><span class="sb-pulse-label">Live</span></div>
+      </div>
     </div>
 
     <button class="mobile-drawer-btn" onclick="toggleMobileDrawer()" title="Settings & Controls">
@@ -1888,21 +1906,6 @@ header:hover .btn-fullscreen { opacity: 1; }
     <!-- ══ LEFT PANEL — LOGO + FADERS ════════════════ -->
     <div class="panel" id="leftPanel">
 
-      <!-- Signal Banner -->
-      <div class="hero-logo-section">
-        <div class="signal-banner" id="signalBanner">
-          <div class="sb-wordmark"><span class="sb-5">5</span><span class="sb-i">i</span></div>
-          <div class="sb-divider"></div>
-          <canvas class="sb-wave" id="waveCanvas" width="400" height="104"></canvas>
-          <div class="sb-divider"></div>
-          <div class="sb-status">
-            <div class="sb-stat-main">5 MODELS</div>
-            <div class="sb-stat-sub">Parallel Synthesis</div>
-            <div class="sb-pulse-row"><span class="sb-pulse-dot"></span><span class="sb-pulse-label">Live</span></div>
-          </div>
-        </div>
-        <div class="hero-subtitle">The AI Synthesis Consortium</div>
-      </div>
 
       <!-- Fader Bank -->
       <div>
