@@ -600,6 +600,29 @@ header:hover .btn-fullscreen { opacity: 1; }
 .header-signal-banner .sb-stat-sub  { font-size: 10px; }
 .header-signal-banner .sb-pulse-dot { width: 7px; height: 7px; }
 .header-signal-banner .sb-pulse-label { font-size: 9px; }
+/* ── HERO LOGO (solar system) ────────────────────────── */
+.hero-logo-section {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0 8px; position: relative;
+}
+.hero-logo-wrap {
+  position: relative; width: 210px; height: 210px;
+  animation: float 6s ease-in-out infinite;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-logo-wrap::before {
+  content: ''; position: absolute; inset: -28px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(88,222,131,0.22) 0%, transparent 65%);
+  animation: pulse-ring 3s ease-in-out infinite;
+}
+.hero-logo-wrap::after {
+  content: ''; position: absolute; inset: -8px; border-radius: 50%;
+  border: 1px solid rgba(88,222,131,0.18);
+  box-shadow: 0 0 20px rgba(88,222,131,0.12), inset 0 0 20px rgba(88,222,131,0.06);
+  animation: pulse-ring 3.5s ease-in-out infinite 1.5s;
+}
+.hero-logo-canvas { width: 200px; height: 200px; cursor: crosshair; }
+
 .hero-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 19px; font-weight: 700; color: var(--mint);
@@ -1907,6 +1930,13 @@ header:hover .btn-fullscreen { opacity: 1; }
     <!-- ══ LEFT PANEL — LOGO + FADERS ════════════════ -->
     <div class="panel" id="leftPanel">
 
+      <!-- Solar System -->
+      <div class="hero-logo-section">
+        <div class="hero-logo-wrap">
+          <canvas class="hero-logo-canvas" id="heroCanvas" width="400" height="400"></canvas>
+        </div>
+        <div class="hero-subtitle">The AI Synthesis Consortium</div>
+      </div>
 
       <!-- Fader Bank -->
       <div>
@@ -3939,9 +3969,109 @@ function initOrbitalBackground() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   HERO LOGO CANVAS — the big glowing orbital logo
+   ORBITAL SOLAR SYSTEM — left panel
 ═══════════════════════════════════════════════════════ */
 function initHeroLogo() {
+  const canvas = document.getElementById('heroCanvas');
+  if (!canvas) return;
+  let angle = 0, heroPaused = false;
+  canvas.addEventListener('mouseenter', () => { heroPaused = true; });
+  canvas.addEventListener('mouseleave', () => { heroPaused = false; });
+  const heroGlitches = {};
+  const speedMult  = [0.009, 0.006, 0.004, 0.003, 0.002];
+  const baseAngles = [0.5, 1.9, 3.3, 4.7, 0.2];
+  const planetKeys = ['gpt','deepseek','gemini','mistral','grok'];
+  const rads       = [0.12, 0.19, 0.26, 0.33, 0.40];
+  const ringColors = ['#7C3AED','#06B6D4','#4285F4','#DA8E20','#CD4E14'];
+  let _heroLastFrame = 0;
+  function animate(ts) {
+    requestAnimationFrame(animate);
+    if (ts - _heroLastFrame < 33.3) return;
+    _heroLastFrame = ts;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2;
+    ctx.clearRect(0, 0, W, H);
+    if (!heroPaused) angle++;
+    if (!heroPaused && Math.random() < 0.004) {
+      const i = Math.floor(Math.random() * planetKeys.length);
+      const j = Math.floor(Math.random() * planetKeys.length);
+      if (i !== j) {
+        const dur = Math.floor(Math.random() * 12) + 4;
+        heroGlitches[planetKeys[i]] = { r: rads[j], frames: dur };
+        heroGlitches[planetKeys[j]] = { r: rads[j], frames: dur };
+      }
+    }
+    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W*0.48);
+    bgGrad.addColorStop(0, 'rgba(19,32,24,0.35)');
+    bgGrad.addColorStop(0.65, 'rgba(11,18,16,0.15)');
+    bgGrad.addColorStop(1, 'rgba(11,18,16,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.48, 0, Math.PI*2);
+    ctx.fillStyle = bgGrad; ctx.fill();
+    ctx.save();
+    ctx.shadowBlur = 12; ctx.shadowColor = 'rgba(88,222,131,0.4)';
+    ctx.beginPath(); ctx.arc(cx, cy, W*0.455, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(88,222,131,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+    rads.forEach((r, i) => {
+      ctx.save();
+      ctx.shadowBlur = 10; ctx.shadowColor = ringColors[i] + '70';
+      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
+      ctx.strokeStyle = ringColors[i] + '60'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.shadowBlur = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, W*r, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(195,253,216,0.08)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.restore();
+    });
+    ctx.save();
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(88,222,131,0.6)';
+    ctx.beginPath(); ctx.moveTo(cx - W*0.3, cy);
+    for (let x=-W*0.3; x<=W*0.3; x+=2)
+      ctx.lineTo(cx+x, cy + Math.sin(x/(W*0.065) + angle*0.018) * (W*0.038));
+    ctx.strokeStyle='rgba(88,222,131,0.55)'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.restore();
+    planetKeys.forEach((k, i) => {
+      const m = MODELS[k];
+      const glitch = heroGlitches[k];
+      const effectiveR = (glitch && glitch.frames > 0) ? glitch.r : rads[i];
+      if (glitch) { glitch.frames--; if (glitch.frames <= 0) delete heroGlitches[k]; }
+      const a = baseAngles[i] + angle * speedMult[i];
+      const px = cx + Math.cos(a) * W * effectiveR;
+      const py = cy + Math.sin(a) * W * effectiveR;
+      const ps = W * 0.038;
+      ctx.save();
+      ctx.shadowBlur = glitch ? 28 : 16; ctx.shadowColor = m.color;
+      const grd = ctx.createRadialGradient(px,py,0,px,py,ps*3.5);
+      grd.addColorStop(0, m.color+'cc'); grd.addColorStop(0.5, m.color+'44'); grd.addColorStop(1, m.color+'00');
+      ctx.beginPath(); ctx.arc(px,py,ps*3.5,0,Math.PI*2); ctx.fillStyle=grd; ctx.fill();
+      if (glitch && Math.random() < 0.5) {
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath(); ctx.arc(px+(Math.random()-0.5)*8, py, ps*0.9, 0, Math.PI*2);
+        ctx.fillStyle = m.color; ctx.fill(); ctx.globalAlpha = 1;
+      }
+      ctx.beginPath(); ctx.arc(px,py,ps,0,Math.PI*2); ctx.fillStyle=m.color; ctx.fill();
+      ctx.beginPath(); ctx.arc(px-ps*0.28, py-ps*0.28, ps*0.22, 0, Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,0.68)'; ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 0.25;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py);
+      ctx.strokeStyle=m.color; ctx.lineWidth=0.7; ctx.stroke();
+      ctx.restore();
+    });
+    ctx.save();
+    const pulse = 0.055 + Math.sin(angle*0.04)*0.008;
+    ctx.shadowBlur = 24; ctx.shadowColor = 'rgba(88,222,131,0.9)';
+    const core = ctx.createRadialGradient(cx,cy,0,cx,cy,W*pulse);
+    core.addColorStop(0,'rgba(220,255,236,1)'); core.addColorStop(0.3,'rgba(105,240,155,0.9)');
+    core.addColorStop(0.7,'rgba(88,222,131,0.4)'); core.addColorStop(1,'rgba(88,222,131,0)');
+    ctx.beginPath(); ctx.arc(cx,cy,W*pulse*1.5,0,Math.PI*2); ctx.fillStyle=core; ctx.fill();
+    ctx.restore();
+  }
+  requestAnimationFrame(animate);
+}
+
+/* ═══════════════════════════════════════════════════════
+   WAVEFORM BANNER — header signal panel
+═══════════════════════════════════════════════════════ */
+function initWaveBanner() {
   const canvas = document.getElementById('waveCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -4080,6 +4210,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initFaders();
   initOrbitalBackground();
   initHeroLogo();
+  initWaveBanner();
   initCpuMeter();
   buildRankings();
   /* Auto-load from 5i-keys.js if present (local only, gitignored) */
