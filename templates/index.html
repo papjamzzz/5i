@@ -269,7 +269,7 @@ body {
 /* ── HEADER — floating, no bar ───────────────────────── */
 header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 22px;
+  padding: 0 22px; height: 110px;
   background: transparent;
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   gap: 14px;
@@ -587,7 +587,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 
 /* ── HEADER SIGNAL BANNER — centered, fixed at top ── */
 .header-signal-banner {
-  position: absolute; left: 50%; transform: translateX(-50%);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: auto;
   width: 720px; max-width: calc(100vw - 200px);
   padding: 13px 20px;
@@ -603,7 +603,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 /* ── HERO LOGO (solar system) ────────────────────────── */
 .hero-logo-section {
   display: flex; flex-direction: column; align-items: center;
-  padding: 12px 0 8px; position: relative;
+  padding: 2px 0 4px; position: relative;
 }
 .hero-logo-wrap {
   position: relative; width: 210px; height: 210px;
