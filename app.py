@@ -376,7 +376,7 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS_GEMINI, system=RESP
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": max_tokens}
+            "generationConfig": {"maxOutputTokens": max_tokens, "thinkingConfig": {"thinkingBudget": 0}}
         }
         if system:
             body["system_instruction"] = {"parts": [{"text": system}]}
@@ -458,7 +458,7 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
         async with session.post(
             "https://api.deepseek.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"},
-            json={"model": "deepseek-reasoner", "messages": messages, "max_tokens": max_tokens},
+            json={"model": "deepseek-chat", "messages": messages, "max_tokens": max_tokens},
             timeout=THINKING_TIMEOUT  # 60s — R1 reasoning phase runs before output
         ) as r:
             data = await r.json()
@@ -758,7 +758,7 @@ def proxy_gemini():
     body = {
         'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
         'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
-        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7}
+        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500), 'temperature': 0.7, 'thinkingConfig': {'thinkingBudget': 0}}
     }
     last_err = 'No Gemini model available'
     for model in GEMINI_MODELS_FALLBACK:
@@ -825,7 +825,7 @@ def proxy_deepseek():
     return _stream_proxy(
         'https://api.deepseek.com/v1/chat/completions',
         {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-        {'model': 'deepseek-reasoner', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
+        {'model': 'deepseek-chat', 'max_tokens': d.get('maxTokens', 1500), 'stream': True,
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
