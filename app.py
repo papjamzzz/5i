@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 import threading
 from collections import defaultdict
 
-load_dotenv(override=True)
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
 
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN", ""),
@@ -88,6 +88,12 @@ MODELS = {
         "provider": "OpenAI",
         "color": "#10a37f",
         "enabled": lambda: bool(OPENAI_KEY),
+    },
+    "claude": {
+        "label": "Claude 3.5 Sonnet",
+        "provider": "Anthropic",
+        "color": "#d4a27a",
+        "enabled": lambda: bool(ANTHROPIC_KEY),
     },
     "deepseek": {
         "label": "DeepSeek R1",
@@ -376,7 +382,7 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS_GEMINI, system=RESP
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GOOGLE_KEY}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": max_tokens, "thinkingConfig": {"thinkingBudget": 0}}
+            "generationConfig": {"maxOutputTokens": max_tokens}
         }
         if system:
             body["system_instruction"] = {"parts": [{"text": system}]}
@@ -388,8 +394,10 @@ async def call_gemini(session, prompt, max_tokens=MAX_TOKENS_GEMINI, system=RESP
         ) as r:
             data = await r.json()
             if "candidates" not in data:
-                block = data.get("promptFeedback", {}).get("blockReason", "no candidates returned")
-                return f"Error: {block}"
+                block = data.get("promptFeedback", {}).get("blockReason", "")
+                err_msg = data.get("error", {}).get("message", "") if "error" in data else ""
+                detail = block or err_msg or str(data)[:120]
+                return f"Error: {detail}"
             candidate = data["candidates"][0]
             finish = candidate.get("finishReason", "")
             # Handle safety-blocked or empty candidates
@@ -472,6 +480,7 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
 
 CALLERS = {
     "gpt":      call_openai,
+    "claude":   call_anthropic,
     "deepseek": call_deepseek,
     "gemini":   call_gemini,
     "grok":     call_grok,
