@@ -4522,5 +4522,11 @@ document.addEventListener('DOMContentLoaded', () => {
   </button>
 </div>
 
+<script>
+  // Auto-set owner bypass when running locally
+  if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+    localStorage.setItem('5i_owner', 'true');
+  }
+</script>
 </body>
 </html>
