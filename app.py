@@ -8,6 +8,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 import os
 import asyncio
+import concurrent.futures
 import aiohttp
 import requests as req_lib
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
@@ -24,6 +25,22 @@ import threading
 from collections import defaultdict
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'), override=True)
+
+def _run_async(coro):
+    """
+    Run an async coroutine safely whether or not an event loop is already running.
+    gevent monkey-patching creates a running loop — asyncio.run() crashes in that case.
+    This helper always spawns a fresh thread with its own loop to avoid the conflict.
+    """
+    def _in_thread():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+        return ex.submit(_in_thread).result()
 
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN", ""),
@@ -660,9 +677,9 @@ def ask():
     start = time.time()
 
     if want_verdict:
-        results, verdict = asyncio.run(query_all_with_verdict(prompt, selected))
+        results, verdict = _run_async(query_all_with_verdict(prompt, selected))
     else:
-        results = asyncio.run(query_all(prompt, selected))
+        results = _run_async(query_all(prompt, selected))
         verdict = None
 
     if use_token:
@@ -687,7 +704,7 @@ def render_verdict():
             return await synthesize(session, prompt, results)
 
     start = time.time()
-    verdict = asyncio.run(_synth())
+    verdict = _run_async(_synth())
     elapsed = round(time.time() - start, 1)
     return jsonify({"verdict": verdict, "elapsed": elapsed})
 
@@ -1224,7 +1241,7 @@ def kalshi_fusion_analyze():
     )
 
     start = time.time()
-    results, verdict = asyncio.run(query_all_with_verdict(prompt, selected))
+    results, verdict = _run_async(query_all_with_verdict(prompt, selected))
     elapsed = round(time.time() - start, 1)
 
     # Parse individual model probabilities + edge/risk
