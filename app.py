@@ -247,7 +247,7 @@ def send_token_email(to_email, token, plan_name):
                   <h2 style="color:#fff;margin:0 0 16px;">Welcome to 5i — {plan_name}</h2>
                   <p style="color:rgba(255,255,255,0.65);margin:0 0 12px;">Your access token:</p>
                   <pre style="background:#0F1A16;padding:16px;border-radius:4px;font-size:16px;color:#86F5B4;border:1px solid #2E8C52;word-break:break-all;">{token}</pre>
-                  <p style="color:rgba(255,255,255,0.65);margin:16px 0 0;">Open <a href="https://web-production-94a13.up.railway.app" style="color:#5EE88A;">5i</a>, click the TOKEN field in the toolbar, and paste it in. It saves automatically.</p>
+                  <p style="color:rgba(255,255,255,0.65);margin:16px 0 0;">Open <a href="https://5i.creativekonsoles.com" style="color:#5EE88A;">5i</a>, click the TOKEN field in the toolbar, and paste it in. It saves automatically.</p>
                   <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:24px 0 0;">Keep this token private. It is tied to your subscription.</p>
                 </div>
                 """
@@ -1315,7 +1315,7 @@ def kalshi_fusion_analyze():
 @app.route("/robots.txt")
 def robots():
     return app.response_class(
-        "User-agent: *\nAllow: /\nSitemap: https://web-production-94a13.up.railway.app/sitemap.xml\n",
+        "User-agent: *\nAllow: /\nSitemap: https://5i.creativekonsoles.com/sitemap.xml\n",
         mimetype="text/plain"
     )
 
@@ -1323,7 +1323,7 @@ def robots():
 def sitemap():
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-           '<url><loc>https://web-production-94a13.up.railway.app/</loc>'
+           '<url><loc>https://5i.creativekonsoles.com/</loc>'
            '<changefreq>daily</changefreq><priority>1.0</priority></url>'
            '</urlset>')
     return app.response_class(xml, mimetype="application/xml")
