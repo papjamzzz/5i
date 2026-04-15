@@ -1312,6 +1312,23 @@ def kalshi_fusion_analyze():
     })
 
 
+@app.route("/robots.txt")
+def robots():
+    return app.response_class(
+        "User-agent: *\nAllow: /\nSitemap: https://web-production-94a13.up.railway.app/sitemap.xml\n",
+        mimetype="text/plain"
+    )
+
+@app.route("/sitemap.xml")
+def sitemap():
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+           '<url><loc>https://web-production-94a13.up.railway.app/</loc>'
+           '<changefreq>daily</changefreq><priority>1.0</priority></url>'
+           '</urlset>')
+    return app.response_class(xml, mimetype="application/xml")
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5562))
     host = "0.0.0.0" if os.getenv("PORT") else "127.0.0.1"
