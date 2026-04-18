@@ -495,6 +495,35 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
         return f"Error: {str(e)}"
 
 
+
+async def call_o3mini(session, prompt, max_tokens=MAX_TOKENS_SYNTH, system=None):
+    """o3-mini: OpenAI reasoning model — dedicated synthesis judge."""
+    try:
+        messages = []
+        # o3-mini uses 'developer' role instead of 'system'
+        if system:
+            messages.append({"role": "developer", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        async with session.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENAI_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": "o3-mini",
+                "messages": messages,
+                "max_completion_tokens": max_tokens,
+                # Note: temperature not supported on reasoning models
+            },
+            timeout=THINKING_TIMEOUT
+        ) as r:
+            data = await r.json()
+            choices = data.get("choices") or []
+            if not choices:
+                return f"Error: {data.get('error', {}).get('message', str(data))}"
+            return choices[0]["message"]["content"]
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
 CALLERS = {
     "gpt":      call_openai,
     "claude":   call_anthropic,
@@ -558,10 +587,12 @@ async def synthesize(session, question, results):
         responses=responses_text
     )
 
-    # Judge priority: Claude > Gemini Flash > GPT > Mistral
+    # Judge priority: o3-mini > Claude > Gemini Flash > GPT > Mistral
     # Cascade — if the top judge fails, fall through to the next available model
     raw = None
     judges = []
+    if OPENAI_KEY:
+        judges.append(("o3-mini", call_o3mini))
     if ANTHROPIC_KEY:
         judges.append(("claude", call_anthropic))
     if GOOGLE_KEY:
