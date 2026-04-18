@@ -1055,6 +1055,23 @@ header:hover .btn-fullscreen { opacity: 1; }
 }
 .prompt-textarea::placeholder { color: rgba(232,250,242,0.55); font-size: 18px; }
 
+  /* ── Mic Button ── */
+  .mic-btn {
+    position: absolute; bottom: 52px; right: 12px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface-2, #1a2a20); border: 1px solid var(--border-dim, rgba(94,232,138,0.15));
+    color: rgba(94,232,138,0.5); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; z-index: 5;
+  }
+  .mic-btn:hover { border-color: rgba(94,232,138,0.4); color: rgba(94,232,138,0.9); }
+  .mic-btn.listening {
+    background: rgba(220,50,50,0.15); border-color: rgba(220,50,50,0.6);
+    color: #ff4444; animation: mic-pulse 1s ease-in-out infinite;
+  }
+  @keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,50,50,0.4)} 50%{box-shadow:0 0 0 8px rgba(220,50,50,0)} }
+
+
 /* ── DEVELOPER TOOLBAR ───────────────────────────────── */
 .dev-toolbar {
   background: var(--bg4);
@@ -2159,7 +2176,7 @@ header:hover .btn-fullscreen { opacity: 1; }
           <div class="token-counter">Tokens: <span id="tokenCount">0</span></div>
         </div>
 
-        <div class="prompt-area">
+        <div class="prompt-area" style="position:relative">
           <textarea
             class="prompt-textarea"
             id="promptInput"
@@ -2167,6 +2184,15 @@ header:hover .btn-fullscreen { opacity: 1; }
             placeholder="Enter your prompt. Press ⌘↵ to run through 5i…"
             rows="6"
           ></textarea>
+
+          <!-- Mic button -->
+          <button class="mic-btn" id="micBtn" title="Voice input" onclick="toggleMic()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="5" y="1" width="6" height="9" rx="3"/>
+              <path d="M2 8c0 3.3 2.7 6 6 6s6-2.7 6-6"/>
+              <line x1="8" y1="14" x2="8" y2="16"/>
+            </svg>
+          </button>
 
           <!-- Sys prompt row (hidden by default) -->
           <div class="sys-prompt-row" id="sysPromptRow">
@@ -4558,6 +4584,55 @@ document.addEventListener('DOMContentLoaded', () => {
   if (['localhost', '127.0.0.1'].includes(location.hostname)) {
     localStorage.setItem('5i_owner', 'true');
   }
+  // ── Voice Input ──────────────────────────────────────────────────────────────
+  let _recognition = null;
+  let _micActive = false;
+
+  function toggleMic() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Voice input is not supported in this browser. Try Chrome or Safari.');
+      return;
+    }
+    if (_micActive) {
+      _recognition && _recognition.stop();
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    _recognition = new SR();
+    _recognition.continuous = false;
+    _recognition.interimResults = true;
+    _recognition.lang = 'en-US';
+
+    const btn = document.getElementById('micBtn');
+    const input = document.getElementById('promptInput');
+    const originalVal = input.value;
+
+    _recognition.onstart = () => {
+      _micActive = true;
+      btn.classList.add('listening');
+      btn.title = 'Listening… click to stop';
+    };
+    _recognition.onresult = (e) => {
+      let transcript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      input.value = (originalVal ? originalVal + ' ' : '') + transcript;
+    };
+    _recognition.onerror = (e) => {
+      console.warn('[MIC]', e.error);
+      _micActive = false;
+      btn.classList.remove('listening');
+      btn.title = 'Voice input';
+    };
+    _recognition.onend = () => {
+      _micActive = false;
+      btn.classList.remove('listening');
+      btn.title = 'Voice input';
+    };
+    _recognition.start();
+  }
+
 </script>
 </body>
 </html>
