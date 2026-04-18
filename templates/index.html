@@ -1057,7 +1057,7 @@ header:hover .btn-fullscreen { opacity: 1; }
 
   /* ── Mic Button ── */
   .mic-btn {
-    position: absolute; bottom: 52px; right: 12px;
+    position: absolute; bottom: 12px; left: 12px;
     width: 36px; height: 36px; border-radius: 50%;
     background: var(--surface-2, #1a2a20); border: 1px solid var(--border-dim, rgba(94,232,138,0.15));
     color: rgba(94,232,138,0.5); cursor: pointer;
@@ -2219,18 +2219,12 @@ header:hover .btn-fullscreen { opacity: 1; }
               SYS <span class="kbd">⌘/</span>
             </div>
 
-            <!-- Response length selector -->
-            <div class="length-selector" id="lengthSelector" title="Response length">
-              <div class="length-opt active" data-len="short" onclick="setLength('short')">SHORT</div>
-              <div class="length-opt" data-len="mid" onclick="setLength('mid')">MID</div>
-              <div class="length-opt" data-len="long" onclick="setLength('long')">LONG</div>
-            </div>
-
-            <!-- Research mode toggle -->
-            <div class="research-toggle" id="researchToggle" onclick="toggleResearch()" title="Research mode — full output, no length cap">
-              <div class="toggle-led"></div>
-              RESEARCH
-            </div>
+            <!-- Response length dropdown -->
+            <select class="length-select" id="lengthSelect" onchange="setLength(this.value)" title="Response length">
+              <option value="short">SHORT</option>
+              <option value="mid">MID</option>
+              <option value="long">LONG</option>
+            </select>
 
             <!-- Dev shortcuts -->
             <button class="dbt-btn" title="Copy output" onclick="copyOutput()">
@@ -2694,11 +2688,7 @@ function buildSeqDisplay(weights) {
   container.innerHTML = '';
   MODEL_ORDER.forEach((k, i) => {
     const m = MODELS[k];
-    if (i > 0) {
-      const a = document.createElement('span');
-      a.className = 'seq-arrow'; a.textContent = '→';
-      container.appendChild(a);
-    }
+
     const p = document.createElement('div');
     p.className = 'seq-planet';
     p.style.background = m.color;
@@ -3033,14 +3023,8 @@ const LENGTH_SYNTH  = { short: 300, mid: 600, long: 1200 };
 
 function setLength(mode) {
   lengthMode = mode;
-  document.querySelectorAll('.length-opt').forEach(el => {
-    el.classList.toggle('active', el.dataset.len === mode);
-  });
-  // turn off research mode if user picks a length
-  if (researchMode) {
-    researchMode = false;
-    document.getElementById('researchToggle').classList.remove('on');
-  }
+  const sel = document.getElementById('lengthSelect');
+  if (sel) sel.value = mode;
 }
 function toggleResearch() {
   researchMode = !researchMode;
