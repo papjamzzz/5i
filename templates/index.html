@@ -2219,6 +2219,13 @@ header:hover .btn-fullscreen { opacity: 1; }
               SYS <span class="kbd">⌘/</span>
             </div>
 
+            <!-- Response length selector -->
+            <div class="length-selector" id="lengthSelector" title="Response length">
+              <div class="length-opt active" data-len="short" onclick="setLength('short')">SHORT</div>
+              <div class="length-opt" data-len="mid" onclick="setLength('mid')">MID</div>
+              <div class="length-opt" data-len="long" onclick="setLength('long')">LONG</div>
+            </div>
+
             <!-- Research mode toggle -->
             <div class="research-toggle" id="researchToggle" onclick="toggleResearch()" title="Research mode — full output, no length cap">
               <div class="toggle-led"></div>
@@ -3019,6 +3026,22 @@ function toggleSysPrompt() {
 
 /* ── RESEARCH MODE ───────────────────────────────────── */
 let researchMode = false;
+let lengthMode = 'short'; // short | mid | long
+
+const LENGTH_TOKENS = { short: 150, mid: 400, long: 900 };
+const LENGTH_SYNTH  = { short: 300, mid: 600, long: 1200 };
+
+function setLength(mode) {
+  lengthMode = mode;
+  document.querySelectorAll('.length-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.len === mode);
+  });
+  // turn off research mode if user picks a length
+  if (researchMode) {
+    researchMode = false;
+    document.getElementById('researchToggle').classList.remove('on');
+  }
+}
 function toggleResearch() {
   researchMode = !researchMode;
   document.getElementById('researchToggle').classList.toggle('on', researchMode);
@@ -3356,7 +3379,7 @@ async function synthesize() {
   const userSysPrompt = sysPromptEl ? sysPromptEl.value.trim() : '';
 
   /* Token budget — Brief (default): 200 tokens + concise instruction. Research: 600 + full instruction. */
-  const MAX_TOKENS = researchMode ? 600 : 150;
+  const MAX_TOKENS = researchMode ? 1200 : (LENGTH_TOKENS[lengthMode] || 150);
 
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8h6M8 5l3 3-3 3"/></svg> SYNTHESIZING… <span class="synth-kbd" style="opacity:0.5">ESC stop</span>`;
   btn.style.opacity = '0.75';
