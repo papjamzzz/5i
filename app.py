@@ -369,7 +369,7 @@ async def call_openai(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SY
 async def call_anthropic(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_SYSTEM):
     try:
         body = {
-            "model": "claude-sonnet-4-5-20250929",
+            "model": "claude-sonnet-4-5",
             "max_tokens": max_tokens,
             "messages": [{"role": "user", "content": prompt}]
         }
@@ -747,7 +747,7 @@ def proxy_claude():
     return _stream_proxy(
         'https://api.anthropic.com/v1/messages',
         {'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
-        {'model': 'claude-sonnet-4-5-20250929', 'max_tokens': d.get('maxTokens', 1500),
+        {'model': 'claude-sonnet-4-5', 'max_tokens': d.get('maxTokens', 1500),
          'stream': True, 'system': d.get('sysPrompt', ''),
          'messages': [{'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
