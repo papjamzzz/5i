@@ -116,7 +116,7 @@ MODELS = {
         "label": "DeepSeek R1",
         "provider": "DeepSeek",
         "color": "#06b6d4",
-        "enabled": lambda: bool(DEEPSEEK_KEY),
+        "enabled": lambda: False,  # benched
     },
     "gemini": {
         "label": "Gemini 2.5 Flash",
@@ -558,14 +558,14 @@ async def synthesize(session, question, results):
         responses=responses_text
     )
 
-    # Judge priority: Gemini Flash > DeepSeek > GPT > Mistral
+    # Judge priority: Claude > Gemini Flash > GPT > Mistral
     # Cascade — if the top judge fails, fall through to the next available model
     raw = None
     judges = []
+    if ANTHROPIC_KEY:
+        judges.append(("claude", call_anthropic))
     if GOOGLE_KEY:
         judges.append(("gemini", call_gemini))
-    if DEEPSEEK_KEY:
-        judges.append(("deepseek", call_deepseek))
     if OPENAI_KEY:
         judges.append(("gpt", call_openai))
     if MISTRAL_KEY:
