@@ -1360,6 +1360,39 @@ def sitemap():
     return app.response_class(xml, mimetype="application/xml")
 
 
+
+@app.route("/admin/issue-token", methods=["POST"])
+def admin_issue_token():
+    """Issue a free founder token manually."""
+    data     = request.get_json() or {}
+    admin_key = request.headers.get("X-Admin-Key", "")
+    if admin_key != os.getenv("ADMIN_KEY", "5i-admin-2026"):
+        return jsonify({"error": "Forbidden"}), 403
+    email     = data.get("email", "")
+    plan      = data.get("plan", "foundational")
+    if not email:
+        return jsonify({"error": "email required"}), 400
+    import secrets, datetime
+    token     = "5I-" + secrets.token_hex(16).upper()
+    limit     = 999999  # effectively unlimited
+    reset_date = (datetime.date.today().replace(day=1) + datetime.timedelta(days=32)).replace(day=1).isoformat()
+    try:
+        with get_db() as db:
+            db.execute("""
+                INSERT INTO subscribers (email, token, plan, usage_count, monthly_limit, reset_date, stripe_customer_id)
+                VALUES (?, ?, ?, 0, ?, ?, 'manual')
+                ON CONFLICT(email) DO UPDATE SET
+                    token=excluded.token, plan=excluded.plan,
+                    monthly_limit=excluded.monthly_limit,
+                    reset_date=excluded.reset_date,
+                    usage_count=0
+            """, (email, token, plan, limit, reset_date))
+            db.commit()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True, "token": token, "email": email, "plan": plan})
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5562))
     host = "0.0.0.0" if os.getenv("PORT") else "127.0.0.1"
