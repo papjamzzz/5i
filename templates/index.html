@@ -2392,13 +2392,13 @@ header:hover .btn-fullscreen { opacity: 1; }
    LMSYS Chatbot Arena (agreeability proxy)
 ═══════════════════════════════════════════════════════ */
 const MODELS = {
-  deepseek: {
-    name:'DeepSeek', short:'DSK', color:'#06B6D4', colorHi:'#67E8F9',
-    costPerMOutput:{ budget:0.14, standard:2.19, premium:2.19 },
-    premiumScore:0.85, budgetScore:0.96,
-    ttft:800, speedScore:0.45,
-    reliabilityPct:98.5, reliabilityScore:0.70,
-    agreeabilityScore:0.65,
+  claude: {
+    name:'Claude', short:'CLU', color:'#7C3AED', colorHi:'#B8A0FA',
+    costPerMOutput:{ budget:3, standard:15, premium:15 },
+    premiumScore:0.93, budgetScore:0.58,
+    ttft:750, speedScore:0.54,
+    reliabilityPct:99.8, reliabilityScore:0.94,
+    agreeabilityScore:0.72,
     orbit:2, active:true,
     apiKey: 'server',
   },
@@ -2445,7 +2445,7 @@ const MODELS = {
 };
 
 /* Model order: sequential synthesis chain */
-const MODEL_ORDER = ['gpt','deepseek','gemini','mistral','grok'];
+const MODEL_ORDER = ['gpt','claude','gemini','mistral','grok'];
 
 /* ── FADER STATE ─────────────────────────────────────── */
 const faders = { cost:0.5, latency:0.5, agree:0.5, rely:0.5 };
@@ -3916,7 +3916,7 @@ function initOrbitalBackground() {
 
   const PLANETS = [
     { key:'gpt',      radius:180, speed:0.00038, angle:0.5,  size:10, glitchFrames:0, glitchR:180 },
-    { key:'deepseek', radius:240, speed:0.00028, angle:1.9,  size:9,  glitchFrames:0, glitchR:240 },
+    { key:'claude',   radius:240, speed:0.00028, angle:1.9,  size:9,  glitchFrames:0, glitchR:240 },
     { key:'gemini',   radius:300, speed:0.00020, angle:3.3,  size:8,  glitchFrames:0, glitchR:300 },
     { key:'mistral',  radius:360, speed:0.00015, angle:4.7,  size:9,  glitchFrames:0, glitchR:360 },
     { key:'grok',     radius:420, speed:0.00010, angle:0.2,  size:10, glitchFrames:0, glitchR:420 },
@@ -4044,7 +4044,7 @@ function initHeroLogo() {
   const heroGlitches = {};
   const speedMult  = [0.009, 0.006, 0.004, 0.003, 0.002];
   const baseAngles = [0.5, 1.9, 3.3, 4.7, 0.2];
-  const planetKeys = ['gpt','deepseek','gemini','mistral','grok'];
+  const planetKeys = ['gpt','claude','gemini','mistral','grok'];
   const rads       = [0.12, 0.19, 0.26, 0.33, 0.40];
   const ringColors = ['#7C3AED','#06B6D4','#4285F4','#DA8E20','#CD4E14'];
   let _heroLastFrame = 0;
