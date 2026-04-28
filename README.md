@@ -62,6 +62,13 @@ No external UI frameworks. SQLite for subscriptions. No tracking. Runs local.
 
 > "Not which AI is right. What the truth is when you ask all of them."
 
-**[creativekonsoles.com](https://creativekonsoles.com)** &nbsp;·&nbsp; support@creativekonsoles.com
+### Also in the Suite
 
-<!-- repo maintenance: 2026-04-10 -->
+| Product | What It Does |
+|---------|-------------|
+| [Grail](https://grailorbital.creativekonsoles.com) | Luxury biohacking dashboard — 40 biomarker orbs, AI health synthesis |
+| [Memoir](https://memoir.creativekonsoles.com) | Voice-to-story AI journaling |
+| [KK Trader](https://github.com/papjamzzz/kalshi-trader) | Autonomous Kalshi prediction market trading bot |
+| [DAW Doctor](https://dawdoctor.creativekonsoles.com) | Diagnostics for Ableton Live producers |
+
+**[creativekonsoles.com](https://creativekonsoles.com)** &nbsp;·&nbsp; support@creativekonsoles.com
