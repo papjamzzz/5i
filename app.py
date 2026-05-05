@@ -57,6 +57,7 @@ GOOGLE_KEY    = os.getenv("GOOGLE_API_KEY", "")
 GROK_KEY      = os.getenv("GROK_API_KEY", "")
 MISTRAL_KEY   = os.getenv("MISTRAL_API_KEY", "")
 DEEPSEEK_KEY  = os.getenv("DEEPSEEK_API_KEY", "")
+GEMMA_KEY     = os.getenv("GEMMA_API_KEY", "") or GOOGLE_KEY  # reuses GOOGLE_KEY by default
 
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_SECRET_KEY     = os.getenv("STRIPE_SECRET_KEY", "")
@@ -135,6 +136,12 @@ MODELS = {
         "provider": "Mistral",
         "color": "#f0a030",
         "enabled": lambda: bool(MISTRAL_KEY),
+    },
+    "gemma": {
+        "label": "Gemma 4",
+        "provider": "Google",
+        "color": "#00bfa5",
+        "enabled": lambda: bool(GEMMA_KEY),
     },
 }
 
@@ -496,6 +503,47 @@ async def call_deepseek(session, prompt, max_tokens=MAX_TOKENS, system=RESPONSE_
 
 
 
+GEMMA_MODELS = [
+    "gemma-4-27b-it",
+    "gemma-4-9b-it",
+    "gemma-4-4b-it",
+]
+
+async def call_gemma(session, prompt, max_tokens=MAX_TOKENS_GEMINI, system=RESPONSE_SYSTEM):
+    for model_id in GEMMA_MODELS:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={GEMMA_KEY}"
+            body = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens}
+            }
+            if system:
+                body["system_instruction"] = {"parts": [{"text": system}]}
+            async with session.post(
+                url,
+                headers={"Content-Type": "application/json"},
+                json=body,
+                timeout=GEMINI_TIMEOUT
+            ) as r:
+                data = await r.json()
+                if r.status == 404:
+                    continue  # model not available, try next
+                if "candidates" not in data:
+                    err_msg = data.get("error", {}).get("message", "") if "error" in data else str(data)[:120]
+                    return f"Error: {err_msg}"
+                candidate = data["candidates"][0]
+                finish = candidate.get("finishReason", "")
+                if finish in ("SAFETY", "RECITATION", "OTHER"):
+                    return f"Error: blocked ({finish})"
+                parts = candidate.get("content", {}).get("parts", [])
+                if not parts:
+                    return f"Error: empty Gemma response"
+                return parts[0]["text"]
+        except Exception as e:
+            return f"Error: {str(e)}"
+    return "Error: no Gemma 4 model available on this API key"
+
+
 async def call_o3mini(session, prompt, max_tokens=MAX_TOKENS_SYNTH, system=None):
     """o3-mini: OpenAI reasoning model — dedicated synthesis judge."""
     try:
@@ -531,6 +579,7 @@ CALLERS = {
     "gemini":   call_gemini,
     "grok":     call_grok,
     "mistral":  call_mistral,
+    "gemma":    call_gemma,
 }
 
 
@@ -843,6 +892,43 @@ def proxy_gemini():
     return jsonify({"error": last_err}), 503
 
 
+@app.route('/proxy/gemma', methods=['POST'])
+def proxy_gemma():
+    d = request.json
+    key = d.get('apiKey') or GEMMA_KEY
+    if not key:
+        return jsonify({"error": "No Google API key — add one via BYOK or set GOOGLE_API_KEY on the server"}), 503
+    body = {
+        'system_instruction': {'parts': [{'text': d.get('sysPrompt', '')}]},
+        'contents': [{'role': 'user', 'parts': [{'text': d.get('userPrompt', '')}]}],
+        'generationConfig': {'maxOutputTokens': d.get('maxTokens', 1500)}
+    }
+    last_err = 'No Gemma 4 model available'
+    for model_id in GEMMA_MODELS:
+        url = f'https://generativelanguage.googleapis.com/v1beta/models/{model_id}:streamGenerateContent?alt=sse&key={key}'
+        try:
+            r = req_lib.post(url, headers={'Content-Type': 'application/json'},
+                             json=body, stream=True, timeout=90)
+            if r.ok:
+                def generate(resp):
+                    try:
+                        for chunk in resp.iter_content(chunk_size=None):
+                            if chunk:
+                                yield chunk
+                    except Exception as e:
+                        yield f"data: {{\"_err\": \"{str(e)}\"}}\n\n".encode()
+                    finally:
+                        resp.close()
+                return Response(stream_with_context(generate(r)),
+                                content_type='text/event-stream',
+                                headers={'X-Accel-Buffering': 'no', 'Cache-Control': 'no-cache'})
+            last_err = f"Upstream {r.status_code} ({model_id}): {r.text[:200]}"
+            r.close()
+        except Exception as e:
+            last_err = f"{model_id}: {str(e)}"
+    return jsonify({"error": last_err}), 503
+
+
 @app.route('/proxy/mistral', methods=['POST'])
 def proxy_mistral():
     d = request.json
@@ -1008,6 +1094,7 @@ def health():
             "google":    bool(GOOGLE_KEY),
             "grok":      bool(GROK_KEY),
             "mistral":   bool(MISTRAL_KEY),
+            "gemma":     bool(GEMMA_KEY),
         }
     })
 
