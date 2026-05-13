@@ -27,7 +27,7 @@ It's not a chatbot. It's a thinking machine.
 | Key | Model | Provider | Env Var |
 |-----|-------|----------|---------|
 | gpt | GPT-4o | OpenAI | `OPENAI_API_KEY` |
-| claude | Claude Sonnet 4.5 | Anthropic | `ANTHROPIC_API_KEY` |
+| claude | Claude Sonnet 4.5 (latest) | Anthropic | `ANTHROPIC_API_KEY` |
 | gemini | Gemini 2.5 Flash | Google | `GOOGLE_API_KEY` |
 | grok | Grok 3 Mini | xAI | `GROK_API_KEY` |
 | mistral | Mistral Small | Mistral | `MISTRAL_API_KEY` |
