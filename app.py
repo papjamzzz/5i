@@ -73,7 +73,7 @@ _rl_lock     = threading.Lock()
 _ip_log      = defaultdict(list)   # key → [timestamp, ...]
 
 FREE_WINDOW  = 86400   # 24 h
-FREE_LIMIT   = 99999   # owner: effectively unlimited
+FREE_LIMIT   = 3       # 2 free + 1 email-gated; 4th requires subscription
 BURST_WINDOW = 60      # 1 min
 BURST_LIMIT  = 8       # max requests per IP per minute, any tier
 
@@ -187,6 +187,14 @@ def init_db():
                 order_id         TEXT,
                 outcome          TEXT DEFAULT 'pending',
                 created_at       TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS email_captures (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                email      TEXT NOT NULL,
+                ip         TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
             )
         """)
         db.commit()
@@ -972,6 +980,22 @@ def proxy_deepseek():
          'messages': [{'role': 'system', 'content': d.get('sysPrompt', '')},
                       {'role': 'user', 'content': d.get('userPrompt', '')}]}
     )
+
+
+@app.route("/capture-email", methods=["POST"])
+def capture_email():
+    data  = request.json or {}
+    email = data.get("email", "").strip().lower()
+    ip    = (request.headers.get("X-Forwarded-For", "") or request.remote_addr or "").split(",")[0].strip()
+    if not email or "@" not in email:
+        return jsonify({"error": "Invalid email"}), 400
+    try:
+        with get_db() as db:
+            db.execute("INSERT INTO email_captures (email, ip) VALUES (?, ?)", (email, ip))
+            db.commit()
+    except Exception:
+        pass  # duplicate or DB error — still let them through
+    return jsonify({"ok": True})
 
 
 @app.route("/verify-token", methods=["POST"])

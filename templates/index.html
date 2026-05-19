@@ -2079,7 +2079,7 @@ header:hover .btn-fullscreen { opacity: 1; }
           <span class="token-gate-status" id="tokenStatus">—</span>
         </div>
         <div class="plan-status free" id="planStatusBar">
-          FREE TRIAL · <span id="planStatusText">0/1 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>
+          FREE TRIAL · <span id="planStatusText">0/3 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>
         </div>
       </div>
 
@@ -3351,7 +3351,7 @@ async function synthesize() {
   }
 
   /* Free trial gate */
-  if (!checkFreeLimit()) return;
+  if (!checkFreeLimit(() => synthesize())) return;
 
   /* Cancel any running synthesis */
   if (synthController) { synthController.abort(); synthController = null; }
@@ -4355,7 +4355,7 @@ function updatePlanBar(data) {
     // Free trial
     const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
     bar.className = 'plan-status free';
-    bar.innerHTML = `FREE TRIAL · <span id="planStatusText">${used}/1 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>`;
+    bar.innerHTML = `FREE TRIAL · <span id="planStatusText">${used}/3 used</span> &nbsp;·&nbsp; <a href="https://creativekonsoles.com/#pricing" target="_blank">subscribe ↗</a>`;
     return;
   }
 
@@ -4383,17 +4383,62 @@ function closePaywall() {
   if (overlay) overlay.classList.add('hidden');
 }
 
-function checkFreeLimit() {
-  if (localStorage.getItem('5i_owner') === 'true') return true; // owner bypass
+function checkFreeLimit(onAllowed) {
+  if (localStorage.getItem('5i_owner') === 'true') { onAllowed && onAllowed(); return true; }
   const tok = getActiveToken();
-  if (tok) return true; // paid user — pass through
+  if (tok) { onAllowed && onAllowed(); return true; }
   const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
-  if (used >= 1) {
+
+  if (used >= 3) {
     showPaywall();
     return false;
   }
+
+  if (used === 2 && !localStorage.getItem('5i_email_captured')) {
+    showEmailCapture(onAllowed);
+    return false;
+  }
+
   localStorage.setItem(FREE_COUNT_KEY, String(used + 1));
+  updatePlanBar();
+  onAllowed && onAllowed();
   return true;
+}
+
+function showEmailCapture(onAllowed) {
+  const overlay = document.getElementById('emailCaptureOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+  window._emailCaptureCallback = onAllowed || null;
+}
+
+function closeEmailCapture() {
+  const overlay = document.getElementById('emailCaptureOverlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+async function submitEmailCapture() {
+  const input = document.getElementById('emailCaptureInput');
+  const btn   = document.getElementById('emailCaptureBtn');
+  const err   = document.getElementById('emailCaptureErr');
+  const email = (input?.value || '').trim();
+  if (!email || !email.includes('@')) {
+    err.textContent = 'Enter a valid email.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    await fetch('/capture-email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email })
+    });
+  } catch(e) {}
+  localStorage.setItem('5i_email_captured', '1');
+  localStorage.setItem(FREE_COUNT_KEY, '3');
+  updatePlanBar();
+  closeEmailCapture();
+  if (window._emailCaptureCallback) window._emailCaptureCallback();
 }
 
 
@@ -4457,6 +4502,30 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <!-- ── PAYWALL MODAL ──────────────────────────────── -->
+<!-- ── EMAIL CAPTURE MODAL ─────────────────────────── -->
+<div class="byok-overlay hidden" id="emailCaptureOverlay">
+  <div class="byok-modal" style="max-width:440px; border-color: var(--green); box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 60px rgba(94,232,138,0.12);">
+    <div class="byok-modal-header" style="background: rgba(94,232,138,0.06); border-color: var(--border);">
+      <div class="byok-modal-title" style="color: var(--green);">One more free run.</div>
+      <div class="byok-modal-sub">DROP YOUR EMAIL TO UNLOCK IT</div>
+    </div>
+    <div class="byok-modal-body" style="gap:14px;">
+      <p>You've run 2 syntheses. Leave your email and we'll give you one more free — then you'll need a plan to keep going.</p>
+      <input id="emailCaptureInput" type="email" placeholder="you@example.com"
+        style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(94,232,138,0.35); border-radius:6px; color:#fff; font-family:'Space Grotesk',sans-serif; font-size:14px; outline:none; box-sizing:border-box;"
+        onkeydown="if(event.key==='Enter') submitEmailCapture()"/>
+      <div id="emailCaptureErr" style="color:#f87171; font-size:12px; min-height:16px;"></div>
+    </div>
+    <div style="padding:12px 20px 16px; display:flex; gap:10px; border-top:1px solid var(--border-dim);">
+      <button onclick="closeEmailCapture()" class="byok-cancel" style="flex:1;">No thanks</button>
+      <button id="emailCaptureBtn" onclick="submitEmailCapture()"
+        style="flex:2; padding:10px 0; background:var(--green); color:#000; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; border-radius:5px; border:none; cursor:pointer; letter-spacing:0.3px;">
+        Unlock my 3rd run →
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="byok-overlay hidden" id="paywallOverlay">
   <div class="byok-modal" style="max-width:480px; border-color: var(--green); box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 60px rgba(94,232,138,0.12);">
     <div class="byok-modal-header" style="background: rgba(94,232,138,0.06); border-color: var(--border);">
