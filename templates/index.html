@@ -4384,9 +4384,9 @@ function closePaywall() {
 }
 
 function checkFreeLimit(onAllowed) {
-  if (localStorage.getItem('5i_owner') === 'true') { onAllowed && onAllowed(); return true; }
+  if (localStorage.getItem('5i_owner') === 'true') { return true; }
   const tok = getActiveToken();
-  if (tok) { onAllowed && onAllowed(); return true; }
+  if (tok) { return true; }
   const used = parseInt(localStorage.getItem(FREE_COUNT_KEY) || '0');
 
   if (used >= 3) {
