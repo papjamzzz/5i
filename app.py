@@ -1456,10 +1456,51 @@ def kalshi_fusion_analyze():
 
 @app.route("/robots.txt")
 def robots():
-    return app.response_class(
-        "User-agent: *\nAllow: /\nSitemap: https://5i.creativekonsoles.com/sitemap.xml\n",
-        mimetype="text/plain"
+    content = (
+        "User-agent: *\nAllow: /\n\n"
+        "User-agent: GPTBot\nAllow: /\n\n"
+        "User-agent: ClaudeBot\nAllow: /\n\n"
+        "User-agent: PerplexityBot\nAllow: /\n\n"
+        "User-agent: Google-Extended\nAllow: /\n\n"
+        "User-agent: OAI-SearchBot\nAllow: /\n\n"
+        "User-agent: Applebot-Extended\nAllow: /\n\n"
+        "User-agent: CCBot\nAllow: /\n\n"
+        "Sitemap: https://5i.creativekonsoles.com/sitemap.xml\n"
     )
+    return app.response_class(content, mimetype="text/plain")
+
+@app.route("/llms.txt")
+def llms_txt():
+    content = """# 5i — Parallel AI Synthesis Engine
+
+> Run one prompt through five frontier AI models simultaneously. Disagreements exposed, consensus highlighted.
+
+5i sends your prompt to GPT-4o, Claude, Gemini, Grok, and Mistral at the same time and synthesizes a unified answer. Where models agree, that consensus is reinforced. Where they diverge, the disagreement is surfaced — giving you signal about where certainty is high and where it isn't.
+
+## What it does
+
+- Parallel model calls: GPT-4o (OpenAI), Claude (Anthropic), Gemini (Google), Grok (xAI), Mistral
+- Synthesis pass: a judge model reads all five responses and produces a unified verdict
+- Disagreement detection: models that diverge from consensus are flagged
+- Konsole mode: opens as a standalone window for side-by-side use
+
+## Pricing
+
+- Free: 5 trial syntheses
+- Base Synthesis: $18/month — 100 syntheses
+- Foundational Synthesis: $88/month — 1,000 syntheses
+- BYOK: bring your own API keys for unlimited use
+
+## Links
+
+- [5i App](https://5i.creativekonsoles.com): Main interface
+- [User Guide](https://creativekonsoles.com/5i-guide.html): How to use 5i
+- [Creative Konsoles](https://creativekonsoles.com): Parent company
+- [Contact](mailto:support@creativekonsoles.com): support@creativekonsoles.com
+"""
+    resp = app.response_class(content, mimetype="text/plain")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 @app.route("/sitemap.xml")
 def sitemap():
