@@ -13,6 +13,7 @@ import aiohttp
 import requests as req_lib
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
+from voice_profile import VOICE_SPEC, build_rewrite_prompt
 import time
 import sqlite3
 import uuid
@@ -795,6 +796,45 @@ def render_verdict():
     verdict = _run_async(_synth())
     elapsed = round(time.time() - start, 1)
     return jsonify({"verdict": verdict, "elapsed": elapsed})
+
+
+# ── Voice layer — rewrite any text to "sound like me" ───────────────────────
+MAX_VOICE_CHARS = 6000   # paste-a-draft sized; bigger than the 500-char ask limit
+
+@app.route("/voice", methods=["POST"])
+def voice_rewrite():
+    """Take arbitrary text (a synthesis verdict, a model answer, a draft) and
+    rewrite it in the personal voice defined in voice_profile.py."""
+    data = request.json or {}
+    text = (data.get("text") or "").strip()[:MAX_VOICE_CHARS]
+    if not text:
+        return jsonify({"error": "Empty text"}), 400
+    if not OPENAI_KEY:
+        return jsonify({"error": "Voice layer needs OPENAI_API_KEY"}), 400
+
+    # Single sync call — no need for the async/aiohttp path for one rewrite.
+    start = time.time()
+    try:
+        r = req_lib.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {OPENAI_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": "gpt-4o",
+                "max_tokens": 1200,
+                "messages": [
+                    {"role": "system", "content": VOICE_SPEC},
+                    {"role": "user", "content": build_rewrite_prompt(text)},
+                ],
+            },
+            timeout=45,
+        )
+        r.raise_for_status()
+        rewritten = r.json()["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        return jsonify({"error": f"Voice rewrite failed: {str(e)[:200]}"}), 502
+
+    elapsed = round(time.time() - start, 1)
+    return jsonify({"original": text, "voiced": rewritten, "elapsed": elapsed})
 
 
 # ── Streaming proxy routes — keep API keys off the browser ──────────────────

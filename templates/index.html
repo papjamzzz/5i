@@ -2232,6 +2232,10 @@ header:hover .btn-fullscreen { opacity: 1; }
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11V2h9"/></svg>
               Copy <span class="kbd">⌘C</span>
             </button>
+            <button class="dbt-btn" id="btnVoice" title="Rewrite the synthesis in your voice" onclick="soundLikeMe(this)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5l1.6 3.4 3.7.5-2.7 2.6.7 3.7L8 10.4 4.7 12.2l.7-3.7L2.7 5.9l3.7-.5z"/></svg>
+              Sound like me
+            </button>
             <button class="dbt-btn" title="Clear all" onclick="clearAll()">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
               Clear <span class="kbd">⌘K</span>
@@ -3224,6 +3228,51 @@ document.addEventListener('DOMContentLoaded', () => {
 function copyOutput() {
   const out = document.getElementById('outputSynthesis');
   if (out) navigator.clipboard.writeText(out.textContent).catch(() => {});
+}
+
+/* ── SOUND LIKE ME — voice-layer pass on the synthesis output ───────── */
+async function soundLikeMe(btn) {
+  const out = document.getElementById('outputSynthesis');
+  if (!out) return;
+  // Drop any prior voiced block so we re-voice the synthesis, not our own output
+  const prior = document.getElementById('voiced-block');
+  if (prior) prior.remove();
+  const text = (out.textContent || '').trim();
+  if (text.length < 8) return;
+
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Voicing…'; }
+  try {
+    const r = await fetch('/voice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.voiced) { alert(d.error || 'Voice rewrite failed.'); return; }
+    const block = document.createElement('div');
+    block.id = 'voiced-block';
+    block.style.cssText = 'margin-top:18px;padding:14px 16px;border-left:2px solid #5EE88A;background:rgba(94,232,138,0.06);border-radius:8px;animation:fadeIn 0.2s ease;';
+    const label = document.createElement('div');
+    label.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:#5EE88A;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;";
+    label.innerHTML = '<span>IN YOUR VOICE</span>';
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.style.cssText = 'background:none;border:1px solid rgba(94,232,138,0.4);color:#5EE88A;font-size:10px;padding:3px 10px;border-radius:5px;cursor:pointer;';
+    const body = document.createElement('div');
+    body.style.cssText = 'white-space:pre-wrap;line-height:1.6;';
+    body.textContent = d.voiced;
+    copyBtn.onclick = () => navigator.clipboard.writeText(d.voiced).catch(() => {});
+    label.appendChild(copyBtn);
+    block.appendChild(label);
+    block.appendChild(body);
+    out.appendChild(block);
+    block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (e) {
+    alert('Voice rewrite failed.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
 }
 function clearAll() {
   const ta = document.getElementById('promptInput');
