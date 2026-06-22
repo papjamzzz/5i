@@ -13,7 +13,7 @@ import aiohttp
 import requests as req_lib
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
-from voice_profile import VOICE_SPEC, build_rewrite_prompt
+from voice_profile import build_messages
 import time
 import sqlite3
 import uuid
@@ -821,10 +821,8 @@ def voice_rewrite():
             json={
                 "model": "gpt-4o",
                 "max_tokens": 1200,
-                "messages": [
-                    {"role": "system", "content": VOICE_SPEC},
-                    {"role": "user", "content": build_rewrite_prompt(text)},
-                ],
+                "temperature": 0.65,   # natural cadence, still consistent
+                "messages": build_messages(text),
             },
             timeout=45,
         )
