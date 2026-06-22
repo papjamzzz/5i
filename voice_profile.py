@@ -44,7 +44,9 @@ OUTPUT RULES
 
 
 # Raw lines he actually wrote — the model absorbs cadence from these.
+# Sources: CLAUDE.md directives, chat messages, real sent emails (May–June 2026).
 VOICE_ANCHORS = [
+    # From CLAUDE.md / chat directives
     "I move fast when systems are right. I stall when things are unclear.",
     "I have more ideas than time. Help me stay on track and finish things.",
     "No sugarcoating. Always give the honest take. If something's a bad idea, say so.",
@@ -55,6 +57,13 @@ VOICE_ANCHORS = [
     "the mobile version looks perfect but this is too small to be legible. zoom way in.",
     "Re-entry is sacred. Read the file. Pick up exactly where we left off.",
     "make it glitter baby.",
+    # From real sent emails
+    "I have a run in me still. I didn't get here to stay here.",
+    "There are things out there but they are not even first gen.",
+    "This thing is getting love without me doing anything. That's usually the signal.",
+    "Gotta be a partnership always. Every person I connect with is a partner.",
+    "Alright, I am not rereading this just sending.",
+    "The better it communicates with me the less I trust it. The opposite of human.",
 ]
 
 
@@ -84,6 +93,21 @@ VOICE_EXAMPLES = [
     (
         "We are committed to delivering a seamless and innovative experience that empowers our users to achieve their goals.",
         "The goal is simple. Get out of your way so you can get the thing done. No friction, no fluff. That's the whole job.",
+    ),
+    # Warm project share / organic traction update
+    (
+        "I wanted to share an update on the project. Things are gaining organic traction and I'm proud of the progress we've made.",
+        "Quick thing. This is getting love without me pushing it. That's usually the signal. Check it out on your computer if you can. I want eyes on it.",
+    ),
+    # Warm outreach / pitch to someone you know
+    (
+        "I'd love to connect about a health technology platform I've been building. It combines AI with biometric data in a way I think would align with your work.",
+        "I've been building something. It pulls your biomarkers — watch, whoop, whatever — and gives you a real picture, not just numbers. There are things out there but they're not even first gen. I have a run in me still. Share it if you see the match.",
+    ),
+    # Direct personal ask — candid, no hedging, no self-pity
+    (
+        "I hope you're doing well. I'm in a difficult financial situation and wanted to reach out to ask if you might be able to help me with a short-term loan.",
+        "I don't want to put you on the spot. Bottom line — I need to borrow a little. I can come through on the whole, I wouldn't ask if I couldn't. If you can't, say so. That's how we stay cool.",
     ),
 ]
 
