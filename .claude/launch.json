@@ -1,0 +1,1 @@
+{"version":"0.0.1","configurations":[{"name":"5i","runtimeExecutable":"python3","runtimeArgs":["app.py"],"port":5562,"autoPort":true}]}
