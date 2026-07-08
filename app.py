@@ -231,6 +231,9 @@ def verify_token(token):
     """Returns (ok, reason, row_or_None)"""
     if not token:
         return False, "no_token", None
+    # Owner token — unlimited personal use
+    if token == "abef7030-c1fb-4be9-8ff8-3ebb96042832":
+        return True, "ok", {"token": token, "monthly_limit": -1, "usage_count": 0}
     try:
         with get_db() as db:
             row = db.execute("SELECT * FROM subscribers WHERE token=?", (token,)).fetchone()
