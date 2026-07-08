@@ -84,3 +84,6 @@ https://web-production-94a13.up.railway.app
 
 ---
 *Last updated: 2026-03-23*
+
+## Last Session
+2026-07-08 — V2 UI rebuilt from scratch on Fable 5 (V1 archived at branch `archive/v1-ui` + tag `v1-ui`). Machined-rack aesthetic per locked brand system: neutral charcoal chassis, silver hairlines, vivid green signal only. All 103 element IDs + JS contract preserved verbatim — zero logic changes. Revived the built-but-unwired RESEARCH toggle in the dev toolbar. Fixed: /verdict endpoint deadlocked locally (gevent monkey.patch_all now gated to RAILWAY_ENVIRONMENT only — local pip install of requirements.txt had introduced gevent which deadlocks aiohttp under the dev server; prod unchanged, verified working before+after). E2E verified: 5-model synthesis, verdict, gauges, tabs, light theme, mobile drawer. New Mistral key wired (old one dead since ~7/8 09:00).

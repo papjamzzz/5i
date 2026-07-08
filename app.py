@@ -1,7 +1,11 @@
-try:
-    from gevent import monkey; monkey.patch_all()
-except ImportError:
-    pass
+import os as _os
+if _os.getenv("RAILWAY_ENVIRONMENT"):
+    # gevent-patched sockets deadlock aiohttp's event loop when running the
+    # plain dev server, so the patch is applied only on Railway
+    try:
+        from gevent import monkey; monkey.patch_all()
+    except ImportError:
+        pass
 
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
