@@ -11,7 +11,8 @@ import asyncio
 import concurrent.futures
 import aiohttp
 import requests as req_lib
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context, redirect
+from functools import wraps
 from dotenv import load_dotenv
 from voice_profile import build_messages
 import time
@@ -66,6 +67,9 @@ RESEND_API_KEY        = os.getenv("RESEND_API_KEY", "")
 FROM_EMAIL            = os.getenv("FROM_EMAIL", "support@creativekonsoles.com")
 DB_PATH               = os.getenv("DB_PATH", "/data/5i.db")
 KALSHI_API_KEY        = os.getenv("KALSHI_API_KEY", "")
+
+SUPABASE_URL  = os.getenv("SUPABASE_URL", "")
+SUPABASE_ANON = os.getenv("SUPABASE_ANON_KEY", "")
 
 MAX_INPUT_CHARS = 2000
 
@@ -720,6 +724,56 @@ async def query_all_with_verdict(prompt, selected):
         }
         verdict = await synthesize(session, prompt, results)
         return results, verdict
+
+
+# ── Supabase auth ───────────────────────────────────────────────────────────
+def require_auth(f):
+    """Validate Supabase JWT from Authorization header or sb-access-token cookie.
+    Localhost bypass: if SUPABASE_URL is unset, auth is skipped entirely (local dev)."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not SUPABASE_URL:                      # local dev — no Supabase configured
+            return f(*args, **kwargs)
+        token = None
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+        if not token:
+            token = request.cookies.get("sb-access-token")
+        if not token:
+            if request.headers.get("Accept", "").startswith("text/html"):
+                return redirect("/login")
+            return jsonify({"error": "unauthorized"}), 401
+        try:
+            from supabase import create_client
+            sb = create_client(SUPABASE_URL, SUPABASE_ANON)
+            user = sb.auth.get_user(token)
+            if not user or not user.user:
+                raise Exception("invalid token")
+        except Exception:
+            if request.headers.get("Accept", "").startswith("text/html"):
+                return redirect("/login")
+            return jsonify({"error": "unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route("/login")
+def login():
+    return LOGIN_HTML
+
+@app.route("/account")
+@require_auth
+def account():
+    return ("<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+            "<style>body{background:#000;color:#fff;font-family:Inter,sans-serif;"
+            "display:flex;flex-direction:column;align-items:center;justify-content:center;"
+            "height:100vh;gap:16px}a{color:#6A8AA8}</style></head><body>"
+            "<div>You are signed in.</div>"
+            "<button onclick=\"localStorage.removeItem('sb-access-token');"
+            "localStorage.removeItem('sb-refresh-token');location.href='/login'\" "
+            "style='padding:10px 20px;background:transparent;border:1px solid #333;"
+            "color:#fff;border-radius:4px;cursor:pointer'>Sign Out</button>"
+            "<a href='/'>← back to 5i</a></body></html>")
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -1581,6 +1635,66 @@ def admin_issue_token():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     return jsonify({"ok": True, "token": token, "email": email, "plan": plan})
+
+
+# ── Login page ────────────────────────────────────────────────────────────────
+LOGIN_HTML = """<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5i — Sign In</title>
+<style>
+  body{background:#0a0a0a;color:#fff;font-family:Inter,-apple-system,sans-serif;
+       display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+  .card{width:320px;padding:32px;border:1px solid #1c1c1c;border-radius:8px;background:#111}
+  h1{font-size:20px;letter-spacing:.15em;margin:0 0 20px;text-align:center}
+  .input{width:100%;box-sizing:border-box;height:42px;margin-bottom:10px;padding:0 12px;
+         background:#000;border:1px solid #2a2a2a;border-radius:4px;color:#fff;font-size:14px}
+  .btn{width:100%;height:44px;background:#6A8AA8;border:none;border-radius:4px;color:#fff;
+       font-weight:700;letter-spacing:.1em;cursor:pointer;font-size:12px;text-transform:uppercase}
+  .link{display:block;text-align:center;margin-top:14px;color:#6A8AA8;font-size:12px;cursor:pointer}
+  .status{text-align:center;margin-top:12px;font-size:12px;min-height:16px}
+  .err{color:#e06a6a}.ok{color:#6ae0a0}
+</style></head><body>
+  <div class="card">
+    <h1>5i</h1>
+    <input class="input" id="email" type="email" placeholder="your@email.com" autocomplete="email"/>
+    <input class="input" id="password" type="password" placeholder="password" autocomplete="current-password"/>
+    <button class="btn" id="btn" onclick="submit()">Sign In</button>
+    <span class="link" id="toggle" onclick="switchMode()">No account? Create one</span>
+    <div class="status" id="status"></div>
+  </div>
+<script>
+  const SB_URL = '__SUPABASE_URL__';
+  const SB_KEY = '__SUPABASE_KEY__';
+  let isSignUp = false;
+  function setStatus(m,c){const s=document.getElementById('status');s.textContent=m||'';s.className='status '+(c||'');}
+  function switchMode(){isSignUp=!isSignUp;
+    document.getElementById('btn').textContent=isSignUp?'Create Account':'Sign In';
+    document.getElementById('toggle').textContent=isSignUp?'Have an account? Sign in':'No account? Create one';
+    setStatus('');}
+  async function submit(){
+    const email=document.getElementById('email').value.trim();
+    const password=document.getElementById('password').value;
+    if(!email||!password){setStatus('Enter email and password.','err');return;}
+    setStatus(isSignUp?'Creating account…':'Signing in…');
+    const endpoint=isSignUp?SB_URL+'/auth/v1/signup':SB_URL+'/auth/v1/token?grant_type=password';
+    try{
+      const res=await fetch(endpoint,{method:'POST',
+        headers:{'Content-Type':'application/json','apikey':SB_KEY},
+        body:JSON.stringify({email,password})});
+      const data=await res.json();
+      if(data.error||data.error_description||data.msg){
+        setStatus(data.error_description||data.msg||data.error,'err');
+      }else if(data.access_token){
+        localStorage.setItem('sb-access-token',data.access_token);
+        localStorage.setItem('sb-refresh-token',data.refresh_token||'');
+        window.location.href='/account';
+      }else if(isSignUp){
+        setStatus('Account created. Check your email to confirm, then sign in.','ok');
+      }else{setStatus('Unexpected response.','err');}
+    }catch(e){setStatus('Network error.','err');}
+  }
+  document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+</script></body></html>""".replace('__SUPABASE_URL__', SUPABASE_URL).replace('__SUPABASE_KEY__', SUPABASE_ANON)
 
 
 if __name__ == "__main__":
