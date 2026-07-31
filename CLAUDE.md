@@ -37,10 +37,12 @@ make run     # starts on http://127.0.0.1:5562
 | Key | Model | Provider | Env Var |
 |-----|-------|----------|---------|
 | gpt | GPT-4o | OpenAI | OPENAI_API_KEY |
-| claude | Claude 3.5 Sonnet | Anthropic | ANTHROPIC_API_KEY |
-| gemini | Gemini 1.5 Flash | Google | GOOGLE_API_KEY |
-| grok | Grok 2 | xAI | GROK_API_KEY |
-| mistral | Mistral Large | Mistral | MISTRAL_API_KEY |
+| claude | Claude Sonnet 4.5 | Anthropic | ANTHROPIC_API_KEY |
+| gemini | Gemini 2.5 Flash | Google | GOOGLE_API_KEY |
+| grok | Grok 3 Mini | xAI | GROK_API_KEY |
+| mistral | Mistral Small | Mistral | MISTRAL_API_KEY |
+| gemma | Gemma 4 | Google | GEMMA_API_KEY (falls back to GOOGLE_API_KEY) |
+| deepseek | DeepSeek R1 | DeepSeek | DEEPSEEK_API_KEY (currently benched — enabled: False in app.py) |
 
 ## What's Built
 - Full dark UI + Konsole Mode (opens as independent window)
@@ -55,7 +57,7 @@ make run     # starts on http://127.0.0.1:5562
 - BYOK support — users can bring own API keys
 
 ## Subscription System
-- Free: 5 trial syntheses (localStorage counter)
+- Free: 3 trial syntheses (localStorage counter — see FREE_COUNT_KEY in index.html)
 - Base Synthesis: $18/mo — 100 syntheses/month
 - Foundational Synthesis: $88/mo — 1,000 syntheses/month
 - Stripe webhook → token generated → Resend emails token to subscriber
@@ -63,8 +65,10 @@ make run     # starts on http://127.0.0.1:5562
 
 ## Railway Environment Variables
 - OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, GROK_API_KEY, MISTRAL_API_KEY
-- STRIPE_WEBHOOK_SECRET, RESEND_API_KEY, FROM_EMAIL
+- STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET (required — webhook now fails closed without it), RESEND_API_KEY, FROM_EMAIL
 - DB_PATH=/data/5i.db (Railway volume mounted at /data)
+- ADMIN_KEY — required for /admin/issue-token and /kalshi-fusion/order (both fail closed if unset, 2026-07-31 security pass)
+- OWNER_TOKEN — optional unlimited-use bypass token for verify_token(); the old hardcoded value was rotated out of source, must be set fresh if this bypass is still wanted
 
 ## Key Technical Decisions
 - asyncio.gather for true parallel model calls
