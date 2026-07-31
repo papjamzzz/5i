@@ -1168,17 +1168,24 @@ def stripe_webhook():
     payload    = request.get_data()
     sig_header = request.headers.get("Stripe-Signature", "")
 
-    if STRIPE_WEBHOOK_SECRET:
-        try:
-            parts    = dict(p.split("=", 1) for p in sig_header.split(","))
-            ts       = parts.get("t", "")
-            v1       = parts.get("v1", "")
-            signed   = ts.encode() + b"." + payload
-            expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(expected, v1):
-                return jsonify({"error": "invalid signature"}), 400
-        except Exception:
-            return jsonify({"error": "signature error"}), 400
+    # Fail closed: without a configured secret there is no way to verify this
+    # request actually came from Stripe. Previously an unset secret silently
+    # skipped verification, so anyone could POST a forged
+    # "checkout.session.completed" event straight to this route and mint
+    # themselves a paid subscriber token for free.
+    if not STRIPE_WEBHOOK_SECRET:
+        return jsonify({"error": "webhook secret not configured"}), 503
+
+    try:
+        parts    = dict(p.split("=", 1) for p in sig_header.split(","))
+        ts       = parts.get("t", "")
+        v1       = parts.get("v1", "")
+        signed   = ts.encode() + b"." + payload
+        expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, v1):
+            return jsonify({"error": "invalid signature"}), 400
+    except Exception:
+        return jsonify({"error": "signature error"}), 400
 
     event      = request.get_json(force=True)
     event_type = (event or {}).get("type", "")
