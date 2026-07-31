@@ -57,6 +57,18 @@ sentry_sdk.init(
 
 app = Flask(__name__)
 
+
+@app.after_request
+def _security_headers(resp):
+    """Baseline security headers — no CSP here on purpose: the UI relies on
+    large inline <script>/<style> blocks throughout, and a real CSP for that
+    would need per-page auditing, not a one-line addition to a live product."""
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return resp
+
+
 OPENAI_KEY    = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GOOGLE_KEY    = os.getenv("GOOGLE_API_KEY", "")
