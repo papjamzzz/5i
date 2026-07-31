@@ -259,8 +259,11 @@ def verify_token(token):
     """Returns (ok, reason, row_or_None)"""
     if not token:
         return False, "no_token", None
-    # Owner token — unlimited personal use
-    if token == "abef7030-c1fb-4be9-8ff8-3ebb96042832":
+    # Owner token — unlimited personal use. Read from env, not hardcoded:
+    # this repo is public, so a literal value here would be exposed to anyone
+    # reading the source. Unset OWNER_TOKEN and this bypass is simply disabled.
+    owner_token = os.getenv("OWNER_TOKEN", "")
+    if owner_token and token == owner_token:
         return True, "ok", {"token": token, "monthly_limit": -1, "usage_count": 0}
     try:
         with get_db() as db:
