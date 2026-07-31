@@ -86,6 +86,34 @@ FREE_LIMIT   = 3       # 2 free + 1 email-gated; 4th requires subscription
 BURST_WINDOW = 60      # 1 min
 BURST_LIMIT  = 8       # max requests per IP per minute, any tier
 
+# /proxy/*, /voice, /verdict are the routes that actually call paid model APIs
+# for the live product (the UI streams through these, not through /ask), and
+# they carry no subscriber token today — the free-tier gate on them is
+# client-side (localStorage) only, which anyone can bypass with a direct
+# request. This is a per-IP safety net so a script can't run those calls
+# unbounded straight against the server's paid keys. Ceiling is generous
+# (one synthesis fans out to up to 7 of these calls) so normal multi-question
+# usage in a browser is never affected.
+PROXY_BURST_WINDOW = 60
+PROXY_BURST_LIMIT  = 40   # per IP per minute, across all proxy/voice/verdict calls
+
+
+def _proxy_rl_check(ip):
+    """Per-IP request-rate gate for the model-calling routes. No daily/token
+    logic here — just a hard ceiling against unbounded automated abuse."""
+    now = time.time()
+    key = f"p:{ip}"
+    with _rl_lock:
+        _ip_log[key] = [t for t in _ip_log[key] if now - t < PROXY_BURST_WINDOW]
+        if len(_ip_log[key]) >= PROXY_BURST_LIMIT:
+            return False
+        _ip_log[key].append(now)
+    return True
+
+
+def _client_ip():
+    return (request.headers.get("X-Forwarded-For", "") or request.remote_addr or "").split(",")[0].strip()
+
 
 def _rl_check(ip, token):
     """Returns (allowed, reason). Burst-gates everyone; day-gates no-token users."""
@@ -842,6 +870,9 @@ def ask():
 @app.route("/verdict", methods=["POST"])
 def render_verdict():
     """Standalone verdict endpoint — call after already having model results."""
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
+
     data = request.json
     prompt = data.get("prompt", "")
     results = data.get("results", {})
@@ -866,6 +897,9 @@ MAX_VOICE_CHARS = 6000   # paste-a-draft sized; bigger than the 500-char ask lim
 def voice_rewrite():
     """Take arbitrary text (a synthesis verdict, a model answer, a draft) and
     rewrite it in the personal voice defined in voice_profile.py."""
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
+
     data = request.json or {}
     text = (data.get("text") or "").strip()[:MAX_VOICE_CHARS]
     if not text:
@@ -927,6 +961,8 @@ def _stream_proxy(upstream_url, upstream_headers, upstream_body):
 
 @app.route('/proxy/claude', methods=['POST'])
 def proxy_claude():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or ANTHROPIC_KEY
     if not key:
@@ -942,6 +978,8 @@ def proxy_claude():
 
 @app.route('/proxy/gpt', methods=['POST'])
 def proxy_gpt():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or OPENAI_KEY
     if not key:
@@ -964,6 +1002,8 @@ GEMINI_MODELS_FALLBACK = [
 
 @app.route('/proxy/gemini', methods=['POST'])
 def proxy_gemini():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or GOOGLE_KEY
     if not key:
@@ -1001,6 +1041,8 @@ def proxy_gemini():
 
 @app.route('/proxy/gemma', methods=['POST'])
 def proxy_gemma():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or GEMMA_KEY
     if not key:
@@ -1038,6 +1080,8 @@ def proxy_gemma():
 
 @app.route('/proxy/mistral', methods=['POST'])
 def proxy_mistral():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or MISTRAL_KEY
     if not key:
@@ -1053,6 +1097,8 @@ def proxy_mistral():
 
 @app.route('/proxy/grok', methods=['POST'])
 def proxy_grok():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or GROK_KEY
     if not key:
@@ -1068,6 +1114,8 @@ def proxy_grok():
 
 @app.route('/proxy/deepseek', methods=['POST'])
 def proxy_deepseek():
+    if not _proxy_rl_check(_client_ip()):
+        return jsonify({"error": "Rate limit: too_many_requests"}), 429
     d = request.json
     key = d.get('apiKey') or DEEPSEEK_KEY
     if not key:
