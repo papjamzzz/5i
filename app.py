@@ -1309,7 +1309,12 @@ def _parse_model_probability(text):
 
 @app.route("/kalshi-fusion/order", methods=["POST"])
 def kalshi_fusion_order():
-    """Place a Kalshi order directly from the fusion signal."""
+    """Place a Kalshi order directly from the fusion signal.
+    This moves real money on a real Kalshi account — owner-only, gated by ADMIN_KEY.
+    Fails closed: if ADMIN_KEY isn't configured, no request can pass, ever."""
+    admin_key = os.getenv("ADMIN_KEY", "")
+    if not admin_key or request.headers.get("X-Admin-Key", "") != admin_key:
+        return jsonify({"error": "Forbidden"}), 403
     if not KALSHI_API_KEY:
         return jsonify({"error": "No KALSHI_API_KEY configured"}), 503
 

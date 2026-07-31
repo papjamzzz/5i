@@ -1252,10 +1252,16 @@ async function placeBuyOrder() {
   const statusEl = document.getElementById('order-status');
   statusEl.style.display = 'none';
 
+  let adminKey = localStorage.getItem('5i_admin_key') || '';
+  if (!adminKey) {
+    adminKey = prompt('Owner admin key required to place a real order (set once, stored locally):') || '';
+    if (adminKey) localStorage.setItem('5i_admin_key', adminKey);
+  }
+
   try {
     const r = await fetch('/kalshi-fusion/order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
       body: JSON.stringify({ ticker, side, count: contractCount, price_cents })
     });
     const d = await r.json();
@@ -1266,6 +1272,7 @@ async function placeBuyOrder() {
       statusEl.style.display = '';
       fetchBalance();
     } else {
+      if (r.status === 403) localStorage.removeItem('5i_admin_key'); // bad/missing key — re-prompt next time
       statusEl.className = 'order-status error';
       statusEl.textContent = `✗ ${d.error}`;
       statusEl.style.display = '';
