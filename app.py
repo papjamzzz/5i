@@ -1673,7 +1673,10 @@ def admin_issue_token():
     """Issue a free founder token manually."""
     data     = request.get_json() or {}
     admin_key = request.headers.get("X-Admin-Key", "")
-    if admin_key != os.getenv("ADMIN_KEY", "5i-admin-2026"):
+    configured_key = os.getenv("ADMIN_KEY", "")
+    # Fails closed: a public-repo default here would be a known-to-everyone
+    # skeleton key. If ADMIN_KEY isn't set, nothing can authenticate.
+    if not configured_key or admin_key != configured_key:
         return jsonify({"error": "Forbidden"}), 403
     email     = data.get("email", "")
     plan      = data.get("plan", "foundational")
