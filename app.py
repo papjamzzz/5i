@@ -17,6 +17,7 @@ import aiohttp
 import requests as req_lib
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context, redirect
 from functools import wraps
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from voice_profile import build_messages
 import time
@@ -246,12 +247,65 @@ def init_db():
                 created_at TEXT DEFAULT (datetime('now'))
             )
         """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type       TEXT NOT NULL,
+                path             TEXT,
+                referrer_domain  TEXT,
+                utm_source       TEXT,
+                utm_medium       TEXT,
+                utm_campaign     TEXT,
+                meta             TEXT,
+                created_at       TEXT DEFAULT (datetime('now'))
+            )
+        """)
         db.commit()
 
 try:
     init_db()
 except Exception as e:
     print(f"[DB] init skipped: {e} — DB will be retried on first use", flush=True)
+
+
+# ── Analytics — first-party only, no third-party scripts ───────────────────────
+# Same shape as Represented's: events table + log_event() helper, referrer/UTM
+# capture on the landing pageview, no cookies, nothing leaves this server.
+
+def _referrer_domain():
+    ref = request.headers.get('Referer', '')
+    if not ref:
+        return None
+    try:
+        return urlparse(ref).netloc or None
+    except Exception:
+        return None
+
+def _client_ip():
+    xff = request.headers.get('X-Forwarded-For', '')
+    return xff.split(',')[0].strip() if xff else (request.remote_addr or '0.0.0.0')
+
+def log_event(event_type, meta=None):
+    try:
+        meta = dict(meta) if meta else {}
+        if event_type.startswith('login') or event_type == 'account_view':
+            meta['ip'] = _client_ip()
+            meta['user_agent'] = request.headers.get('User-Agent', '')[:255]
+        with get_db() as db:
+            db.execute(
+                'INSERT INTO events (event_type, path, referrer_domain, utm_source, utm_medium, utm_campaign, meta) '
+                'VALUES (?,?,?,?,?,?,?)',
+                (
+                    event_type, request.path, _referrer_domain(),
+                    (request.values.get('utm_source') or '')[:100] or None,
+                    (request.values.get('utm_medium') or '')[:100] or None,
+                    (request.values.get('utm_campaign') or '')[:100] or None,
+                    json.dumps(meta) if meta else None,
+                )
+            )
+            db.commit()
+    except Exception as ex:
+        print(f'[ANALYTICS] failed to log {event_type}: {ex}')
 
 
 def _check_and_reset(row):
@@ -801,9 +855,11 @@ def require_auth(f):
             if not user or not user.user:
                 raise Exception("invalid token")
         except Exception:
+            log_event("login_failed")
             if request.headers.get("Accept", "").startswith("text/html"):
                 return redirect("/login")
             return jsonify({"error": "unauthorized"}), 401
+        log_event("account_view", meta={"email": getattr(user.user, "email", None)})
         return f(*args, **kwargs)
     return decorated
 
@@ -830,6 +886,7 @@ def account():
 
 @app.route("/")
 def index():
+    log_event("pageview")
     models_info = {
         k: {"label": v["label"], "provider": v["provider"],
             "color": v["color"], "enabled": v["enabled"]()}
@@ -1265,6 +1322,36 @@ def stripe_webhook():
 
     send_token_email(email, token, plan_name)
     return jsonify({"ok": True}), 200
+
+
+@app.route('/admin/analytics')
+def admin_analytics():
+    configured_key = os.getenv("ADMIN_KEY", "")
+    supplied_key = request.headers.get("X-Admin-Key") or request.args.get("admin_key", "")
+    # Fails closed, same posture as /admin/issue-token — no key configured means no access.
+    if not configured_key or supplied_key != configured_key:
+        return jsonify({"error": "Forbidden"}), 403
+
+    with get_db() as db:
+        pageviews_by_day = db.execute("""
+            SELECT date(created_at) AS day, COUNT(*) AS n FROM events
+            WHERE event_type='pageview' AND created_at >= date('now', '-30 days')
+            GROUP BY day ORDER BY day
+        """).fetchall()
+        pageviews_by_source = db.execute("""
+            SELECT COALESCE(NULLIF(utm_source,''), NULLIF(referrer_domain,''), 'direct') AS source, COUNT(*) AS n
+            FROM events WHERE event_type='pageview'
+            GROUP BY source ORDER BY n DESC
+        """).fetchall()
+        total_pageviews = db.execute("SELECT COUNT(*) AS n FROM events WHERE event_type='pageview'").fetchone()['n']
+        total_account_views = db.execute("SELECT COUNT(*) AS n FROM events WHERE event_type='account_view'").fetchone()['n']
+        total_subscribers = db.execute("SELECT COUNT(*) AS n FROM subscribers").fetchone()['n']
+
+    return render_template('analytics.html',
+        pageviews_by_day=pageviews_by_day, pageviews_by_source=pageviews_by_source,
+        total_pageviews=total_pageviews, total_account_views=total_account_views,
+        total_subscribers=total_subscribers,
+    )
 
 
 @app.route('/guide')
